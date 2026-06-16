@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+:root {
+  --color-bg-primary: #FFFAF5;
+  --color-bg-card: #FAEEDA;
+  --color-bg-dark: #1A0E05;
+  --color-bg-surface: #412402;
+  --color-text-primary: #412402;
+  --color-text-secondary: #854F0B;
+  --color-text-muted: #888780;
+  --color-text-onDark: #FAEEDA;
+  --color-accent-primary: #BA7517;
+  --color-accent-secondary: #EF9F27;
+  --color-accent-light: #FAC775;
+  --color-accent-highlight: #BA7517;
+  --color-border: #D3D1C7;
+  --color-tab-active: #854F0B;
+  --color-tab-inactive: #888780;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Pretendard', -apple-system, sans-serif;
+  max-width: 430px;
+  margin: 0 auto;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  min-height: 100dvh;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes scaleUp {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes speakGlow {
+  0%, 100% {
+    box-shadow: inset 0 0 0 3px rgba(239, 159, 39, 0.3);
+  }
+  50% {
+    box-shadow: inset 0 0 0 6px rgba(239, 159, 39, 0.8);
+  }
+}
+
+@keyframes waveBar {
+  0%, 100% { height: 4px; }
+  50% { height: 20px; }
+}
