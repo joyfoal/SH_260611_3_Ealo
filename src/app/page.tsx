@@ -49,12 +49,41 @@ export default function RootPage() {
     return () => clearTimeout(timer)
   }, [router])
 
+  const icons = Array.from({ length: 9 }, (_, i) => ({
+    col: i % 3,
+    row: Math.floor(i / 3),
+    delay: i * 0.09,
+  }))
+
   return (
     <div
       className="flex items-center justify-center"
       style={{ minHeight: '100dvh', background: 'var(--color-bg-dark)' }}
     >
-      <img src="/mornim.png" alt="모님" style={{ width: '200px', height: '200px', objectFit: 'contain' }} />
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '12px',
+          width: '288px',
+        }}
+      >
+        {icons.map(({ col, row, delay }, i) => (
+          <div
+            key={i}
+            style={{
+              width: '84px',
+              height: '84px',
+              borderRadius: '20px',
+              backgroundImage: 'url(/mornim.png)',
+              backgroundSize: '300% 300%',
+              backgroundPosition: `${col * 50}% ${row * 50}%`,
+              animation: `popIn 0.45s cubic-bezier(0.34,1.56,0.64,1) both`,
+              animationDelay: `${delay}s`,
+            }}
+          />
+        ))}
+      </div>
     </div>
   )
 }
