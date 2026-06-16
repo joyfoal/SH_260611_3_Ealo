@@ -44,15 +44,17 @@ export default function RootPage() {
       }
 
       router.replace('/home')
-    }, 1000)
+    }, 2000)
 
     return () => clearTimeout(timer)
   }, [router])
 
+  // 나선형 순서: 테두리 → 중앙으로 등장
+  const ORDER = [0, 1, 2, 5, 8, 7, 6, 3, 4]
   const icons = Array.from({ length: 9 }, (_, i) => ({
     col: i % 3,
     row: Math.floor(i / 3),
-    delay: i * 0.09,
+    delay: ORDER.indexOf(i) * 0.1,
   }))
 
   return (
@@ -64,22 +66,22 @@ export default function RootPage() {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '12px',
-          width: '288px',
+          gap: '20px',
+          width: '360px',
         }}
       >
         {icons.map(({ col, row, delay }, i) => (
           <div
             key={i}
             style={{
-              width: '84px',
-              height: '84px',
-              borderRadius: '20px',
+              width: '106px',
+              height: '106px',
+              borderRadius: '24px',
               backgroundImage: 'url(/mornim.png)',
               backgroundSize: '300% 300%',
               backgroundPosition: `${col * 50}% ${row * 50}%`,
-              animation: `popIn 0.45s cubic-bezier(0.34,1.56,0.64,1) both`,
-              animationDelay: `${delay}s`,
+              animation: `popIn 0.55s cubic-bezier(0.34,1.56,0.64,1) both, floatIcon 2.5s ease-in-out infinite`,
+              animationDelay: `${delay}s, ${delay + 0.6}s`,
             }}
           />
         ))}
