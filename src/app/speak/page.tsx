@@ -495,7 +495,7 @@ function SpeakPageInner() {
               ))}
             </div>
           )}
-          {reRecordState === 'recording' ? '다시 녹음 중...' : isSpeaking ? '인식 중...' : '듣고 있어요...'}
+          {isSpeaking ? '인식 중...' : '듣고 있어요...'}
         </div>
       </div>
 
@@ -512,94 +512,7 @@ function SpeakPageInner() {
           완료 ✓
         </button>
 
-        {/* 다시 녹음 버튼 (두 번째부터) */}
-        {hasExistingRecording && reRecordState === 'idle' && (
-          <button
-            onClick={startReRecord}
-            style={{
-              width: '100%', padding: '13px',
-              background: 'rgba(255,255,255,0.12)',
-              border: '1.5px solid rgba(255,255,255,0.25)',
-              backdropFilter: 'blur(8px)',
-              borderRadius: '16px', color: 'white', fontSize: '15px', fontWeight: 600, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
-              <circle cx="12" cy="12" r="9"/>
-            </svg>
-            다시 녹음
-          </button>
-        )}
-
-        {/* 녹음 중 → 완료 버튼 */}
-        {reRecordState === 'recording' && (
-          <button
-            onClick={stopReRecord}
-            style={{
-              width: '100%', padding: '13px',
-              background: 'rgba(194,85,46,0.85)',
-              border: '1.5px solid rgba(255,255,255,0.25)',
-              backdropFilter: 'blur(8px)',
-              borderRadius: '16px', color: 'white', fontSize: '15px', fontWeight: 600, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            }}
-          >
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: '#fff', display: 'inline-block' }} />
-            녹음 완료
-          </button>
-        )}
       </div>
-
-      {/* 저장 확인 모달 */}
-      {reRecordState === 'confirm' && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 50,
-          background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)',
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        }}>
-          <div style={{
-            width: '100%', maxWidth: 480,
-            background: 'var(--color-bg-card)',
-            borderRadius: '24px 24px 0 0',
-            padding: '28px 24px 48px',
-            display: 'flex', flexDirection: 'column', gap: 16,
-          }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-text-primary)', textAlign: 'center' }}>
-              이 녹음 파일로 저장할까요?
-            </div>
-            <div style={{ fontSize: 14, color: 'var(--color-text-muted)', textAlign: 'center', lineHeight: 1.5 }}>
-              새로 녹음한 파일이 기존 녹음을 대체합니다.
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
-              <button
-                onClick={saveReRecord}
-                style={{
-                  width: '100%', padding: '15px',
-                  background: 'var(--color-accent-primary)',
-                  border: 'none', borderRadius: '14px',
-                  color: 'white', fontSize: '16px', fontWeight: 700, cursor: 'pointer',
-                }}
-              >
-                저장하기
-              </button>
-              <button
-                onClick={discardReRecord}
-                style={{
-                  width: '100%', padding: '15px',
-                  background: 'transparent',
-                  border: '1.5px solid var(--color-border)',
-                  borderRadius: '14px',
-                  color: 'var(--color-text-muted)', fontSize: '15px', fontWeight: 600, cursor: 'pointer',
-                }}
-              >
-                취소
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
