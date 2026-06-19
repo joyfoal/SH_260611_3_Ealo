@@ -160,6 +160,9 @@ export default function OnboardingPage() {
   const onbAutoCompleteRef = useRef(false)
   const onbAutoCompleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onbSpeakTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const onbAudioBlobRef = useRef<Blob | null>(null)
+  const onbAudioRef = useRef<HTMLAudioElement | null>(null)
+  const [onbIsPlaying, setOnbIsPlaying] = useState(false)
   const [onbRecognizedWords, setOnbRecognizedWords] = useState<Set<string>>(new Set())
   const [onbIsListening, setOnbIsListening] = useState(false)
   const [onbIsSpeaking, setOnbIsSpeaking] = useState(false)
@@ -314,6 +317,7 @@ export default function OnboardingPage() {
       recorder.onstop = async () => {
         const blob = new Blob(onbAudioChunksRef.current, { type: mimeType || 'audio/webm' })
         if (blob.size > 0) {
+          onbAudioBlobRef.current = blob
           try {
             await saveAudioRecord({
               id: `onb-audio-${Date.now()}`,
@@ -703,10 +707,51 @@ export default function OnboardingPage() {
                 backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
                 border: '1px solid rgba(232,200,120,.45)', borderRadius: 20, padding: '22px 20px',
               }}>
-                <div style={{ fontSize: 19, fontWeight: 800, lineHeight: 1.45, color: '#fff', marginBottom: 10 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(232,200,120,.7)', letterSpacing: '.4px', marginBottom: 8 }}>
+                  당신의 첫 성공의 말이에요
+                </div>
+                <div style={{ fontSize: 19, fontWeight: 800, lineHeight: 1.45, color: '#fff', marginBottom: 14 }}>
                   &ldquo;{transcript}&rdquo;
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#e8c878' }}>{encouragement}</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#e8c878' }}>{encouragement}</div>
+                  {onbAudioBlobRef.current && (
+                    <button
+                      onClick={() => {
+                        if (onbIsPlaying) {
+                          onbAudioRef.current?.pause()
+                          if (onbAudioRef.current) onbAudioRef.current.currentTime = 0
+                          setOnbIsPlaying(false)
+                          return
+                        }
+                        const url = URL.createObjectURL(onbAudioBlobRef.current!)
+                        const audio = new Audio(url)
+                        onbAudioRef.current = audio
+                        setOnbIsPlaying(true)
+                        audio.onended = () => { setOnbIsPlaying(false); URL.revokeObjectURL(url) }
+                        audio.onerror = () => { setOnbIsPlaying(false); URL.revokeObjectURL(url) }
+                        audio.play().catch(() => setOnbIsPlaying(false))
+                      }}
+                      style={{
+                        width: 40, height: 40, borderRadius: '50%', border: 'none', cursor: 'pointer',
+                        background: onbIsPlaying ? 'rgba(232,200,120,.25)' : T.gold,
+                        color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {onbIsPlaying ? (
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                          <rect x="3" y="2" width="4" height="12" rx="1.5"/>
+                          <rect x="9" y="2" width="4" height="12" rx="1.5"/>
+                        </svg>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M5 3.5l8 4.5-8 4.5V3.5z"/>
+                        </svg>
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           )}
