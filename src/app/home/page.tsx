@@ -423,6 +423,7 @@ export default function HomePage() {
   const [allDone, setAllDone] = useState(false)
   const [hasAffirmations, setHasAffirmations] = useState(true)
   const [streakData, setStreakData] = useState<StreakData>({ currentStreak: 0, lastCompletedDate: null, shields: 0 })
+  const [todayCount, setTodayCount] = useState(0)
   const [tomorrowNote, setTomorrowNote] = useState<string | null>(null)
   const [motto, setMotto] = useState('')
   const [showWeeklyReport, setShowWeeklyReport] = useState(false)
@@ -464,6 +465,7 @@ export default function HomePage() {
     setTodayAffirmation(notDone[0] ?? null)
     setAllDone(notDone.length === 0 && affirmations.length > 0)
     setStreakData(getStreakData())
+    setTodayCount(getDayRecord(todayStr())?.completedCount ?? 0)
     if (isTomorrowEnabled()) {
       const note = getTomorrowNote()
       if (note && note.date === today && note.message) {
@@ -645,7 +647,7 @@ export default function HomePage() {
             }}
           >
             <span style={{ fontSize: '24px' }}>🔥</span>
-            <div>
+            <div style={{ flex: 1 }}>
               <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--color-text-primary)' }}>
                 {streakData.currentStreak}일 연속
               </div>
@@ -654,6 +656,12 @@ export default function HomePage() {
                   🛡 스트릭 보호막 {streakData.shields}개
                 </div>
               )}
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-accent-primary)' }}>
+                {todayCount}회
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>오늘 완료</div>
             </div>
           </div>
         )}
