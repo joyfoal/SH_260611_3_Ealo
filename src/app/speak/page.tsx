@@ -157,10 +157,17 @@ function SpeakPageInner() {
 
   const startSTT = useCallback(() => {
     if (typeof window === 'undefined') return
+    if (!shouldListenRef.current) return
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = window as any
     const SpeechRec = w.SpeechRecognition ?? w.webkitSpeechRecognition
     if (!SpeechRec) return
+
+    // 기존 인스턴스 정리 (윈도우 호환: 재시작 대신 새 인스턴스 생성)
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop() } catch { /* ignore */ }
+      recognitionRef.current = null
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const recognition: any = new SpeechRec()
@@ -169,7 +176,6 @@ function SpeakPageInner() {
     recognition.interimResults = true
     recognition.maxAlternatives = 1
     recognitionRef.current = recognition
-    shouldListenRef.current = true
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recognition.onresult = (event: any) => {
@@ -205,17 +211,21 @@ function SpeakPageInner() {
         setIsListening(false)
         return
       }
-      try { recognition.start() } catch { /* already started */ }
+      // 오류 시 새 인스턴스로 재시작 (윈도우 호환)
+      setTimeout(() => { if (shouldListenRef.current) startSTT() }, 200)
     }
 
     recognition.onend = () => {
-      if (shouldListenRef.current) {
-        try { recognition.start() } catch { /* already started */ }
-      }
+      // 종료 시 새 인스턴스로 재시작 (윈도우에서 같은 인스턴스 재시작 불가)
+      setTimeout(() => { if (shouldListenRef.current) startSTT() }, 100)
     }
 
-    recognition.start()
-    setIsListening(true)
+    try {
+      recognition.start()
+      setIsListening(true)
+    } catch {
+      setTimeout(() => { if (shouldListenRef.current) startSTT() }, 300)
+    }
   }, [affirmation])
 
   useEffect(() => {
