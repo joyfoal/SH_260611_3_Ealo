@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppLayout } from '@/components/ui/AppLayout'
 import { DynamicText } from '@/components/ui/DynamicText'
-import { Play } from 'lucide-react'
+import { Play, Pause } from 'lucide-react'
 import {
   getAffirmations,
   getTodayAffirmationIds,
@@ -15,11 +15,18 @@ import {
   isTomorrowEnabled,
   generateTodayQueue,
   todayStr,
+  getAffirmationsByDate,
+  getDayNote,
+  getWeeklyReportShown,
+  setWeeklyReportShown,
+  getWeekKey,
   type Affirmation,
   type DayRecord,
   type StreakData,
 } from '@/lib/storage'
 import { CATEGORY_COLORS } from '@/lib/categories'
+import { getRecentAudioRecord, deleteExpiredAudioRecords, type AudioRecord } from '@/lib/audioStorage'
+import { WeeklyReportModal } from '@/components/ui/WeeklyReportModal'
 
 function getGreeting(): string {
   const h = new Date().getHours()
@@ -28,9 +35,99 @@ function getGreeting(): string {
   return '좋은 저녁이에요 🌙'
 }
 
+// ─── Recent Recording Player ──────────────────────────────────────
+function RecentRecordingPlayer() {
+  const [record, setRecord] = useState<AudioRecord | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const urlRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    getRecentAudioRecord().then(setRecord).catch(() => {})
+    return () => {
+      if (audioRef.current) audioRef.current.pause()
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current)
+    }
+  }, [])
+
+  const handleToggle = () => {
+    if (!record) return
+    if (isPlaying) {
+      audioRef.current?.pause()
+      setIsPlaying(false)
+      return
+    }
+    if (!urlRef.current) {
+      urlRef.current = URL.createObjectURL(record.blob)
+    }
+    if (!audioRef.current) {
+      audioRef.current = new Audio(urlRef.current)
+      audioRef.current.onended = () => setIsPlaying(false)
+    }
+    audioRef.current.src = urlRef.current
+    audioRef.current.play().catch(() => setIsPlaying(false))
+    setIsPlaying(true)
+  }
+
+  if (!record) return null
+
+  return (
+    <div
+      style={{
+        margin: '0 16px 16px',
+        padding: '14px 16px',
+        background: 'var(--color-bg-card)',
+        borderRadius: '16px',
+        border: '1px solid var(--color-border)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+      }}
+    >
+      <button
+        onClick={handleToggle}
+        style={{
+          width: '40px',
+          height: '40px',
+          borderRadius: '50%',
+          background: 'var(--color-accent-primary)',
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        {isPlaying ? <Pause size={16} color="white" fill="white" /> : <Play size={16} color="white" fill="white" />}
+      </button>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: '10px', color: 'var(--color-text-muted)', marginBottom: '2px' }}>최근 녹음</div>
+        <div
+          style={{
+            fontSize: '13px',
+            color: 'var(--color-text-secondary)',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {record.affirmationText}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Calendar View ────────────────────────────────────────────────
+const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
+
 function CalendarView() {
   const [records, setRecords] = useState<DayRecord[]>([])
   const [selectedDay, setSelectedDay] = useState<DayRecord | null>(null)
+  const [selectedAffirmations, setSelectedAffirmations] = useState<Affirmation[]>([])
+  const [selectedNote, setSelectedNote] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
     const now = new Date()
@@ -41,116 +138,176 @@ function CalendarView() {
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
       const rec = getDayRecord(dateStr)
-      recs.push(
-        rec ?? { date: dateStr, completedCount: 0, dominantCategory: null }
-      )
+      recs.push(rec ?? { date: dateStr, completedCount: 0, dominantCategory: null })
     }
     setRecords(recs)
   }, [])
+
+  const handleDayClick = (rec: DayRecord) => {
+    if (selectedDay?.date === rec.date) {
+      setSelectedDay(null)
+      return
+    }
+    setSelectedDay(rec)
+    setSelectedAffirmations(getAffirmationsByDate(rec.date))
+    setSelectedNote(getDayNote(rec.date))
+  }
 
   const today = todayStr()
   const now = new Date()
   const firstDayOfWeek = new Date(now.getFullYear(), now.getMonth(), 1).getDay()
 
-  return (
-    <div style={{ padding: '0 16px 16px' }}>
-      <div
+  // 이번 주 7일 (일~토)
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(now)
+    d.setDate(d.getDate() - now.getDay() + i)
+    return d.toISOString().split('T')[0]
+  })
+  const weekRecords = weekDays.map(
+    (date) => records.find((r) => r.date === date) ?? { date, completedCount: 0, dominantCategory: null as null }
+  )
+
+  const renderDayBtn = (rec: DayRecord, size = 32) => {
+    const day = parseInt(rec.date.split('-')[2])
+    const isToday = rec.date === today
+    const isSelected = selectedDay?.date === rec.date
+    const colors = rec.dominantCategory ? CATEGORY_COLORS[rec.dominantCategory] : null
+    const intensity =
+      rec.completedCount >= 6
+        ? colors?.dark
+        : rec.completedCount >= 3
+        ? (colors?.dark ?? '') + 'CC'
+        : rec.completedCount >= 1
+        ? colors?.light
+        : 'transparent'
+    return (
+      <button
+        key={rec.date}
+        onClick={() => handleDayClick(rec)}
         style={{
-          fontSize: '14px',
-          color: 'var(--color-text-secondary)',
-          marginBottom: '8px',
-          fontWeight: 500,
+          width: size,
+          height: size,
+          borderRadius: '8px',
+          background: isSelected ? 'var(--color-accent-primary)' : intensity,
+          border: isToday && !isSelected ? '1.5px solid var(--color-accent-primary)' : '1px solid transparent',
+          fontSize: '11px',
+          color: isSelected ? 'white' : rec.completedCount > 0 ? colors?.dark : 'var(--color-text-muted)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto',
+          flexShrink: 0,
         }}
       >
-        {now.getFullYear()}년 {now.getMonth() + 1}월
+        {day}
+      </button>
+    )
+  }
+
+  return (
+    <div style={{ padding: '0 16px 16px' }}>
+      {/* 헤더 */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+        <div style={{ fontSize: '14px', color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+          {now.getFullYear()}년 {now.getMonth() + 1}월
+        </div>
+        <button
+          onClick={() => { setExpanded((v) => !v); setSelectedDay(null) }}
+          style={{ fontSize: '12px', color: 'var(--color-accent-primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}
+        >
+          {expanded ? '접기 ↑' : '전체 보기 ↓'}
+        </button>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
-        {['일', '월', '화', '수', '목', '금', '토'].map((d) => (
-          <div
-            key={d}
-            style={{
-              fontSize: '11px',
-              color: 'var(--color-text-muted)',
-              textAlign: 'center',
-              padding: '4px 0',
-            }}
-          >
+
+      {/* 요일 레이블 */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '4px' }}>
+        {DAY_LABELS.map((d) => (
+          <div key={d} style={{ fontSize: '11px', color: 'var(--color-text-muted)', textAlign: 'center', padding: '2px 0' }}>
             {d}
           </div>
         ))}
-        {Array.from({ length: firstDayOfWeek }, (_, i) => (
-          <div key={`empty-${i}`} />
-        ))}
-        {records.map((rec) => {
-          const day = parseInt(rec.date.split('-')[2])
-          const isToday = rec.date === today
-          const colors = rec.dominantCategory
-            ? CATEGORY_COLORS[rec.dominantCategory]
-            : null
-          const intensity =
-            rec.completedCount >= 6
-              ? colors?.dark
-              : rec.completedCount >= 3
-              ? colors?.dark + 'CC'
-              : rec.completedCount >= 1
-              ? colors?.light
-              : 'transparent'
-
-          return (
-            <button
-              key={rec.date}
-              onClick={() => setSelectedDay(rec)}
-              style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: '8px',
-                background: intensity,
-                border: isToday ? '1.5px solid var(--color-accent-primary)' : '1px solid transparent',
-                fontSize: '11px',
-                color: rec.completedCount > 0 ? colors?.dark : 'var(--color-text-muted)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto',
-              }}
-            >
-              {day}
-            </button>
-          )
-        })}
       </div>
 
+      {/* 주간 뷰 (기본) */}
+      {!expanded && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+          {weekRecords.map((rec) => renderDayBtn(rec, 32))}
+        </div>
+      )}
+
+      {/* 월간 뷰 (펼침) */}
+      {expanded && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+          {Array.from({ length: firstDayOfWeek }, (_, i) => <div key={`empty-${i}`} />)}
+          {records.map((rec) => renderDayBtn(rec, 28))}
+        </div>
+      )}
+
+      {/* 선택된 날 상세 */}
       {selectedDay && (
         <div
           style={{
             marginTop: '12px',
-            padding: '12px 16px',
+            padding: '14px 16px',
             background: 'var(--color-bg-card)',
-            borderRadius: '12px',
+            borderRadius: '14px',
             fontSize: '13px',
             color: 'var(--color-text-secondary)',
           }}
         >
-          <div style={{ fontWeight: 600, marginBottom: '4px' }}>{selectedDay.date}</div>
+          <div style={{ fontWeight: 600, marginBottom: '8px', color: 'var(--color-text-primary)' }}>
+            {selectedDay.date}
+          </div>
+
           {selectedDay.completedCount > 0 ? (
-            <div>
-              완료: {selectedDay.completedCount}개
-              {selectedDay.dominantCategory && ` · ${selectedDay.dominantCategory}`}
-            </div>
+            <>
+              <div style={{ marginBottom: '8px', color: 'var(--color-text-muted)' }}>
+                완료: {selectedDay.completedCount}개
+                {selectedDay.dominantCategory && ` · ${selectedDay.dominantCategory}`}
+              </div>
+              {selectedAffirmations.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
+                  {selectedAffirmations.map((a) => (
+                    <div
+                      key={a.id}
+                      style={{
+                        padding: '8px 10px',
+                        background: 'var(--color-bg-surface)',
+                        borderRadius: '8px',
+                        fontSize: '13px',
+                        color: 'var(--color-text-primary)',
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      ✓ {a.text}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           ) : (
-            <div>아직 기록이 없어요</div>
+            <div style={{ marginBottom: '8px', color: 'var(--color-text-muted)' }}>아직 기록이 없어요</div>
           )}
+
+          {selectedNote && (
+            <div
+              style={{
+                padding: '10px 12px',
+                background: '#FFFAE6',
+                borderRadius: '10px',
+                border: '1px solid #F5E066',
+                marginBottom: '8px',
+              }}
+            >
+              <div style={{ fontSize: '10px', color: '#9B8A00', marginBottom: '4px' }}>오늘의 나에게</div>
+              <div style={{ fontSize: '13px', color: '#4A3C00', lineHeight: 1.5 }}>{selectedNote}</div>
+            </div>
+          )}
+
           <button
             onClick={() => setSelectedDay(null)}
-            style={{
-              marginTop: '8px',
-              fontSize: '12px',
-              color: 'var(--color-text-muted)',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-            }}
+            style={{ marginTop: '4px', fontSize: '12px', color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
           >
             닫기
           </button>
@@ -179,12 +336,51 @@ export default function HomePage() {
   const router = useRouter()
   const [todayAffirmation, setTodayAffirmation] = useState<Affirmation | null>(null)
   const [allDone, setAllDone] = useState(false)
+  const [hasAffirmations, setHasAffirmations] = useState(true)
   const [streakData, setStreakData] = useState<StreakData>({ currentStreak: 0, lastCompletedDate: null, shields: 0 })
   const [tomorrowNote, setTomorrowNote] = useState<string | null>(null)
   const [motto, setMotto] = useState('')
+  const [showWeeklyReport, setShowWeeklyReport] = useState(false)
 
   useEffect(() => {
     setMotto(MOTTOS[Math.floor(Math.random() * MOTTOS.length)])
+  }, [])
+
+  // Auto-show weekly report on Saturday
+  useEffect(() => {
+    const now = new Date()
+    if (now.getDay() === 6) {
+      const weekKey = getWeekKey(now)
+      const shown = getWeeklyReportShown()
+      if (shown !== weekKey) {
+        setTimeout(() => setShowWeeklyReport(true), 1000)
+      }
+    }
+  }, [])
+
+  // Alarm check on app open
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const checkAlarm = async () => {
+      const { getAlarmSettings, getAlarmLastShown, setAlarmLastShown } = await import('@/lib/storage')
+      const alarm = getAlarmSettings()
+      if (!alarm) return
+      const now = new Date()
+      const today = todayStr()
+      if (getAlarmLastShown() === today) return
+      const nowMinutes = now.getHours() * 60 + now.getMinutes()
+      const alarmMinutes = alarm.hour * 60 + alarm.minute
+      if (Math.abs(nowMinutes - alarmMinutes) <= 30) {
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('모님 - 성공의 말 시간이에요! 🌟', {
+            body: '오늘의 성공의 말을 말해보세요.',
+            icon: '/icon-192.png',
+          })
+          setAlarmLastShown(today)
+        }
+      }
+    }
+    checkAlarm()
   }, [])
 
   const loadData = useCallback(() => {
@@ -198,6 +394,7 @@ export default function HomePage() {
     const notDone = affirmations.filter(
       (a) => ids.includes(a.id) && !a.completedDates.includes(today)
     )
+    setHasAffirmations(affirmations.length > 0)
     setTodayAffirmation(notDone[0] ?? null)
     setAllDone(notDone.length === 0 && affirmations.length > 0)
     setStreakData(getStreakData())
@@ -211,6 +408,7 @@ export default function HomePage() {
 
   useEffect(() => {
     loadData()
+    deleteExpiredAudioRecords().catch(() => {})
   }, [loadData])
 
   const handlePlay = () => {
@@ -234,10 +432,16 @@ export default function HomePage() {
     router.push(`/speak?id=${pick.id}`)
   }
 
+  const handleCloseWeeklyReport = () => {
+    setShowWeeklyReport(false)
+    const weekKey = getWeekKey(new Date())
+    setWeeklyReportShown(weekKey)
+  }
+
   return (
     <AppLayout activeTab="홈" decorativeIcons={[0, 2]}>
       <div style={{ paddingBottom: '16px' }}>
-        {/* Tomorrow's note */}
+        {/* Yesterday's note */}
         {tomorrowNote && (
           <div
             style={{
@@ -257,7 +461,7 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Greeting + Motto (same line) */}
+        {/* Greeting + Motto */}
         <div style={{ padding: '20px 16px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>
             {getGreeting()}
@@ -326,6 +530,39 @@ export default function HomePage() {
               더 말하기
             </button>
           </div>
+        ) : !hasAffirmations ? (
+          <div
+            style={{
+              background: 'var(--color-bg-card)',
+              borderRadius: '20px',
+              padding: '28px 20px',
+              margin: '0 16px 16px',
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: '32px', marginBottom: '10px' }}>🌱</div>
+            <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '6px' }}>
+              아직 성공의 말이 없어요
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '18px' }}>
+              첫 번째 성공의 말을 만들어보세요
+            </div>
+            <button
+              onClick={() => router.push('/create')}
+              style={{
+                padding: '12px 28px',
+                background: 'var(--color-accent-primary)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '14px',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              만들기
+            </button>
+          </div>
         ) : null}
 
         {/* Streak */}
@@ -354,6 +591,9 @@ export default function HomePage() {
             </div>
           </div>
         )}
+
+        {/* Recent recording player — above calendar */}
+        <RecentRecordingPlayer />
 
         {/* Calendar */}
         <CalendarView />
@@ -394,6 +634,8 @@ export default function HomePage() {
           </button>
         </div>
       </div>
+
+      {showWeeklyReport && <WeeklyReportModal onClose={handleCloseWeeklyReport} />}
     </AppLayout>
   )
 }

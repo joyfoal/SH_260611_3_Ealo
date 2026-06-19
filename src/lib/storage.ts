@@ -28,6 +28,12 @@ export interface TomorrowNote {
   selectedAffirmationIds: string[]
 }
 
+export interface AlarmSettings {
+  audioId: string
+  hour: number
+  minute: number
+}
+
 const KEYS = {
   AFFIRMATIONS: 'mornim-affirmations',
   CALENDAR: 'mornim-calendar',
@@ -39,6 +45,11 @@ const KEYS = {
   WEEKLY_REPORT_SHOWN: 'mornim-weekly-report-shown',
   TOMORROW_ENABLED: 'mornim-tomorrow-enabled',
   CATEGORIES: 'mornim-categories',
+  TODAY_EXTRA: 'mornim-today-extra',
+  ALARM: 'mornim-alarm',
+  ALARM_LAST_SHOWN: 'mornim-alarm-last-shown',
+  DAY_NOTES: 'mornim-day-notes',
+  WEEKLY_SHIELDS: 'mornim-weekly-shields',
 } as const
 
 const DEFAULT_CATEGORIES = [
@@ -197,6 +208,88 @@ export function generateTodayQueue(): string[] {
     .sort(() => Math.random() - 0.5)
   const combined = [...notRecentlyDone, ...recentlyDone]
   return combined.slice(0, 3).map((a) => a.id)
+}
+
+// Affirmations by date
+export function getAffirmationsByDate(dateStr: string): Affirmation[] {
+  return getAffirmations().filter((a) => a.completedDates.includes(dateStr))
+}
+
+// Extra daily affirmations (beyond base 3)
+export function getTodayExtraCount(): number {
+  const data = safeGet<{ date: string; count: number }>(KEYS.TODAY_EXTRA, { date: '', count: 0 })
+  const today = todayStr()
+  if (data.date !== today) return 0
+  return data.count
+}
+
+export function incrementTodayExtraCount(): void {
+  const today = todayStr()
+  const current = getTodayExtraCount()
+  safeSet(KEYS.TODAY_EXTRA, { date: today, count: current + 1 })
+}
+
+// Alarm settings
+export function getAlarmSettings(): AlarmSettings | null {
+  return safeGet<AlarmSettings | null>(KEYS.ALARM, null)
+}
+
+export function saveAlarmSettings(s: AlarmSettings): void {
+  safeSet(KEYS.ALARM, s)
+}
+
+export function clearAlarmSettings(): void {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem(KEYS.ALARM)
+}
+
+export function getAlarmLastShown(): string {
+  return safeGet<string>(KEYS.ALARM_LAST_SHOWN, '')
+}
+
+export function setAlarmLastShown(dateStr: string): void {
+  safeSet(KEYS.ALARM_LAST_SHOWN, dateStr)
+}
+
+// Day notes ("오늘의 나에게" messages)
+export function getDayNotes(): Record<string, string> {
+  return safeGet<Record<string, string>>(KEYS.DAY_NOTES, {})
+}
+
+export function getDayNote(dateStr: string): string | null {
+  const notes = getDayNotes()
+  return notes[dateStr] ?? null
+}
+
+export function saveDayNote(dateStr: string, message: string): void {
+  const notes = getDayNotes()
+  notes[dateStr] = message
+  safeSet(KEYS.DAY_NOTES, notes)
+}
+
+// Weekly shields tracking (Sun-Sat week completion)
+export function getWeeklyShields(): string[] {
+  return safeGet<string[]>(KEYS.WEEKLY_SHIELDS, [])
+}
+
+export function saveWeeklyShields(weeks: string[]): void {
+  safeSet(KEYS.WEEKLY_SHIELDS, weeks)
+}
+
+// Weekly report shown tracking
+export function getWeeklyReportShown(): string {
+  return safeGet<string>(KEYS.WEEKLY_REPORT_SHOWN, '')
+}
+
+export function setWeeklyReportShown(weekKey: string): void {
+  safeSet(KEYS.WEEKLY_REPORT_SHOWN, weekKey)
+}
+
+// Week key (Sunday of the given date's week)
+export function getWeekKey(date: Date): string {
+  const d = new Date(date)
+  d.setDate(d.getDate() - d.getDay())
+  return d.toISOString().split('T')[0]
 }
 
 // Clear all data

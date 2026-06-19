@@ -324,19 +324,25 @@ export default function CreatePage() {
               </div>
             )}
 
+            {(!directText.trim() || !directCategory) && (
+              <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '8px', textAlign: 'center' }}>
+                {!directText.trim() ? '성공의 말을 입력해주세요' : '카테고리를 선택해주세요'}
+              </p>
+            )}
             <button
               onClick={() => handleDirectSave()}
               disabled={!directText.trim() || !directCategory || directSaving}
               style={{
                 width: '100%',
                 padding: '14px',
-                background: directText.trim() && directCategory ? 'var(--color-accent-primary)' : 'var(--color-bg-card)',
+                background: directText.trim() && directCategory ? 'var(--color-accent-primary)' : 'var(--color-border)',
                 color: directText.trim() && directCategory ? 'white' : 'var(--color-text-muted)',
                 border: 'none',
                 borderRadius: '14px',
                 fontSize: '15px',
                 fontWeight: 600,
                 cursor: directText.trim() && directCategory ? 'pointer' : 'not-allowed',
+                opacity: directText.trim() && directCategory ? 1 : 0.6,
               }}
             >
               {directSaving ? '확인 중...' : '저장하기'}

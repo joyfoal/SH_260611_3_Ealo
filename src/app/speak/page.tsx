@@ -12,9 +12,14 @@ import {
   saveDayRecord,
   isTomorrowEnabled,
   todayStr,
+  getTodayExtraCount,
+  incrementTodayExtraCount,
   type Affirmation,
 } from '@/lib/storage'
 import { updateStreak } from '@/lib/streak'
+import { saveAudioRecord } from '@/lib/audioStorage'
+
+const MAX_EXTRA = 4
 
 function useSwipeUp(onSwipeUp: () => void) {
   const startY = useRef(0)
@@ -31,11 +36,20 @@ function useSwipeUp(onSwipeUp: () => void) {
   return { handleTouchStart, handleTouchEnd }
 }
 
+function getSupportedMimeType(): string {
+  const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg']
+  for (const type of types) {
+    if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(type)) return type
+  }
+  return ''
+}
+
 function SpeakPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [screen, setScreen] = useState<'text' | 'speak' | 'celebration'>('text')
   const [affirmation, setAffirmation] = useState<Affirmation | null>(null)
+  const [dataLoaded, setDataLoaded] = useState(false)
   const [queue, setQueue] = useState<string[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [recognizedWords, setRecognizedWords] = useState<Set<string>>(new Set())
@@ -46,6 +60,11 @@ function SpeakPageInner() {
   const shouldListenRef = useRef(false)
   const speakTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const completedCountRef = useRef(0)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
+  const pendingAffirmationRef = useRef<Affirmation | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const isExtraMode = useRef(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -62,18 +81,74 @@ function SpeakPageInner() {
       const found = all.find((a) => a.id === affirmId)
       setAffirmation(found ?? null)
     }
+    setDataLoaded(true)
   }, [searchParams])
 
+  // 확언 없으면 3초 후 홈으로
+  useEffect(() => {
+    if (!dataLoaded || affirmation !== null) return
+    const timer = setTimeout(() => router.replace('/home'), 3000)
+    return () => clearTimeout(timer)
+  }, [dataLoaded, affirmation, router])
+
+  const stopMediaRecorder = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+    }
+  }, [])
+
   const startCamera = useCallback(async () => {
-    if (!videoRef.current) return
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user' },
-        audio: false,
+        audio: true,
       })
-      videoRef.current.srcObject = stream
+      streamRef.current = stream
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+      }
+
+      // Start MediaRecorder for audio
+      const mimeType = getSupportedMimeType()
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+      audioChunksRef.current = []
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data)
+      }
+      recorder.onstop = async () => {
+        const blob = new Blob(audioChunksRef.current, { type: mimeType || 'audio/webm' })
+        const aff = pendingAffirmationRef.current
+        if (aff && blob.size > 0) {
+          try {
+            await saveAudioRecord({
+              id: `audio-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+              affirmationId: aff.id,
+              affirmationText: aff.text,
+              blob,
+              createdAt: Date.now(),
+              keepForever: false,
+            })
+          } catch {
+            // ignore storage errors
+          }
+        }
+      }
+      recorder.start()
+      mediaRecorderRef.current = recorder
     } catch {
-      // camera denied — continue without
+      // Try without audio
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user' },
+          audio: false,
+        })
+        streamRef.current = stream
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+        }
+      } catch {
+        // camera denied — continue without
+      }
     }
   }, [])
 
@@ -102,16 +177,17 @@ function SpeakPageInner() {
         .join(' ')
         .toLowerCase()
 
-      // Visual speaking indicator
       setIsSpeaking(true)
       if (speakTimerRef.current) clearTimeout(speakTimerRef.current)
       speakTimerRef.current = setTimeout(() => setIsSpeaking(false), 800)
 
       if (affirmation) {
         const words = affirmation.text.split(' ')
+        const transcriptWords = transcript.split(/\s+/)
         const newRecognized = new Set<string>()
         words.forEach((word) => {
-          if (transcript.includes(word.toLowerCase())) {
+          const lw = word.toLowerCase()
+          if (transcriptWords.some((tw) => tw === lw || tw.startsWith(lw))) {
             newRecognized.add(word)
           }
         })
@@ -125,7 +201,6 @@ function SpeakPageInner() {
         setIsListening(false)
         return
       }
-      // restart on recoverable errors
       try { recognition.start() } catch { /* already started */ }
     }
 
@@ -150,9 +225,9 @@ function SpeakPageInner() {
       if (recognitionRef.current) {
         recognitionRef.current.stop()
       }
-      if (videoRef.current?.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream
-        stream.getTracks().forEach((t) => t.stop())
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop())
+        streamRef.current = null
       }
     }
   }, [screen, startCamera, startSTT])
@@ -160,10 +235,16 @@ function SpeakPageInner() {
   const handleComplete = useCallback(() => {
     if (!affirmation) return
 
+    // Set pending affirmation for audio recording
+    pendingAffirmationRef.current = affirmation
+
     // Stop recognition
     if (recognitionRef.current) {
       recognitionRef.current.stop()
     }
+
+    // Stop MediaRecorder (triggers onstop which saves audio)
+    stopMediaRecorder()
 
     // Mark completion
     const today = todayStr()
@@ -174,7 +255,6 @@ function SpeakPageInner() {
       }
       updateAffirmation(updated)
 
-      // Update day record
       const existing = getDayRecord(today)
       const newCount = (existing?.completedCount ?? 0) + 1
       saveDayRecord({
@@ -185,14 +265,13 @@ function SpeakPageInner() {
 
       completedCountRef.current = newCount
 
-      // Update streak if 3 completed
       if (newCount >= 3) {
         updateStreak(true)
       }
     }
 
     setScreen('celebration')
-  }, [affirmation])
+  }, [affirmation, stopMediaRecorder])
 
   const handleCelebrationNext = useCallback(() => {
     const nextIndex = currentIndex + 1
@@ -213,13 +292,31 @@ function SpeakPageInner() {
       }
     }
 
-    // All done
+    // All base done
     if (isTomorrowEnabled()) {
       router.push('/tomorrow')
     } else {
       router.push('/home')
     }
   }, [currentIndex, queue, router])
+
+  const handleMoreAffirmation = useCallback(() => {
+    incrementTodayExtraCount()
+    const all = getAffirmations()
+    if (all.length === 0) {
+      router.push('/tomorrow')
+      return
+    }
+    const pick = all[Math.floor(Math.random() * all.length)]
+    isExtraMode.current = true
+    setAffirmation(pick)
+    setRecognizedWords(new Set())
+    setScreen('text')
+  }, [router])
+
+  const isAllDone = completedCountRef.current >= queue.length && queue.length > 0
+  const extraCount = isAllDone ? getTodayExtraCount() : 0
+  const allowMore = isAllDone && extraCount < MAX_EXTRA
 
   const { handleTouchStart, handleTouchEnd } = useSwipeUp(() => {
     if (screen === 'text') setScreen('speak')
@@ -228,10 +325,17 @@ function SpeakPageInner() {
   if (!affirmation) {
     return (
       <div
-        className="flex items-center justify-center"
+        className="flex flex-col items-center justify-center gap-3"
         style={{ minHeight: '100dvh', background: 'var(--color-bg-dark)' }}
       >
-        <div style={{ color: 'var(--color-text-muted)' }}>로딩 중...</div>
+        <div style={{ color: 'var(--color-text-muted)', fontSize: '15px' }}>
+          {dataLoaded ? '확언을 찾을 수 없어요' : '로딩 중...'}
+        </div>
+        {dataLoaded && (
+          <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', opacity: 0.6 }}>
+            잠시 후 홈으로 이동합니다
+          </div>
+        )}
       </div>
     )
   }
@@ -242,6 +346,8 @@ function SpeakPageInner() {
         completedCount={completedCountRef.current}
         totalCount={queue.length}
         onNext={handleCelebrationNext}
+        allowMore={allowMore}
+        onMore={handleMoreAffirmation}
       />
     )
   }
@@ -269,7 +375,7 @@ function SpeakPageInner() {
               color: 'var(--color-text-muted)',
             }}
           >
-            {currentIndex + 1} / {queue.length}
+            {isExtraMode.current ? `보너스 +${extraCount + 1}` : `${currentIndex + 1} / ${queue.length}`}
           </div>
           <DynamicText text={affirmation.text} darkBackground />
         </div>
@@ -312,7 +418,6 @@ function SpeakPageInner() {
         }}
       />
 
-      {/* Dark gradient for text readability */}
       <div
         style={{
           position: 'absolute',
@@ -322,7 +427,6 @@ function SpeakPageInner() {
         }}
       />
 
-      {/* Speaking glow ring */}
       {isSpeaking && (
         <div
           style={{
@@ -353,7 +457,7 @@ function SpeakPageInner() {
             color: 'var(--color-text-muted)',
           }}
         >
-          {currentIndex + 1} / {queue.length}
+          {isExtraMode.current ? `보너스 +${extraCount + 1}` : `${currentIndex + 1} / ${queue.length}`}
         </div>
       </div>
 
@@ -399,7 +503,6 @@ function SpeakPageInner() {
           ))}
         </div>
 
-        {/* Listening indicator */}
         <div className="flex items-center gap-2" style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>
           {isListening && (
             <div className="flex items-end gap-0.5" style={{ height: '20px' }}>

@@ -1,7 +1,23 @@
-import { getStreakData, saveStreakData, todayStr } from './storage'
+import { getStreakData, saveStreakData, todayStr, getCalendar, getWeeklyShields, saveWeeklyShields, getWeekKey } from './storage'
 
 function daysBetween(a: string, b: string): number {
   return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000)
+}
+
+function isCurrentWeekComplete(): boolean {
+  const now = new Date()
+  const dayOfWeek = now.getDay() // 0=Sun, 6=Sat
+  const calendar = getCalendar()
+
+  // Check all days from Sunday to today
+  for (let i = 0; i <= dayOfWeek; i++) {
+    const d = new Date(now)
+    d.setDate(d.getDate() - (dayOfWeek - i))
+    const dateStr = d.toISOString().split('T')[0]
+    const rec = calendar.find((r) => r.date === dateStr)
+    if (!rec || rec.completedCount < 3) return false
+  }
+  return true
 }
 
 export function updateStreak(completedToday: boolean): void {
@@ -32,9 +48,24 @@ export function updateStreak(completedToday: boolean): void {
 
   data.lastCompletedDate = today
 
+  // Shield for 7 consecutive days
   if (data.currentStreak % 7 === 0) {
     data.shields++
   }
 
   saveStreakData(data)
+
+  // Shield for completing all days of a Sun-Sat week
+  const weekKey = getWeekKey(new Date())
+  const weeklyShields = getWeeklyShields()
+  if (!weeklyShields.includes(weekKey) && isCurrentWeekComplete()) {
+    // Only award if not already awarded via 7-consecutive streak this same milestone
+    const streak7 = data.currentStreak % 7 === 0
+    if (!streak7) {
+      data.shields++
+      saveStreakData(data)
+    }
+    weeklyShields.push(weekKey)
+    saveWeeklyShields(weeklyShields)
+  }
 }

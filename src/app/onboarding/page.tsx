@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { CATEGORIES } from '@/lib/categories'
-import { saveAffirmation, setOnboarded, saveTodayAffirmationIds } from '@/lib/storage'
+import { saveAffirmation, setOnboarded, saveTodayAffirmationIds, saveAlarmSettings } from '@/lib/storage'
 
 /* ── Design tokens (warm gold) ───────────────────────────────── */
 const T = {
@@ -177,6 +177,14 @@ function SelfieCam({ active }: { active: boolean }) {
   )
 }
 
+const ENCOURAGEMENTS = [
+  '당신은 정말 해낼 수 있어요!',
+  '시작이 반이에요! 오늘도 멋지게!',
+  '매일 조금씩, 분명히 달라지고 있어요!',
+  '이 한 문장이 당신의 하루를 바꿀 거예요!',
+  '용기 있어요! 계속 나아가요!',
+]
+
 /* ── Main component ──────────────────────────────────────────── */
 type RecState = 'idle' | 'recording' | 'done'
 type Dir = 'next' | 'back' | 'fade'
@@ -197,8 +205,13 @@ export default function OnboardingPage() {
   const [rec, setRec] = useState<RecState>('idle')
   const [transcript, setTranscript] = useState('')
   const [notifTime, setNotifTime] = useState(480)
+  const [notifAllowed, setNotifAllowed] = useState(false)
   const [isFinishing, setIsFinishing] = useState(false)
   const recRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Recommended affirmations for screen 2
+  const [recAffirmations, setRecAffirmations] = useState<string[]>([])
+  const [encouragement] = useState(() => ENCOURAGEMENTS[Math.floor(Math.random() * ENCOURAGEMENTS.length)])
 
   const goTo = useCallback((n: number, d: Dir = 'next') => {
     if (transRef.current) clearTimeout(transRef.current)
@@ -214,6 +227,24 @@ export default function OnboardingPage() {
     if (transRef.current) clearTimeout(transRef.current)
   }, [])
 
+  // Fetch recommended affirmations when entering screen 2
+  useEffect(() => {
+    if (cur !== 2 || cats.length === 0) return
+    const cat = cats[0]
+    fetch('/api/recommend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category: cat }),
+    })
+      .then((r) => r.json())
+      .then((data: { affirmations: string[] }) => {
+        setRecAffirmations(data.affirmations.slice(0, 3))
+      })
+      .catch(() => {
+        setRecAffirmations(['나는 오늘도 잘 해낼 수 있다.', '나는 성장하고 있다.', '나는 충분히 가치 있다.'])
+      })
+  }, [cur, cats])
+
   const toggleCat = (cat: string) =>
     setCats((p) => {
       const next = p.includes(cat) ? p.filter((c) => c !== cat) : [...p, cat]
@@ -225,6 +256,11 @@ export default function OnboardingPage() {
     if (recRef.current) clearTimeout(recRef.current)
     setTranscript(getPhrase(catsRef.current))
     setRec('done')
+    import('canvas-confetti').then(({ default: confetti }) => {
+      confetti({ particleCount: 80, spread: 60, origin: { y: 0.5 }, colors: ['#bd821f', '#e8c878', '#f3e6c8', '#ffffff'] })
+      setTimeout(() => confetti({ particleCount: 50, angle: 60, spread: 50, origin: { x: 0, y: 0.6 }, colors: ['#bd821f', '#FFD700'] }), 300)
+      setTimeout(() => confetti({ particleCount: 50, angle: 120, spread: 50, origin: { x: 1, y: 0.6 }, colors: ['#bd821f', '#FFD700'] }), 500)
+    }).catch(() => {})
   }, [])
 
   const micTap = () => {
@@ -239,6 +275,11 @@ export default function OnboardingPage() {
     setIsFinishing(true)
     const affText = transcript || getPhrase(cats)
     const category = cats[0] ?? '나 자신'
+
+    if (notifAllowed) {
+      saveAlarmSettings({ audioId: '', hour: Math.floor(notifTime / 60), minute: notifTime % 60 })
+    }
+
     try {
       const res = await fetch('/api/recommend', {
         method: 'POST',
@@ -413,14 +454,36 @@ export default function OnboardingPage() {
                 )}
                 {/* Transcript quote card (done state) */}
                 {rec === 'done' && (
-                  <div style={{
-                    width: '100%', background: 'rgba(28,20,8,.72)',
-                    backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(232,200,120,.3)', borderRadius: 18, padding: '16px 18px',
-                  }}>
-                    <div style={{ fontSize: 19, fontWeight: 800, lineHeight: 1.42, color: '#fff' }}>
-                      &ldquo;{transcript}&rdquo;
+                  <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{
+                      width: '100%', background: 'rgba(28,20,8,.72)',
+                      backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+                      border: '1px solid rgba(232,200,120,.3)', borderRadius: 18, padding: '16px 18px',
+                    }}>
+                      <div style={{ fontSize: 19, fontWeight: 800, lineHeight: 1.42, color: '#fff' }}>
+                        &ldquo;{transcript}&rdquo;
+                      </div>
                     </div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: '#e8c878', textAlign: 'center', padding: '4px 0' }}>
+                      {encouragement}
+                    </div>
+                    {recAffirmations.length > 0 && (
+                      <div style={{ width: '100%' }}>
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 6, textAlign: 'center' }}>
+                          이런 성공의 말도 소리 내어 말해보세요
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {recAffirmations.map((aff, i) => (
+                            <div key={i} style={{
+                              background: 'rgba(189,130,31,0.2)', border: '1px solid rgba(232,200,120,0.3)',
+                              borderRadius: 12, padding: '10px 14px', fontSize: 13, color: '#f3e6c8', lineHeight: 1.4,
+                            }}>
+                              {aff}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
                 {/* Mic button with pulse rings */}
@@ -523,7 +586,18 @@ export default function OnboardingPage() {
             </div>
           </div>
           <div style={{ padding: '12px 26px 48px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <button style={btnPrimary} onClick={() => goTo(4)}>알림 허용하기</button>
+            <button
+              style={btnPrimary}
+              onClick={async () => {
+                if ('Notification' in window && Notification.permission !== 'granted') {
+                  await Notification.requestPermission()
+                }
+                setNotifAllowed(true)
+                goTo(4)
+              }}
+            >
+              알림 허용하기
+            </button>
             <button style={btnText} onClick={() => goTo(4)}>나중에 할게요</button>
           </div>
         </div>

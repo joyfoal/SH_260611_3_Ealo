@@ -17,6 +17,40 @@ export default function GamesPage() {
         </p>
 
         <div className="flex flex-col gap-4">
+          {/* Success Image */}
+          <div
+            style={{
+              background: 'linear-gradient(135deg, var(--color-accent-light), var(--color-bg-card))',
+              borderRadius: '20px',
+              padding: '20px',
+              border: '1px solid var(--color-accent-secondary)',
+            }}
+          >
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>🌟</div>
+            <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '6px' }}>
+              성공 이미지 만들기
+            </h2>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '16px', lineHeight: 1.5 }}>
+              사진과 성공의 말로 AI가 당신의 성공한 미래를 상상해 드려요!
+            </p>
+            <button
+              onClick={() => router.push('/games/success-image')}
+              style={{
+                width: '100%',
+                padding: '12px',
+                background: 'var(--color-accent-primary)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '15px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              이미지 만들기
+            </button>
+          </div>
+
           {/* Brick Breaker */}
           <div
             style={{

@@ -2,7 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getAffirmations, saveTomorrowNote, type Affirmation } from '@/lib/storage'
+import { getAffirmations, saveTomorrowNote, saveDayNote, todayStr, type Affirmation } from '@/lib/storage'
+import { ChevronLeft } from 'lucide-react'
+
+function getTimePlaceholder(): string {
+  const hour = new Date().getHours()
+  return hour < 18 ? '오후 6시까지는 오늘도 잘 해낼 수 있어!' : '오늘도 수고했어!'
+}
 
 export default function TomorrowPage() {
   const router = useRouter()
@@ -10,6 +16,7 @@ export default function TomorrowPage() {
   const [affirmations, setAffirmations] = useState<Affirmation[]>([])
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
+  const [placeholder] = useState(getTimePlaceholder)
 
   useEffect(() => {
     setAffirmations(getAffirmations())
@@ -31,7 +38,6 @@ export default function TomorrowPage() {
 
     let finalIds = selectedIds
     if (finalIds.length === 0) {
-      // Auto-select 3 random
       const shuffled = [...affirmations].sort(() => Math.random() - 0.5)
       finalIds = shuffled.slice(0, 3).map((a) => a.id)
     }
@@ -41,6 +47,12 @@ export default function TomorrowPage() {
       message: message.trim(),
       selectedAffirmationIds: finalIds,
     })
+
+    // Save today's note to day notes for calendar
+    if (message.trim()) {
+      saveDayNote(todayStr(), message.trim())
+    }
+
     router.push('/home')
   }
 
@@ -53,28 +65,29 @@ export default function TomorrowPage() {
       style={{
         minHeight: '100dvh',
         background: 'var(--color-bg-dark)',
-        padding: '32px 16px',
+        padding: '0 16px 32px',
       }}
     >
       {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 600, color: 'var(--color-text-onDark)', marginBottom: '8px' }}>
-          내일의 나에게 ✉️
-        </h1>
-        <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-          오늘의 성공의 말을 모두 마쳤어요.<br />내일의 나에게 한 마디 남겨보세요.
-        </p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '20px 0 16px' }}>
+        <button
+          onClick={handleSkip}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '4px', display: 'flex', alignItems: 'center' }}
+        >
+          <ChevronLeft size={22} />
+        </button>
+        <h1 style={{ fontSize: '17px', fontWeight: 600, color: 'var(--color-text-onDark)' }}>내일의 나에게</h1>
       </div>
 
-      {/* Message input */}
+      {/* Today's note section */}
       <div style={{ marginBottom: '28px' }}>
-        <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '10px' }}>
-          내일의 나에게 한 줄 메시지 (선택사항)
+        <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '10px', fontWeight: 500 }}>
+          오늘의 나에게 한 마디
         </p>
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="내일도 잘 해낼 수 있어!"
+          placeholder={placeholder}
           rows={3}
           style={{
             width: '100%',
@@ -91,8 +104,11 @@ export default function TomorrowPage() {
         />
       </div>
 
-      {/* Affirmation picker */}
+      {/* Tomorrow's affirmation picker */}
       <div style={{ marginBottom: '28px' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-text-onDark)', marginBottom: '6px' }}>
+          내일의 나에게
+        </h2>
         <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '6px' }}>
           내일 말하고 싶은 성공의 말 최대 7개 (선택 안 하면 AI가 3개 골라줘요)
         </p>
@@ -146,7 +162,7 @@ export default function TomorrowPage() {
             cursor: 'pointer',
           }}
         >
-          {saving ? '저장 중...' : '내일을 위해 남기기'}
+          {saving ? '저장 중...' : '남기기'}
         </button>
         <button
           onClick={handleSkip}

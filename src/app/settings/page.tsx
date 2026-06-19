@@ -1,91 +1,25 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { AppLayout } from '@/components/ui/AppLayout'
 import { useTheme } from '@/lib/themeContext'
 import { getCategoryColor } from '@/lib/categories'
 import {
   isTomorrowEnabled,
   setTomorrowEnabled,
-  getCalendar,
   getAffirmations,
   updateAffirmation,
   clearAllData,
-  todayStr,
   getCategories,
   saveCategories,
+  getAlarmSettings,
+  saveAlarmSettings,
+  clearAlarmSettings,
+  type AlarmSettings,
 } from '@/lib/storage'
-import { Pencil, Trash2, Check, X, Plus } from 'lucide-react'
-
-// ─── Weekly Report ───────────────────────────────────────────────
-function WeeklyReportModal({ onClose }: { onClose: () => void }) {
-  const today = new Date()
-  const weekDays: string[] = []
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(today)
-    d.setDate(d.getDate() - i)
-    weekDays.push(d.toISOString().split('T')[0])
-  }
-  const calendar = getCalendar()
-  const affirmations = getAffirmations()
-  const weekRecords = weekDays.map((date) => {
-    const rec = calendar.find((r) => r.date === date)
-    return { date, count: rec?.completedCount ?? 0 }
-  })
-  const totalCompleted = weekRecords.reduce((s, r) => s + r.count, 0)
-  const daysCompleted = weekRecords.filter((r) => r.count > 0).length
-  const weekDateSet = new Set(weekDays)
-  const topAffirmation = [...affirmations]
-    .map((a) => ({ text: a.text, count: a.completedDates.filter((d) => weekDateSet.has(d)).length }))
-    .sort((a, b) => b.count - a.count)[0]
-
-  return (
-    <div
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end', zIndex: 1000 }}
-      onClick={onClose}
-    >
-      <div
-        style={{ width: '100%', maxWidth: '430px', margin: '0 auto', background: 'var(--color-bg-primary)', borderRadius: '24px 24px 0 0', padding: '24px 20px 40px' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div style={{ width: '36px', height: '4px', background: 'var(--color-border)', borderRadius: '2px', margin: '0 auto 20px' }} />
-        <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '20px' }}>이번 주 리포트</h2>
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          {[{ label: '완료한 날', value: daysCompleted }, { label: '총 완료 횟수', value: totalCompleted }].map(({ label, value }) => (
-            <div key={label} style={{ padding: '16px', background: 'var(--color-bg-card)', borderRadius: '14px', textAlign: 'center' }}>
-              <div style={{ fontSize: '28px', fontWeight: 700, color: 'var(--color-accent-primary)' }}>{value}</div>
-              <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{label}</div>
-            </div>
-          ))}
-        </div>
-        <div className="flex gap-2 mb-6">
-          {weekRecords.map((rec) => {
-            const dayLabel = ['일', '월', '화', '수', '목', '금', '토'][new Date(rec.date).getDay()]
-            const isToday = rec.date === todayStr()
-            return (
-              <div key={rec.date} className="flex flex-col items-center gap-1" style={{ flex: 1 }}>
-                <div style={{ width: '100%', aspectRatio: '1', borderRadius: '8px', background: rec.count > 0 ? `rgba(186,117,23,${Math.min(0.3 + rec.count * 0.15, 1)})` : 'var(--color-bg-card)', border: isToday ? '2px solid var(--color-accent-primary)' : '1px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: rec.count > 0 ? 'var(--color-accent-primary)' : 'var(--color-text-muted)', fontWeight: rec.count > 0 ? 600 : 400 }}>
-                  {rec.count || ''}
-                </div>
-                <span style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>{dayLabel}</span>
-              </div>
-            )
-          })}
-        </div>
-        {topAffirmation && topAffirmation.count > 0 && (
-          <div style={{ padding: '14px 16px', background: 'var(--color-bg-card)', borderRadius: '14px' }}>
-            <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginBottom: '4px' }}>이번 주 가장 많이 말한 성공의 말</p>
-            <p style={{ fontSize: '14px', color: 'var(--color-text-primary)', lineHeight: 1.5 }}>{topAffirmation.text}</p>
-            <p style={{ fontSize: '12px', color: 'var(--color-accent-primary)', marginTop: '4px' }}>{topAffirmation.count}회 완료</p>
-          </div>
-        )}
-        <button onClick={onClose} style={{ width: '100%', marginTop: '20px', padding: '14px', background: 'var(--color-accent-primary)', color: 'white', border: 'none', borderRadius: '14px', fontSize: '15px', fontWeight: 600, cursor: 'pointer' }}>
-          닫기
-        </button>
-      </div>
-    </div>
-  )
-}
+import { getAudioRecords, setAudioKeepForever, type AudioRecord } from '@/lib/audioStorage'
+import { Pencil, Trash2, Check, X, Plus, Bell, Download } from 'lucide-react'
+import { WeeklyReportModal } from '@/components/ui/WeeklyReportModal'
 
 // ─── Category Delete Modal ────────────────────────────────────────
 function CategoryDeleteModal({
@@ -339,6 +273,184 @@ function CategoryManager() {
   )
 }
 
+// ─── Alarm Manager ────────────────────────────────────────────────
+function AlarmManager() {
+  const [open, setOpen] = useState(false)
+  const [recordings, setRecordings] = useState<AudioRecord[]>([])
+  const [alarm, setAlarm] = useState<AlarmSettings | null>(null)
+  const [selectedAudioId, setSelectedAudioId] = useState<string>('')
+  const [hour, setHour] = useState(7)
+  const [minute, setMinute] = useState(0)
+  const [saving, setSaving] = useState(false)
+  const urlRef = useRef<Record<string, string>>({})
+
+  useEffect(() => {
+    if (!open) return
+    const current = getAlarmSettings()
+    setAlarm(current)
+    if (current) {
+      setSelectedAudioId(current.audioId)
+      setHour(current.hour)
+      setMinute(current.minute)
+    }
+    getAudioRecords().then(setRecordings).catch(() => {})
+  }, [open])
+
+  const handleSave = async () => {
+    if (!selectedAudioId) return
+    setSaving(true)
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      await Notification.requestPermission()
+    }
+    saveAlarmSettings({ audioId: selectedAudioId, hour, minute })
+    setAlarm({ audioId: selectedAudioId, hour, minute })
+    setSaving(false)
+    setOpen(false)
+  }
+
+  const handleClear = () => {
+    clearAlarmSettings()
+    setAlarm(null)
+    setOpen(false)
+  }
+
+  const handleDownload = (rec: AudioRecord) => {
+    const url = urlRef.current[rec.id] ?? URL.createObjectURL(rec.blob)
+    urlRef.current[rec.id] = url
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `mornim-${rec.affirmationId.slice(0, 8)}.webm`
+    a.click()
+  }
+
+  const handleKeepForever = async (rec: AudioRecord) => {
+    await setAudioKeepForever(rec.id, !rec.keepForever)
+    setRecordings((prev) => prev.map((r) => r.id === rec.id ? { ...r, keepForever: !r.keepForever } : r))
+  }
+
+  const fmtHour = (h: number) => {
+    const ampm = h < 12 ? '오전' : '오후'
+    const hh = ((h + 11) % 12) + 1
+    return `${ampm} ${hh}시`
+  }
+
+  return (
+    <div style={{ background: 'var(--color-bg-card)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: '2px' }}>알람 설정</p>
+          <p style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+            {alarm ? `${fmtHour(alarm.hour)} ${String(alarm.minute).padStart(2, '0')}분 · 녹음 재생` : '앱 열 때 녹음을 들려드려요'}
+          </p>
+        </div>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          style={{ padding: '8px 16px', background: 'var(--color-accent-primary)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
+          <Bell size={14} />{open ? '닫기' : '설정'}
+        </button>
+      </div>
+
+      {open && (
+        <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {/* Time picker */}
+          <div>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '8px' }}>알람 시간</p>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <select
+                value={hour}
+                onChange={(e) => setHour(Number(e.target.value))}
+                style={{ flex: 1, padding: '10px', background: 'var(--color-bg-primary)', border: '1px solid var(--color-border)', borderRadius: '10px', fontSize: '14px', color: 'var(--color-text-primary)', outline: 'none' }}
+              >
+                {Array.from({ length: 24 }, (_, i) => (
+                  <option key={i} value={i}>{fmtHour(i)}</option>
+                ))}
+              </select>
+              <select
+                value={minute}
+                onChange={(e) => setMinute(Number(e.target.value))}
+                style={{ width: '80px', padding: '10px', background: 'var(--color-bg-primary)', border: '1px solid var(--color-border)', borderRadius: '10px', fontSize: '14px', color: 'var(--color-text-primary)', outline: 'none' }}
+              >
+                {[0, 15, 30, 45].map((m) => (
+                  <option key={m} value={m}>{String(m).padStart(2, '0')}분</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Recording picker */}
+          <div>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '8px' }}>재생할 녹음 선택</p>
+            {recordings.length === 0 ? (
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                녹음된 내용이 없어요. 말하기 화면에서 성공의 말을 말해보세요.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto' }}>
+                {recordings.map((rec) => (
+                  <div
+                    key={rec.id}
+                    style={{
+                      padding: '10px 12px',
+                      background: selectedAudioId === rec.id ? 'var(--color-accent-light)' : 'var(--color-bg-surface)',
+                      border: selectedAudioId === rec.id ? '1.5px solid var(--color-accent-primary)' : '1px solid transparent',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => setSelectedAudioId(rec.id)}
+                  >
+                    <div style={{ fontSize: '13px', color: 'var(--color-text-primary)', marginBottom: '4px' }}>
+                      {selectedAudioId === rec.id && '✓ '}{rec.affirmationText}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>
+                        {new Date(rec.createdAt).toLocaleDateString('ko-KR')}
+                        {rec.keepForever ? ' · 영구 보관' : ' · 7일 후 삭제'}
+                      </span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleKeepForever(rec) }}
+                        style={{ fontSize: '10px', padding: '2px 6px', background: rec.keepForever ? 'var(--color-accent-primary)' : 'transparent', border: '1px solid var(--color-border)', borderRadius: '6px', cursor: 'pointer', color: rec.keepForever ? 'white' : 'var(--color-text-muted)' }}
+                      >
+                        {rec.keepForever ? '영구 보관 중' : '계속 보관'}
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDownload(rec) }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '2px' }}
+                        title="다운로드"
+                      >
+                        <Download size={12} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Save / Clear */}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={handleSave}
+              disabled={!selectedAudioId || saving}
+              style={{ flex: 1, padding: '12px', background: selectedAudioId ? 'var(--color-accent-primary)' : 'var(--color-border)', color: 'white', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 600, cursor: selectedAudioId ? 'pointer' : 'not-allowed' }}
+            >
+              {saving ? '저장 중...' : '알람 저장'}
+            </button>
+            {alarm && (
+              <button
+                onClick={handleClear}
+                style={{ padding: '12px 16px', background: 'transparent', border: '1px solid #E53935', borderRadius: '12px', color: '#E53935', fontSize: '14px', cursor: 'pointer' }}
+              >
+                삭제
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main Settings Page ───────────────────────────────────────────
 export default function SettingsPage() {
   const { themeName, setTheme } = useTheme()
@@ -390,6 +502,9 @@ export default function SettingsPage() {
             </button>
           </div>
         </div>
+
+        {/* Alarm settings */}
+        <AlarmManager />
 
         {/* Weekly Report */}
         <div style={{ background: 'var(--color-bg-card)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
