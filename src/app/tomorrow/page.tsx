@@ -76,7 +76,7 @@ export default function TomorrowPage() {
         >
           <ChevronLeft size={22} />
         </button>
-        <h1 style={{ fontSize: '17px', fontWeight: 600, color: 'var(--color-text-onDark)' }}>내일의 나에게</h1>
+        <h1 style={{ fontSize: '17px', fontWeight: 600, color: 'var(--color-text-onDark)' }}>나에게</h1>
       </div>
 
       {/* Today's note section */}
