@@ -10,6 +10,7 @@ import {
   type FaceProfile,
   type FaceData,
 } from '@/lib/faceStorage'
+import { saveSuccessImage } from '@/lib/successImageStorage'
 
 function resizeImage(file: File | Blob, maxPx = 900, format: 'jpeg' | 'png' = 'jpeg'): Promise<string> {
   return new Promise((resolve) => {
@@ -265,6 +266,7 @@ export default function SuccessImagePage() {
         setSuccessError(data.error)
       } else if (data.url) {
         setSuccessUrl(data.url)
+        saveSuccessImage(dataURLtoBlob(data.url)).catch(() => {})
       }
     } catch {
       setSuccessError('성공 이미지 생성 중 오류가 발생했어요.')

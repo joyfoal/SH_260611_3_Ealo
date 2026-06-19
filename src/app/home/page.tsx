@@ -26,6 +26,7 @@ import {
 } from '@/lib/storage'
 import { CATEGORY_COLORS } from '@/lib/categories'
 import { getRecentAudioRecord, deleteExpiredAudioRecords, type AudioRecord } from '@/lib/audioStorage'
+import { getSuccessImage } from '@/lib/successImageStorage'
 import { WeeklyReportModal } from '@/components/ui/WeeklyReportModal'
 
 function getGreeting(): string {
@@ -313,6 +314,48 @@ function CalendarView() {
           </button>
         </div>
       )}
+    </div>
+  )
+}
+
+// ─── Saved Success Image ──────────────────────────────────────────
+function SavedSuccessImage({ onTap }: { onTap: () => void }) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    getSuccessImage().then((record) => {
+      if (!record?.imageBlob) return
+      const url = URL.createObjectURL(record.imageBlob)
+      setImageUrl(url)
+      return () => URL.revokeObjectURL(url)
+    }).catch(() => {})
+  }, [])
+
+  if (!imageUrl) return null
+
+  return (
+    <div style={{ padding: '0 16px 16px' }}>
+      <button
+        onClick={onTap}
+        style={{
+          width: '100%',
+          background: 'none',
+          border: 'none',
+          padding: 0,
+          cursor: 'pointer',
+          display: 'block',
+        }}
+      >
+        <img
+          src={imageUrl}
+          alt="저장된 성공 이미지"
+          style={{
+            width: '100%',
+            borderRadius: '16px',
+            display: 'block',
+          }}
+        />
+      </button>
     </div>
   )
 }
@@ -649,6 +692,9 @@ export default function HomePage() {
             게임하기
           </button>
         </div>
+
+        {/* 저장된 성공 이미지 */}
+        <SavedSuccessImage onTap={() => router.push('/games/success-image')} />
       </div>
 
       {showWeeklyReport && <WeeklyReportModal onClose={handleCloseWeeklyReport} />}
