@@ -67,6 +67,7 @@ function SpeakPageInner() {
   const isExtraMode = useRef(false)
   const autoCompleteTriggeredRef = useRef(false)
   const autoCompleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cumulativeRecognizedRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -187,15 +188,14 @@ function SpeakPageInner() {
         const clean = (w: string) => w.replace(/[.,!?。、。·]/g, '').toLowerCase()
         const words = affirmation.text.split(' ')
         const transcriptWords = transcript.split(/\s+/).map(clean)
-        const newRecognized = new Set<string>()
         words.forEach((word) => {
           const lw = clean(word)
           if (!lw) return
           if (transcriptWords.some((tw) => tw === lw || tw.startsWith(lw) || lw.startsWith(tw))) {
-            newRecognized.add(word)
+            cumulativeRecognizedRef.current.add(word)
           }
         })
-        setRecognizedWords(newRecognized)
+        setRecognizedWords(new Set(cumulativeRecognizedRef.current))
       }
     }
 
@@ -236,10 +236,11 @@ function SpeakPageInner() {
     }
   }, [screen, startCamera, startSTT])
 
-  // affirmation 바뀌면 자동완료 플래그 리셋
+  // affirmation 바뀌면 자동완료 플래그 및 누적 인식 리셋
   useEffect(() => {
     autoCompleteTriggeredRef.current = false
     if (autoCompleteTimerRef.current) clearTimeout(autoCompleteTimerRef.current)
+    cumulativeRecognizedRef.current = new Set()
   }, [affirmation])
 
   // 모든 단어 인식 시 자동 완료 (타이머가 onresult마다 리셋되지 않도록 ref로 제어)
