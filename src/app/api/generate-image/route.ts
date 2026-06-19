@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
       const prompt = `Keep this character's appearance, face, style, and identity EXACTLY as shown.
 Place them in an inspiring, triumphant success scene that visually embodies: ${affText}
 The character is experiencing genuine joy, fulfillment, and success.
-Maintain the exact same art style (Studio Ghibli). Warm golden light, uplifting atmosphere.
+Maintain the exact same art style and visual aesthetic. Warm golden light, uplifting atmosphere.
 NO TEXT OR LETTERS in the image.`
 
       const response = await openai.images.edit({

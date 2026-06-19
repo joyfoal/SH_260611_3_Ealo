@@ -54,8 +54,9 @@ export default function SuccessImagePage() {
   const [faceAnalyzing, setFaceAnalyzing] = useState(false)
   const [faceError, setFaceError] = useState<string | null>(null)
 
-  // 글
+  // 글 + 스타일
   const [text, setText] = useState('')
+  const [imageStyle, setImageStyle] = useState<'ghibli' | 'realistic'>('ghibli')
 
   // 저장된 프로필
   const [savedProfile, setSavedProfile] = useState<FaceProfile | null>(null)
@@ -163,6 +164,7 @@ export default function SuccessImagePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode,
+          imageStyle,
           faceImageBase64,
           faceData: faceData ?? undefined,
           text: textToSend || undefined,
@@ -420,7 +422,7 @@ export default function SuccessImagePage() {
           style={{
             width: '100%',
             padding: '11px 13px',
-            background: 'var(--color-bg-surface)',
+            background: 'var(--color-bg-primary)',
             border: '1.5px solid var(--color-border)',
             borderRadius: '11px',
             fontSize: '13px',
@@ -429,9 +431,45 @@ export default function SuccessImagePage() {
             outline: 'none',
             lineHeight: 1.6,
             boxSizing: 'border-box',
-            marginBottom: '14px',
+            marginBottom: '12px',
           }}
         />
+
+        {/* 스타일 선택 */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '6px',
+            marginBottom: '14px',
+            padding: '4px',
+            background: 'var(--color-bg-primary)',
+            borderRadius: '12px',
+          }}
+        >
+          {([
+            { id: 'ghibli', label: '✨ 지브리/만화' },
+            { id: 'realistic', label: '📸 실사' },
+          ] as const).map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setImageStyle(s.id)}
+              style={{
+                flex: 1,
+                padding: '9px 6px',
+                borderRadius: '9px',
+                background: imageStyle === s.id ? 'var(--color-accent-primary)' : 'transparent',
+                color: imageStyle === s.id ? 'white' : 'var(--color-text-muted)',
+                border: 'none',
+                fontSize: '13px',
+                fontWeight: imageStyle === s.id ? 600 : 400,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
 
         {/* 프로필 생성 버튼 */}
         <button

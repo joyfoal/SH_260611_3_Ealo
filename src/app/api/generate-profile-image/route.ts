@@ -18,12 +18,14 @@ interface FaceData {
 
 export async function POST(req: NextRequest) {
   try {
-    const { mode, faceImageBase64, faceData, text } = await req.json() as {
+    const { mode, imageStyle, faceImageBase64, faceData, text } = await req.json() as {
       mode: 'face+text' | 'face' | 'text'
+      imageStyle?: 'ghibli' | 'realistic'
       faceImageBase64?: string
       faceData?: FaceData
       text?: string
     }
+    const style = imageStyle ?? 'ghibli'
 
     if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your_key_here') {
       return NextResponse.json({ error: 'API 키가 설정되지 않았어요.' }, { status: 400 })
@@ -35,7 +37,13 @@ export async function POST(req: NextRequest) {
     let b64: string | null | undefined
 
     if (mode === 'text') {
-      const prompt = `Create a beautiful, inspiring character illustration that captures the mood and feeling of: "${text ?? '긍정과 행복'}".
+      const mood = text ?? '긍정과 행복'
+      const prompt = style === 'realistic'
+        ? `A beautiful, photorealistic portrait of a radiant person who embodies the feeling of: "${mood}".
+Warm golden natural light, professional photography style, soft bokeh background.
+The person looks genuinely joyful, confident, and fulfilled. Authentic expression.
+NO TEXT OR LETTERS in the image.`
+        : `Create a beautiful, inspiring character illustration that captures the mood and feeling of: "${mood}".
 Studio Ghibli anime art style. Warm golden light, soft watercolor tones, magical atmosphere.
 A person radiating joy, warmth, positivity, and inner peace.
 Lush nature scene with soft sunlight.
@@ -60,12 +68,18 @@ NO TEXT OR LETTERS in the image.`
         faceData?.eyewear === 'glasses' ? 'Keep their glasses exactly.' :
         faceData?.eyewear === 'sunglasses' ? 'Keep their sunglasses exactly.' :
         'No glasses or eyewear.'
-
       const moodLine = (mode === 'face+text' && text)
         ? `\nThe scene captures the mood and feeling of: "${text}".`
         : ''
 
-      const prompt = `Transform this ${genderLabel} into a Studio Ghibli anime character.
+      const prompt = style === 'realistic'
+        ? `Create a beautiful, radiant photorealistic portrait of this ${genderLabel}.
+Character reference: ${faceDesc}
+CRITICAL: Maintain their exact facial features, face shape, eye shape, skin tone, and identity. ${eyewearRule}${moodLine}
+Warm golden natural light, professional photography style, soft bokeh background.
+Genuine joy, confidence, and fulfillment in their expression.
+NO TEXT OR LETTERS in the image.`
+        : `Transform this ${genderLabel} into a Studio Ghibli anime character.
 Character reference: ${faceDesc}
 CRITICAL: Maintain their face shape, eye shape, skin tone, and identity exactly. ${eyewearRule}${moodLine}
 Place them in a warm, magical, uplifting nature scene filled with soft golden light.
