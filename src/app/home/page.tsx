@@ -130,7 +130,7 @@ function CalendarView() {
   const [selectedNote, setSelectedNote] = useState<string | null>(null)
   const [expanded, setExpanded] = useState(false)
 
-  useEffect(() => {
+  const loadRecords = useCallback(() => {
     const now = new Date()
     const year = now.getFullYear()
     const month = now.getMonth()
@@ -143,6 +143,13 @@ function CalendarView() {
     }
     setRecords(recs)
   }, [])
+
+  useEffect(() => {
+    loadRecords()
+    const onVisible = () => { if (document.visibilityState === 'visible') loadRecords() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [loadRecords])
 
   const handleDayClick = (rec: DayRecord) => {
     if (selectedDay?.date === rec.date) {
