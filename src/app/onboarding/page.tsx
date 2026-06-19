@@ -500,33 +500,60 @@ export default function OnboardingPage() {
       /* ── 1: Category chips ────────────────────────────────────── */
       case 1: return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 26px', overflow: 'hidden' }}>
-            <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.6px', color: T.ink, lineHeight: 1.28, marginBottom: 10 }}>
-              어떤 성공을<br />이루고 싶으세요?
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '0 26px', overflow: 'hidden' }}>
+            <div style={{ paddingTop: 48, marginBottom: 10 }}>
+              <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.6px', color: T.ink, lineHeight: 1.28, marginBottom: 10 }}>
+                어떤 성공을<br />이루고 싶으세요?
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 500, color: T.ink2, marginBottom: 20 }}>끌리는 걸 모두 눌러주세요.</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {CATEGORIES.map((cat) => {
+                  const on = cats.includes(cat)
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => toggleCat(cat)}
+                      style={{
+                        border: `1.5px solid ${on ? T.gold : T.line}`,
+                        background: on ? T.gold : T.bgSoft,
+                        color: on ? '#fff' : T.ink2,
+                        borderRadius: 999, padding: '9px 15px',
+                        fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        transition: 'transform .12s, border-color .15s, background .15s, color .15s',
+                      }}
+                    >
+                      <span style={{ marginRight: 5 }}>{CAT_EMOJI[cat]}</span>{cat}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-            <div style={{ fontSize: 16, fontWeight: 500, color: T.ink2, marginBottom: 26 }}>끌리는 걸 모두 눌러주세요.</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {CATEGORIES.map((cat) => {
-                const on = cats.includes(cat)
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => toggleCat(cat)}
-                    style={{
-                      border: `1.5px solid ${on ? T.gold : T.line}`,
-                      background: on ? T.gold : T.bgSoft,
-                      color: on ? '#fff' : T.ink2,
-                      borderRadius: 999, padding: '9px 15px',
-                      fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                      transition: 'transform .12s, border-color .15s, background .15s, color .15s',
-                    }}
-                  >
-                    <span style={{ marginRight: 5 }}>{CAT_EMOJI[cat]}</span>{cat}
-                  </button>
-                )
-              })}
-            </div>
+
+            {/* 선택한 카테고리별 추천 성공의 말 */}
+            {cats.length > 0 && (
+              <div style={{ marginTop: 24, flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: T.ink3, marginBottom: 2 }}>추천 성공의 말</div>
+                {cats.map((cat) => {
+                  const suggestion = SUGGESTIONS[cat]?.[0]
+                  if (!suggestion) return null
+                  return (
+                    <div key={cat} style={{
+                      background: T.bgSoft,
+                      border: `1.5px solid ${T.line}`,
+                      borderRadius: 16, padding: '14px 16px',
+                    }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: T.gold, marginBottom: 6 }}>
+                        {CAT_EMOJI[cat]} {cat}
+                      </div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: T.ink, lineHeight: 1.5 }}>
+                        &ldquo;{suggestion}&rdquo;
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
           <div style={{ padding: '12px 26px 48px' }}>
             <button
