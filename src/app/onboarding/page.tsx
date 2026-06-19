@@ -886,17 +886,43 @@ export default function OnboardingPage() {
                     <span key={k} style={{ display: 'block', width: 4, borderRadius: 2, background: T.gold, height: '30%' }} />
                   ))}
                 </div>
-                <div style={{
-                  width: 60, height: 60, borderRadius: '50%', background: T.gold, color: '#fff',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 10px 22px -8px rgba(189,130,31,.8)',
-                }}>
-                  <PlayIcon />
-                </div>
+                <button
+                  onClick={() => {
+                    if (!onbAudioBlobRef.current) return
+                    if (onbIsPlaying) {
+                      onbAudioRef.current?.pause()
+                      if (onbAudioRef.current) onbAudioRef.current.currentTime = 0
+                      setOnbIsPlaying(false)
+                      return
+                    }
+                    const url = URL.createObjectURL(onbAudioBlobRef.current)
+                    const audio = new Audio(url)
+                    onbAudioRef.current = audio
+                    setOnbIsPlaying(true)
+                    audio.onended = () => { setOnbIsPlaying(false); URL.revokeObjectURL(url) }
+                    audio.onerror = () => { setOnbIsPlaying(false); URL.revokeObjectURL(url) }
+                    audio.play().catch(() => setOnbIsPlaying(false))
+                  }}
+                  style={{
+                    width: 60, height: 60, borderRadius: '50%', border: 'none', cursor: 'pointer',
+                    background: T.gold, color: '#fff',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 10px 22px -8px rgba(189,130,31,.8)',
+                  }}
+                >
+                  {onbIsPlaying ? (
+                    <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
+                      <rect x="3" y="2" width="4" height="12" rx="1.5"/>
+                      <rect x="9" y="2" width="4" height="12" rx="1.5"/>
+                    </svg>
+                  ) : (
+                    <PlayIcon />
+                  )}
+                </button>
               </div>
             </div>
             <div style={{ fontSize: 14, fontWeight: 500, color: T.ink2 }}>
-              분야 {cats.length || 1}개 · 매일 {fmtTime(notifTime)}
+              매일 오전 07:00 알람
             </div>
           </div>
           <div style={{ padding: '12px 26px 48px' }}>
