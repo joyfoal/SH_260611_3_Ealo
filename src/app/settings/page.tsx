@@ -15,6 +15,9 @@ import {
   getAlarmSettings,
   saveAlarmSettings,
   clearAlarmSettings,
+  getTrash,
+  restoreFromTrash,
+  emptyTrash,
   type AlarmSettings,
 } from '@/lib/storage'
 import { getAudioRecords, setAudioKeepForever, clearAllAudioRecords, type AudioRecord } from '@/lib/audioStorage'
@@ -295,7 +298,10 @@ function AlarmManager() {
       setHour(current.hour)
       setMinute(current.minute)
     }
-    getAudioRecords().then(setRecordings).catch(() => {})
+    const affIds = new Set(getAffirmations().map((a) => a.id))
+    getAudioRecords()
+      .then((recs) => setRecordings(recs.filter((r) => affIds.has(r.affirmationId))))
+      .catch(() => {})
   }, [open])
 
   const handleSave = async () => {
@@ -455,6 +461,107 @@ function AlarmManager() {
   )
 }
 
+// ─── Trash Manager ────────────────────────────────────────────────
+function TrashManager() {
+  const [open, setOpen] = useState(false)
+  const [trash, setTrash] = useState<ReturnType<typeof getTrash>>([])
+
+  const reload = () => setTrash(getTrash())
+
+  useEffect(() => {
+    if (open) reload()
+  }, [open])
+
+  const handleRestore = (id: string) => {
+    restoreFromTrash(id)
+    reload()
+  }
+
+  const handleEmpty = () => {
+    if (!confirm('휴지통을 비울까요? 삭제된 성공의 말은 복구할 수 없어요.')) return
+    emptyTrash()
+    reload()
+  }
+
+  return (
+    <div style={{ background: 'var(--color-bg-card)', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p style={{ fontSize: '15px', fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: '2px' }}>
+            휴지통
+          </p>
+          <p style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+            삭제된 성공의 말 {open ? '' : `· ${getTrash().length}개`}
+          </p>
+        </div>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          style={{ padding: '8px 16px', background: 'var(--color-accent-primary)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', cursor: 'pointer' }}
+        >
+          {open ? '닫기' : '열기'}
+        </button>
+      </div>
+
+      {open && (
+        <div style={{ marginTop: '16px' }}>
+          {trash.length === 0 ? (
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', fontStyle: 'italic', textAlign: 'center', padding: '16px 0' }}>
+              휴지통이 비어있어요
+            </p>
+          ) : (
+            <>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                {trash.map((item) => (
+                  <div
+                    key={item.id}
+                    style={{
+                      padding: '10px 12px',
+                      background: 'var(--color-bg-surface)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: '13px', color: 'var(--color-text-primary)', lineHeight: 1.4, marginBottom: '2px' }}>
+                        {item.text}
+                      </p>
+                      <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{item.category}</span>
+                    </div>
+                    <button
+                      onClick={() => handleRestore(item.id)}
+                      style={{
+                        padding: '5px 10px', border: '1px solid var(--color-accent-primary)',
+                        borderRadius: '8px', background: 'transparent', cursor: 'pointer',
+                        fontSize: '12px', color: 'var(--color-accent-primary)', flexShrink: 0,
+                      }}
+                    >
+                      복원
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={handleEmpty}
+                style={{
+                  width: '100%', padding: '11px',
+                  background: 'transparent', border: '1px solid #E53935',
+                  borderRadius: '12px', color: '#E53935',
+                  fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                휴지통 비우기
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main Settings Page ───────────────────────────────────────────
 export default function SettingsPage() {
   const { themeName, setTheme } = useTheme()
@@ -527,6 +634,9 @@ export default function SettingsPage() {
             </button>
           </div>
         </div>
+
+        {/* Trash */}
+        <TrashManager />
 
         {/* Category Manager */}
         <CategoryManager />

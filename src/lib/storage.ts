@@ -36,6 +36,7 @@ export interface AlarmSettings {
 
 const KEYS = {
   AFFIRMATIONS: 'mornim-affirmations',
+  TRASH: 'mornim-trash',
   CALENDAR: 'mornim-calendar',
   STREAK: 'mornim-streak',
   THEME: 'mornim-theme',
@@ -99,6 +100,37 @@ export function updateAffirmation(a: Affirmation): void {
 export function deleteAffirmation(id: string): void {
   const list = getAffirmations().filter((x) => x.id !== id)
   safeSet(KEYS.AFFIRMATIONS, list)
+}
+
+// Trash (soft-deleted affirmations)
+export function getTrash(): Affirmation[] {
+  return safeGet<Affirmation[]>(KEYS.TRASH, [])
+}
+
+export function moveToTrash(id: string): void {
+  const list = getAffirmations()
+  const idx = list.findIndex((x) => x.id === id)
+  if (idx < 0) return
+  const [item] = list.splice(idx, 1)
+  safeSet(KEYS.AFFIRMATIONS, list)
+  const trash = getTrash()
+  trash.push(item)
+  safeSet(KEYS.TRASH, trash)
+}
+
+export function restoreFromTrash(id: string): void {
+  const trash = getTrash()
+  const idx = trash.findIndex((x) => x.id === id)
+  if (idx < 0) return
+  const [item] = trash.splice(idx, 1)
+  safeSet(KEYS.TRASH, trash)
+  const list = getAffirmations()
+  list.push(item)
+  safeSet(KEYS.AFFIRMATIONS, list)
+}
+
+export function emptyTrash(): void {
+  safeSet(KEYS.TRASH, [])
 }
 
 // Calendar

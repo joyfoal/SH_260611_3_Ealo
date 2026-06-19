@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppLayout } from '@/components/ui/AppLayout'
 import { Plus, Trash2, Play, Pause } from 'lucide-react'
-import { getAffirmations, deleteAffirmation, getCategories, type Affirmation } from '@/lib/storage'
+import { getAffirmations, moveToTrash, getCategories, type Affirmation } from '@/lib/storage'
 import { getCategoryColor } from '@/lib/categories'
 import { getAudioRecords, deleteAudioRecord, type AudioRecord } from '@/lib/audioStorage'
 
@@ -98,9 +98,9 @@ export default function AffirmationsPage() {
   }
 
   const handleDelete = (id: string) => {
-    if (confirm('이 성공의 말을 삭제할까요?')) {
+    if (confirm('이 성공의 말을 휴지통으로 이동할까요?')) {
       if (playingId === id) stopCurrentAudio()
-      deleteAffirmation(id)
+      moveToTrash(id)
       load()
     }
   }
