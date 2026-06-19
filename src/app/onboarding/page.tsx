@@ -163,6 +163,9 @@ export default function OnboardingPage() {
   const onbAudioBlobRef = useRef<Blob | null>(null)
   const onbAudioRef = useRef<HTMLAudioElement | null>(null)
   const [onbIsPlaying, setOnbIsPlaying] = useState(false)
+  // 녹음↔성공의말↔알람 연결용 ID (마이크 탭 시 고정)
+  const onbVoiceIdRef = useRef(`voice-${Date.now()}`)
+  const onbAudioRecordIdRef = useRef(`onb-audio-${Date.now()}`)
   const [onbRecognizedWords, setOnbRecognizedWords] = useState<Set<string>>(new Set())
   const [onbIsListening, setOnbIsListening] = useState(false)
   const [onbPhrase, setOnbPhrase] = useState('나는 매일 성장한다.')
@@ -302,13 +305,17 @@ export default function OnboardingPage() {
   // 마이크 버튼 탭 → 녹음 + STT 시작 (사용자 제스처로 getUserMedia 호출)
   const handleMicTap = useCallback(async () => {
     onbCumulativeRef.current = new Set()
-    onbAutoCompleteRef.current = new Set() as unknown as boolean
     onbAutoCompleteRef.current = false
     setOnbRecognizedWords(new Set())
     setRec('recording')
 
+    // 녹음마다 새 ID 쌍 고정 (성공의말·녹음·알람 모두 동일 ID로 연결)
+    const voiceId = `voice-${Date.now()}`
+    const audioRecordId = `onb-audio-${Date.now()}`
+    onbVoiceIdRef.current = voiceId
+    onbAudioRecordIdRef.current = audioRecordId
+
     try {
-      // 사용자 제스처 안에서 호출 → 모든 브라우저에서 마이크 권한 정상 요청
       const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true })
       onbAudioStreamRef.current = audioStream
       const mimeType = getSupportedMimeType()
@@ -321,12 +328,12 @@ export default function OnboardingPage() {
           onbAudioBlobRef.current = blob
           try {
             await saveAudioRecord({
-              id: `onb-audio-${Date.now()}`,
-              affirmationId: `voice-onb-${Date.now()}`,
+              id: onbAudioRecordIdRef.current,
+              affirmationId: onbVoiceIdRef.current, // 성공의말 ID와 일치
               affirmationText: onbPhraseRef.current,
               blob,
               createdAt: Date.now(),
-              keepForever: false,
+              keepForever: true, // 온보딩 녹음은 영구 보관
             })
           } catch { /* ignore */ }
         }
@@ -450,22 +457,23 @@ export default function OnboardingPage() {
     const affText = transcript || onbPhraseRef.current
     const category = cats[0] ?? '나 자신'
 
+    const now = Date.now()
+    const ids: string[] = []
+
+    // 1. 녹음한 성공의 말 — 온보딩 마이크 탭 시 고정된 ID 사용 (녹음과 연결)
+    const today = todayStr()
+    const voiceId = onbVoiceIdRef.current || `voice-${now}`
+    saveAffirmation({ id: voiceId, text: affText, category, createdAt: new Date().toISOString(), completedDates: [today] })
+    saveDayRecord({ date: today, completedCount: 1, dominantCategory: category })
+    ids.push(voiceId)
+
     if (notifAllowed) {
-      saveAlarmSettings({ audioId: '', hour: Math.floor(notifTime / 60), minute: notifTime % 60 })
+      // 알람 audioId를 온보딩 녹음 ID로 연결
+      saveAlarmSettings({ audioId: onbAudioRecordIdRef.current, hour: Math.floor(notifTime / 60), minute: notifTime % 60 })
       import('@/lib/alarmScheduler').then(({ registerSW, scheduleAlarm }) =>
         registerSW().then(() => scheduleAlarm())
       )
     }
-
-    const now = Date.now()
-    const ids: string[] = []
-
-    // 1. 녹음한 성공의 말 — 오늘 1회 완료 처리
-    const today = todayStr()
-    const voiceId = `voice-${now}`
-    saveAffirmation({ id: voiceId, text: affText, category, createdAt: new Date().toISOString(), completedDates: [today] })
-    saveDayRecord({ date: today, completedCount: 1, dominantCategory: category })
-    ids.push(voiceId)
 
     // 2. 화면 1에서 추천된 성공의 말 — 선택한 카테고리당 1개씩만
     cats.forEach((cat, i) => {
