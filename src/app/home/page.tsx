@@ -492,7 +492,10 @@ export default function HomePage() {
   const handleMore = () => {
     const affirmations = getAffirmations()
     if (affirmations.length === 0) return
-    const pick = affirmations[Math.floor(Math.random() * affirmations.length)]
+    const today = todayStr()
+    const notDoneToday = affirmations.filter((a) => !a.completedDates.includes(today))
+    const pool = notDoneToday.length > 0 ? notDoneToday : affirmations
+    const pick = pool[Math.floor(Math.random() * pool.length)]
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('mornim-speak-queue', JSON.stringify([pick.id]))
       sessionStorage.setItem('mornim-speak-index', '0')
