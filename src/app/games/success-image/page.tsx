@@ -370,53 +370,72 @@ export default function SuccessImagePage() {
             >
               ✓ 저장된 프로필 사용 중 · 아래에서 성공의 말을 선택해요
             </div>
-            <button
-              onClick={async () => {
-                clearAllData()
-                await Promise.all([
-                  deleteFaceProfile().catch(() => {}),
-                  clearFaceStorage().catch(() => {}),
-                  clearSuccessImages().catch(() => {}),
-                  clearAllAudioRecords().catch(() => {}),
-                ])
-                // 프로필 관련
-                setSavedProfile(null)
-                setSavedProfileUrl(null)
-                setProfileUrl(null)
-                setProfileSaved(false)
-                setProfileError(null)
-                setIsRegenerating(false)
-                // 얼굴
-                if (faceThumbnail) URL.revokeObjectURL(faceThumbnail)
-                setFaceThumbnail(null)
-                setFaceFile(null)
-                setFaceData(null)
-                setFaceError(null)
-                // 글 + 스타일
-                setText('')
-                setImageStyle('ghibli')
-                setPositiveSuggestion(null)
-                // 확언 선택
-                setSelectedIds([])
-                // 성공 이미지
-                setSuccessUrl(null)
-                setSuccessError(null)
-                // UI
-                setShowCreationUI(true)
-              }}
-              style={{
-                width: '100%',
-                padding: '11px',
-                background: 'transparent',
-                border: '1.5px solid var(--color-border)',
-                borderRadius: '12px',
-                fontSize: '13px',
-                color: 'var(--color-text-muted)',
-                cursor: 'pointer',
-              }}
-            >
-              프로필 다시 만들기
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={async () => {
+                  clearAllData()
+                  await Promise.all([
+                    deleteFaceProfile().catch(() => {}),
+                    clearFaceStorage().catch(() => {}),
+                    clearSuccessImages().catch(() => {}),
+                    clearAllAudioRecords().catch(() => {}),
+                  ])
+                  setSavedProfile(null)
+                  setSavedProfileUrl(null)
+                  setProfileUrl(null)
+                  setProfileSaved(false)
+                  setProfileError(null)
+                  setIsRegenerating(false)
+                  if (faceThumbnail) URL.revokeObjectURL(faceThumbnail)
+                  setFaceThumbnail(null)
+                  setFaceFile(null)
+                  setFaceData(null)
+                  setFaceError(null)
+                  setText('')
+                  setImageStyle('ghibli')
+                  setPositiveSuggestion(null)
+                  setSelectedIds([])
+                  setSuccessUrl(null)
+                  setSuccessError(null)
+                  setShowCreationUI(true)
+                }}
+                style={{
+                  flex: 1,
+                  padding: '11px',
+                  background: 'transparent',
+                  border: '1.5px solid var(--color-border)',
+                  borderRadius: '12px',
+                  fontSize: '13px',
+                  color: 'var(--color-text-muted)',
+                  cursor: 'pointer',
+                }}
+              >
+                프로필 다시 만들기
+              </button>
+              <button
+                onClick={() => {
+                  if (!savedProfileUrl) return
+                  const a = document.createElement('a')
+                  a.href = savedProfileUrl
+                  a.download = 'mornim-profile.png'
+                  document.body.appendChild(a)
+                  a.click()
+                  document.body.removeChild(a)
+                }}
+                style={{
+                  padding: '11px 16px',
+                  background: 'transparent',
+                  border: '1.5px solid var(--color-border)',
+                  borderRadius: '12px',
+                  fontSize: '13px',
+                  color: 'var(--color-text-muted)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                다운로드
+              </button>
+            </div>
           </div>
         )}
 
@@ -656,7 +675,7 @@ export default function SuccessImagePage() {
                         cursor: 'pointer',
                       }}
                     >
-                      🌟 프로필로 저장
+                      프로필로 저장
                     </button>
                     <button
                       onClick={() => {
@@ -673,13 +692,13 @@ export default function SuccessImagePage() {
                         background: 'transparent',
                         border: '1.5px solid var(--color-border)',
                         borderRadius: '12px',
-                        fontSize: '16px',
+                        fontSize: '13px',
+                        color: 'var(--color-text-muted)',
                         cursor: 'pointer',
-                        lineHeight: 1,
+                        whiteSpace: 'nowrap',
                       }}
-                      title="프로필 이미지 다운로드"
                     >
-                      📥
+                      다운로드
                     </button>
                     {isRegenerating ? (
                       /* 기존 프로필이 있었을 때 → 취소 */
