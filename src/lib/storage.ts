@@ -53,6 +53,9 @@ const KEYS = {
   WEEKLY_SHIELDS: 'mornim-weekly-shields',
   TODAY_REPEAT_DONE: 'mornim-today-repeat-done',
   NAEGE_SEEN_DATE: 'mornim-naege-seen-date',
+  SHOW_RECENT_REC: 'mornim-show-recent-rec',
+  SHOW_SUCCESS_IMG: 'mornim-show-success-img',
+  SHOW_CALENDAR: 'mornim-show-calendar',
 } as const
 
 const DEFAULT_CATEGORIES = [
@@ -342,6 +345,35 @@ export function getTodayRepeatDone(): boolean {
 
 export function setTodayRepeatDone(): void {
   safeSet(KEYS.TODAY_REPEAT_DONE, { date: todayStr() })
+}
+
+// Home display settings
+export function getHomeDisplaySettings(): { showRecentRec: boolean; showSuccessImg: boolean; showCalendar: boolean } {
+  return {
+    showRecentRec: safeGet<boolean>(KEYS.SHOW_RECENT_REC, true),
+    showSuccessImg: safeGet<boolean>(KEYS.SHOW_SUCCESS_IMG, true),
+    showCalendar: safeGet<boolean>(KEYS.SHOW_CALENDAR, true),
+  }
+}
+
+export function setHomeDisplaySetting(key: 'showRecentRec' | 'showSuccessImg' | 'showCalendar', val: boolean): void {
+  const map: Record<string, string> = {
+    showRecentRec: KEYS.SHOW_RECENT_REC,
+    showSuccessImg: KEYS.SHOW_SUCCESS_IMG,
+    showCalendar: KEYS.SHOW_CALENDAR,
+  }
+  safeSet(map[key], val)
+}
+
+// Delete a specific date from calendar + affirmation completedDates
+export function deleteDayRecord(date: string): void {
+  const list = getCalendar().filter((r) => r.date !== date)
+  safeSet(KEYS.CALENDAR, list)
+  const affs = getAffirmations().map((a) => ({
+    ...a,
+    completedDates: a.completedDates.filter((d) => d !== date),
+  }))
+  safeSet(KEYS.AFFIRMATIONS, affs)
 }
 
 // Clear all data

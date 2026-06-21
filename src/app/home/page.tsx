@@ -22,6 +22,7 @@ import {
   getWeekKey,
   getTodayRepeatDone,
   getNaegeSeenDate,
+  getHomeDisplaySettings,
   type Affirmation,
   type DayRecord,
   type StreakData,
@@ -435,6 +436,7 @@ export default function HomePage() {
   const [naegeSavedToday, setNaegeSavedToday] = useState(false)
   const [motto, setMotto] = useState('')
   const [showWeeklyReport, setShowWeeklyReport] = useState(false)
+  const [displaySettings, setDisplaySettings] = useState({ showRecentRec: true, showSuccessImg: true, showCalendar: true })
 
   useEffect(() => {
     setMotto(MOTTOS[Math.floor(Math.random() * MOTTOS.length)])
@@ -484,6 +486,7 @@ export default function HomePage() {
   useEffect(() => {
     loadData()
     deleteExpiredAudioRecords().catch(() => {})
+    setDisplaySettings(getHomeDisplaySettings())
   }, [loadData])
 
   const handlePlay = () => {
@@ -693,7 +696,7 @@ export default function HomePage() {
         )}
 
         {/* Calendar */}
-        <CalendarView />
+        {displaySettings.showCalendar && <CalendarView />}
 
         {/* Shortcuts */}
         <div style={{ display: 'flex', gap: '8px', padding: '0 16px 16px' }}>
@@ -748,10 +751,10 @@ export default function HomePage() {
         </div>
 
         {/* Recent recording player */}
-        <RecentRecordingPlayer />
+        {displaySettings.showRecentRec && <RecentRecordingPlayer />}
 
         {/* 저장된 성공 이미지 */}
-        <SavedSuccessImage onTap={() => router.push('/games/success-image')} />
+        {displaySettings.showSuccessImg && <SavedSuccessImage onTap={() => router.push('/games/success-image')} />}
       </div>
 
       {showWeeklyReport && <WeeklyReportModal onClose={handleCloseWeeklyReport} />}
