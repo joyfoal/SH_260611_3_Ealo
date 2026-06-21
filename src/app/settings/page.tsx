@@ -10,7 +10,7 @@ import {
   getCategories, saveCategories,
   getAlarmSettings, saveAlarmSettings, clearAlarmSettings,
   getTrash, restoreFromTrash, emptyTrash,
-  getCalendar, getStreakData,
+  getCalendar, getStreakData, saveStreakData,
   getHomeDisplaySettings, setHomeDisplaySetting, deleteDayRecord,
   todayStr,
   type AlarmSettings, type Affirmation,
@@ -847,6 +847,7 @@ function DeletePanel() {
     if (!confirm('모든 데이터를 초기화할까요?\n이 작업은 되돌릴 수 없습니다.')) return
     clearAllData()
     await Promise.all([clearAllAudioRecords(), clearFaceStorage(), clearSuccessImages()])
+    saveStreakData({ currentStreak: 0, lastCompletedDate: null, shields: 1 })
     window.location.href = '/'
   }
 
