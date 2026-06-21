@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { getAffirmations, saveTomorrowNote, saveDayNote, todayStr, type Affirmation } from '@/lib/storage'
-import { ChevronLeft } from 'lucide-react'
+import { getAffirmations, saveTomorrowNote, saveDayNote, todayStr, setNaegeSeenDate, type Affirmation } from '@/lib/storage'
+import { ChevronLeft, Mic } from 'lucide-react'
 
 function getTimePlaceholder(): string {
   const hour = new Date().getHours()
@@ -17,6 +17,9 @@ export default function TomorrowPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [placeholder] = useState(getTimePlaceholder)
+  const [negativeSuggestion, setNegativeSuggestion] = useState<string | null>(null)
+  const [isListening, setIsListening] = useState(false)
+  const recognitionRef = useRef<{ stop: () => void } | null>(null)
 
   useEffect(() => {
     setAffirmations(getAffirmations())
@@ -30,7 +33,54 @@ export default function TomorrowPage() {
     })
   }
 
+  const toggleVoiceInput = () => {
+    if (isListening) {
+      recognitionRef.current?.stop()
+      setIsListening(false)
+      return
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any
+    const SpeechRec = w.SpeechRecognition ?? w.webkitSpeechRecognition
+    if (!SpeechRec) return
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rec: any = new SpeechRec()
+    rec.lang = 'ko-KR'
+    rec.continuous = false
+    rec.interimResults = false
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rec.onresult = (e: any) => {
+      const text: string = e.results[0][0].transcript
+      setMessage((prev) => prev ? prev + ' ' + text : text)
+    }
+    rec.onend = () => setIsListening(false)
+    rec.onerror = () => setIsListening(false)
+    rec.start()
+    recognitionRef.current = rec
+    setIsListening(true)
+  }
+
   const handleSave = async () => {
+    const trimmed = message.trim()
+    if (trimmed) {
+      setSaving(true)
+      try {
+        const res = await fetch('/api/detect-negative', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: trimmed }),
+        })
+        const data = await res.json() as { isNegative: boolean; alternative: string | null }
+        if (data.isNegative && data.alternative) {
+          setNegativeSuggestion(data.alternative)
+          setSaving(false)
+          return
+        }
+      } catch {
+        // proceed without check
+      }
+      setSaving(false)
+    }
     setSaving(true)
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
@@ -48,10 +98,11 @@ export default function TomorrowPage() {
       selectedAffirmationIds: finalIds,
     })
 
-    // Save today's note to day notes for calendar
-    if (message.trim()) {
-      saveDayNote(todayStr(), message.trim())
-    }
+    // Mark naege as seen today (only on save, not skip)
+    setNaegeSeenDate(todayStr())
+
+    // Save today's note — use placeholder if empty
+    saveDayNote(todayStr(), message.trim() || getTimePlaceholder())
 
     router.push('/home')
   }
@@ -92,7 +143,7 @@ export default function TomorrowPage() {
             rows={3}
             style={{
               width: '100%',
-              padding: '14px',
+              padding: '14px 44px 14px 14px',
               background: 'var(--color-bg-surface)',
               border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: '14px',
@@ -103,16 +154,26 @@ export default function TomorrowPage() {
               lineHeight: 1.6,
             }}
           />
-          <span style={{
-            position: 'absolute',
-            bottom: '10px',
-            right: '14px',
-            fontSize: '11px',
-            color: 'var(--color-text-muted)',
-            pointerEvents: 'none',
-          }}>
-            메시지를 입력하세요
-          </span>
+          <button
+            onClick={toggleVoiceInput}
+            style={{
+              position: 'absolute',
+              top: '10px',
+              right: '10px',
+              background: isListening ? '#E53935' : 'rgba(255,255,255,0.12)',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '6px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background 0.2s',
+            }}
+            title={isListening ? '듣는 중 — 탭하여 중지' : '음성으로 입력'}
+          >
+            <Mic size={16} color={isListening ? 'white' : 'rgba(255,255,255,0.6)'} />
+          </button>
         </div>
       </div>
 
@@ -159,6 +220,30 @@ export default function TomorrowPage() {
 
       {/* Actions */}
       <div className="flex flex-col gap-3">
+        {negativeSuggestion && (
+          <div style={{ padding: '14px', background: '#FFF3CD', borderRadius: '12px', border: '1px solid #FFE082' }}>
+            <p style={{ fontSize: '13px', color: '#795548', marginBottom: '8px' }}>
+              부정적인 표현이 감지되었어요. 이렇게 바꿔볼까요?
+            </p>
+            <p style={{ fontSize: '15px', color: '#4E342E', fontWeight: 500, marginBottom: '12px' }}>
+              {negativeSuggestion}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setMessage(negativeSuggestion); setNegativeSuggestion(null) }}
+                style={{ flex: 1, padding: '10px', background: 'var(--color-accent-primary)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', cursor: 'pointer' }}
+              >
+                바꿔서 남기기
+              </button>
+              <button
+                onClick={() => { setNegativeSuggestion(null); setMessage('') }}
+                style={{ flex: 1, padding: '10px', background: 'transparent', color: '#795548', border: '1px solid #FFE082', borderRadius: '10px', fontSize: '13px', cursor: 'pointer' }}
+              >
+                다시 쓰기
+              </button>
+            </div>
+          </div>
+        )}
         <button
           onClick={handleSave}
           disabled={saving}

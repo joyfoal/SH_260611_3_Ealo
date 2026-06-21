@@ -52,6 +52,7 @@ const KEYS = {
   DAY_NOTES: 'mornim-day-notes',
   WEEKLY_SHIELDS: 'mornim-weekly-shields',
   TODAY_REPEAT_DONE: 'mornim-today-repeat-done',
+  NAEGE_SEEN_DATE: 'mornim-naege-seen-date',
 } as const
 
 const DEFAULT_CATEGORIES = [
@@ -281,6 +282,15 @@ export function getAlarmLastShown(): string {
 
 export function setAlarmLastShown(dateStr: string): void {
   safeSet(KEYS.ALARM_LAST_SHOWN, dateStr)
+}
+
+// Naege (나에게) seen date — tracks whether the page was auto-shown today
+export function getNaegeSeenDate(): string | null {
+  return safeGet<string | null>(KEYS.NAEGE_SEEN_DATE, null)
+}
+
+export function setNaegeSeenDate(dateStr: string): void {
+  safeSet(KEYS.NAEGE_SEEN_DATE, dateStr)
 }
 
 // Day notes ("오늘의 나에게" messages)

@@ -430,6 +430,7 @@ export default function HomePage() {
   const [streakData, setStreakData] = useState<StreakData>({ currentStreak: 0, lastCompletedDate: null, shields: 0 })
   const [todayCount, setTodayCount] = useState(0)
   const [tomorrowNote, setTomorrowNote] = useState<string | null>(null)
+  const [tomorrowEnabled, setTomorrowEnabled] = useState(false)
   const [motto, setMotto] = useState('')
   const [showWeeklyReport, setShowWeeklyReport] = useState(false)
 
@@ -474,6 +475,7 @@ export default function HomePage() {
     setTodayCount(getDayRecord(todayStr())?.completedCount ?? 0)
     const dayNote = getDayNote(today)
     if (dayNote) setTomorrowNote(dayNote)
+    setTomorrowEnabled(isTomorrowEnabled())
   }, [])
 
   useEffect(() => {
@@ -593,7 +595,7 @@ export default function HomePage() {
                 </button>
               </>
             )}
-            {tomorrowNote && (
+            {tomorrowEnabled && (
               <div
                 style={{
                   marginTop: '16px',
@@ -604,8 +606,19 @@ export default function HomePage() {
                   textAlign: 'left',
                 }}
               >
-                <div style={{ fontSize: '11px', color: '#9B8A00', marginBottom: '4px' }}>오늘 나에게</div>
-                <div style={{ fontSize: '14px', color: '#4A3C00', lineHeight: 1.5 }}>{tomorrowNote}</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: tomorrowNote ? '4px' : 0 }}>
+                  <div style={{ fontSize: '11px', color: '#9B8A00' }}>오늘 나에게</div>
+                  <button
+                    onClick={() => router.push('/tomorrow')}
+                    style={{ fontSize: '11px', color: '#9B8A00', background: 'transparent', border: '1px solid #F5E066', borderRadius: '6px', padding: '2px 8px', cursor: 'pointer' }}
+                  >
+                    수정
+                  </button>
+                </div>
+                {tomorrowNote
+                  ? <div style={{ fontSize: '14px', color: '#4A3C00', lineHeight: 1.5 }}>{tomorrowNote}</div>
+                  : <div style={{ fontSize: '13px', color: '#B8A400', fontStyle: 'italic' }}>아직 남기지 않았어요</div>
+                }
               </div>
             )}
           </div>

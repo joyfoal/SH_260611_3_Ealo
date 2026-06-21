@@ -13,6 +13,7 @@ import {
   isTomorrowEnabled,
   todayStr,
   setTodayRepeatDone,
+  getNaegeSeenDate,
   type Affirmation,
 } from '@/lib/storage'
 import { updateStreak } from '@/lib/streak'
@@ -427,8 +428,12 @@ function SpeakPageInner() {
       sessionStorage.removeItem('mornim-speak-index')
       sessionStorage.removeItem('mornim-speak-phase')
     }
-    if (isTomorrowEnabled()) router.push('/tomorrow')
-    else { router.refresh(); router.push('/home') }
+    if (isTomorrowEnabled() && getNaegeSeenDate() !== todayStr()) {
+      router.push('/tomorrow')
+    } else {
+      router.refresh()
+      router.push('/home')
+    }
   }, [router])
 
   // ── 오늘 더 말하고 싶어요 ──────────────────────────────────────────

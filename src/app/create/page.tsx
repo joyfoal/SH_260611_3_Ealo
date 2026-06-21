@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppLayout } from '@/components/ui/AppLayout'
 import type { CategoryName } from '@/lib/categories'
-import { saveAffirmation, getCategories, type AffirmationCategory } from '@/lib/storage'
+import { saveAffirmation, getCategories, saveCategories, getTodayAffirmationIds, saveTodayAffirmationIds, type AffirmationCategory } from '@/lib/storage'
+import { Mic } from 'lucide-react'
 
 type Tab = '직접 입력' | 'AI 추천' | 'Talk Mode'
 
@@ -29,6 +30,41 @@ export default function CreatePage() {
   const [directSaving, setDirectSaving] = useState(false)
   const [negativeBanner, setNegativeBanner] = useState<{ alternative: string } | null>(null)
   const [savedMsg, setSavedMsg] = useState('')
+
+  // Category add state
+  const [addCatMode, setAddCatMode] = useState(false)
+  const [newCatName, setNewCatName] = useState('')
+
+  // Voice input state
+  const [isListening, setIsListening] = useState(false)
+  const recognitionRef = useRef<{ stop: () => void } | null>(null)
+
+  const toggleVoiceInput = () => {
+    if (isListening) {
+      recognitionRef.current?.stop()
+      setIsListening(false)
+      return
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any
+    const SpeechRec = w.SpeechRecognition ?? w.webkitSpeechRecognition
+    if (!SpeechRec) return
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rec: any = new SpeechRec()
+    rec.lang = 'ko-KR'
+    rec.continuous = false
+    rec.interimResults = false
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rec.onresult = (e: any) => {
+      const text: string = e.results[0][0].transcript
+      setDirectText((prev) => prev ? prev + ' ' + text : text)
+    }
+    rec.onend = () => setIsListening(false)
+    rec.onerror = () => setIsListening(false)
+    rec.start()
+    recognitionRef.current = rec
+    setIsListening(true)
+  }
 
   // AI recommend state
   const [aiPrompt, setAiPrompt] = useState('')
@@ -65,14 +101,31 @@ export default function CreatePage() {
     setDirectSaving(false)
   }
 
+  const handleAddCategory = () => {
+    const name = newCatName.trim()
+    if (!name) return
+    if (categories.includes(name)) { alert('이미 있는 카테고리예요.'); return }
+    const updated = [...categories, name]
+    saveCategories(updated)
+    setCategories(updated)
+    setNewCatName('')
+    setAddCatMode(false)
+  }
+
   const doSave = (text: string, category: CategoryName) => {
+    const newId = `aff-${Date.now()}-${Math.random().toString(36).slice(2)}`
     saveAffirmation({
-      id: `aff-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      id: newId,
       text,
       category: category as AffirmationCategory,
       createdAt: new Date().toISOString(),
       completedDates: [],
     })
+    // Add to today's queue so home page shows it immediately
+    const currentIds = getTodayAffirmationIds()
+    if (!currentIds.includes(newId)) {
+      saveTodayAffirmationIds([...currentIds, newId])
+    }
     setDirectText('')
     setNegativeBanner(null)
     setSavedMsg('저장되었어요!')
@@ -231,30 +284,51 @@ export default function CreatePage() {
         {/* Direct input tab */}
         {activeTab === '직접 입력' && (
           <div>
-            <textarea
-              value={directText}
-              onChange={(e) => setDirectText(e.target.value)}
-              placeholder="나는 오늘도 충분히 잘하고 있다"
-              rows={3}
-              style={{
-                width: '100%',
-                padding: '14px',
-                background: 'var(--color-bg-card)',
-                border: '1px solid var(--color-border)',
-                borderRadius: '12px',
-                fontSize: '15px',
-                color: 'var(--color-text-primary)',
-                resize: 'none',
-                outline: 'none',
-                marginBottom: '16px',
-                lineHeight: 1.6,
-              }}
-            />
+            <div style={{ position: 'relative', marginBottom: '16px' }}>
+              <textarea
+                value={directText}
+                onChange={(e) => setDirectText(e.target.value)}
+                placeholder="나는 오늘도 충분히 잘하고 있다"
+                rows={3}
+                style={{
+                  width: '100%',
+                  padding: '14px 44px 14px 14px',
+                  background: 'var(--color-bg-card)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '12px',
+                  fontSize: '15px',
+                  color: 'var(--color-text-primary)',
+                  resize: 'none',
+                  outline: 'none',
+                  lineHeight: 1.6,
+                }}
+              />
+              <button
+                onClick={toggleVoiceInput}
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  background: isListening ? '#E53935' : 'var(--color-bg-surface)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '8px',
+                  padding: '6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'background 0.2s',
+                }}
+                title={isListening ? '듣는 중 — 탭하여 중지' : '음성으로 입력'}
+              >
+                <Mic size={16} color={isListening ? 'white' : 'var(--color-text-muted)'} />
+              </button>
+            </div>
 
             <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '10px' }}>
               카테고리
             </p>
-            <div className="grid grid-cols-2 gap-2 mb-6">
+            <div className="grid grid-cols-2 gap-2 mb-3">
               {categories.map((cat) => (
                 <button
                   key={cat}
@@ -279,6 +353,62 @@ export default function CreatePage() {
                 </button>
               ))}
             </div>
+
+            {addCatMode ? (
+              <div className="flex gap-2 mb-6">
+                <input
+                  autoFocus
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleAddCategory()
+                    if (e.key === 'Escape') { setAddCatMode(false); setNewCatName('') }
+                  }}
+                  placeholder="새 카테고리 이름"
+                  style={{
+                    flex: 1,
+                    padding: '10px 12px',
+                    background: 'var(--color-bg-card)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    color: 'var(--color-text-primary)',
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  onClick={handleAddCategory}
+                  style={{ padding: '10px 16px', background: 'var(--color-accent-primary)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  추가
+                </button>
+                <button
+                  onClick={() => { setAddCatMode(false); setNewCatName('') }}
+                  style={{ padding: '10px 12px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: '10px', fontSize: '13px', color: 'var(--color-text-muted)', cursor: 'pointer' }}
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setAddCatMode(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 14px',
+                  background: 'transparent',
+                  border: '1.5px dashed var(--color-border)',
+                  borderRadius: '10px',
+                  color: 'var(--color-text-muted)',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  marginBottom: '16px',
+                }}
+              >
+                + 카테고리 추가
+              </button>
+            )}
 
             {negativeBanner && (
               <div
@@ -315,21 +445,19 @@ export default function CreatePage() {
                     바꿔서 저장
                   </button>
                   <button
-                    onClick={() => {
-                      if (directCategory) doSave(directText, directCategory)
-                    }}
+                    onClick={() => setNegativeBanner(null)}
                     style={{
                       flex: 1,
                       padding: '10px',
-                      background: 'var(--color-bg-card)',
-                      color: 'var(--color-text-muted)',
-                      border: '1px solid var(--color-border)',
+                      background: 'transparent',
+                      color: '#795548',
+                      border: '1px solid #FFE082',
                       borderRadius: '10px',
                       fontSize: '13px',
                       cursor: 'pointer',
                     }}
                   >
-                    그대로 저장
+                    다시 쓰기
                   </button>
                 </div>
               </div>
@@ -383,7 +511,7 @@ export default function CreatePage() {
               }}
             />
 
-            <div className="flex flex-wrap gap-2 mb-6">
+            <div className="flex flex-wrap gap-2 mb-3">
               {categories.map((cat) => (
                 <button
                   key={cat}
@@ -407,6 +535,57 @@ export default function CreatePage() {
                   {cat}
                 </button>
               ))}
+              {addCatMode ? (
+                <div className="flex gap-2 w-full mt-1">
+                  <input
+                    autoFocus
+                    value={newCatName}
+                    onChange={(e) => setNewCatName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleAddCategory()
+                      if (e.key === 'Escape') { setAddCatMode(false); setNewCatName('') }
+                    }}
+                    placeholder="새 카테고리 이름"
+                    style={{
+                      flex: 1,
+                      padding: '8px 12px',
+                      background: 'var(--color-bg-card)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: '10px',
+                      fontSize: '13px',
+                      color: 'var(--color-text-primary)',
+                      outline: 'none',
+                    }}
+                  />
+                  <button
+                    onClick={handleAddCategory}
+                    style={{ padding: '8px 14px', background: 'var(--color-accent-primary)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    추가
+                  </button>
+                  <button
+                    onClick={() => { setAddCatMode(false); setNewCatName('') }}
+                    style={{ padding: '8px 10px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: '10px', fontSize: '13px', color: 'var(--color-text-muted)', cursor: 'pointer' }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setAddCatMode(true)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '20px',
+                    border: '1.5px dashed var(--color-border)',
+                    background: 'transparent',
+                    color: 'var(--color-text-muted)',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  + 추가
+                </button>
+              )}
             </div>
 
             <button
