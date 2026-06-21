@@ -493,7 +493,7 @@ export default function OnboardingPage() {
     router.push('/home')
   }
 
-  const TIME_PRESETS = [360, 420, 480, 540]
+  const TIME_PRESETS = [360, 420, 480, 540, 600, 660]
   const phrase = transcript || onbPhrase
   const onbWords = onbPhrase.split(' ')
 
@@ -513,7 +513,7 @@ export default function OnboardingPage() {
             <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.6px', color: T.ink, lineHeight: 1.28 }}>안녕하세요 :)</div>
             <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.6px', color: T.gold, lineHeight: 1.28 }}>저는 모님이에요.</div>
             <div style={{ fontSize: 16, fontWeight: 500, color: T.ink2, lineHeight: 1.55, marginTop: 4 }}>
-              성공의 말을 하면 이루어진다.
+              성공의 말을 자주 하면 이루어진다.
             </div>
           </div>
           <div style={{ padding: '12px 26px 48px' }}>
@@ -830,7 +830,7 @@ export default function OnboardingPage() {
             </div>
             <div>
               <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.6px', color: T.ink, lineHeight: 1.28, marginBottom: 10 }}>
-                매일 아침,<br />당신의 말로 깨울게요
+                매일, 성공의 말로<br />하루를 시작하세요
               </div>
               <div style={{ fontSize: 16, fontWeight: 500, color: T.ink2, lineHeight: 1.55 }}>
                 알림을 켜면 정한 시간에 오늘의 성공의 말을 보내드려요.
@@ -949,9 +949,6 @@ export default function OnboardingPage() {
                   )}
                 </button>
               </div>
-            </div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: T.ink2 }}>
-              매일 오전 07:00 알람
             </div>
           </div>
           <div style={{ padding: '12px 26px 48px' }}>

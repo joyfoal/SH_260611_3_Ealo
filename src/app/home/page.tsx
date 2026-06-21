@@ -539,18 +539,18 @@ export default function HomePage() {
               <button
                 onClick={handlePlay}
                 style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '50%',
+                  borderRadius: '999px',
                   background: 'var(--color-accent-primary)',
                   border: 'none',
                   cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  padding: '10px 20px',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  color: 'white',
+                  fontFamily: 'inherit',
                 }}
               >
-                <Play size={18} color="white" fill="white" />
+                성공의 말하기
               </button>
             </div>
           </div>
