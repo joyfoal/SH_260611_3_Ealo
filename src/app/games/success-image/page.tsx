@@ -281,7 +281,7 @@ export default function SuccessImagePage() {
     if (!successUrl) return
     const a = document.createElement('a')
     a.href = successUrl
-    a.download = 'mornim-success-image.png'
+    a.download = 'ealo-성공이미지.png'
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -417,7 +417,7 @@ export default function SuccessImagePage() {
                   if (!savedProfileUrl) return
                   const a = document.createElement('a')
                   a.href = savedProfileUrl
-                  a.download = 'mornim-profile.png'
+                  a.download = 'ealo-프로필.png'
                   document.body.appendChild(a)
                   a.click()
                   document.body.removeChild(a)
@@ -682,7 +682,7 @@ export default function SuccessImagePage() {
                         if (!profileUrl) return
                         const a = document.createElement('a')
                         a.href = profileUrl
-                        a.download = 'mornim-profile.png'
+                        a.download = 'ealo-프로필.png'
                         document.body.appendChild(a)
                         a.click()
                         document.body.removeChild(a)

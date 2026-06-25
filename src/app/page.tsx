@@ -35,8 +35,8 @@ export default function RootPage() {
       if (uncompleted.length > 0) {
         if (typeof window !== 'undefined') {
           try {
-            sessionStorage.setItem('mornim-speak-queue', JSON.stringify(ids))
-            sessionStorage.setItem('mornim-speak-index', String(ids.indexOf(uncompleted[0].id)))
+            sessionStorage.setItem('ealo-speak-queue', JSON.stringify(ids))
+            sessionStorage.setItem('ealo-speak-index', String(ids.indexOf(uncompleted[0].id)))
           } catch { /* 프라이빗 브라우징 등 storage 비활성화 환경 */ }
         }
         router.replace(`/speak?id=${uncompleted[0].id}`)

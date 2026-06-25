@@ -1,4 +1,4 @@
-const DB_NAME = 'mornim-success'
+const DB_NAME = 'ealo-success'
 const STORE_NAME = 'images'
 const DB_VERSION = 1
 

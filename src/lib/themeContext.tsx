@@ -17,7 +17,7 @@ const ThemeContext = createContext<ThemeContextValue>({
 
 function getInitialTheme(): ThemeName {
   if (typeof window === 'undefined') return 'warm'
-  const stored = localStorage.getItem('mornim-theme') as ThemeName | null
+  const stored = localStorage.getItem('ealo-theme') as ThemeName | null
   if (stored && stored in themes) return stored
   return 'warm'
 }
@@ -49,7 +49,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const setTheme = (name: ThemeName) => {
     setThemeName(name)
     if (typeof window !== 'undefined') {
-      localStorage.setItem('mornim-theme', name)
+      localStorage.setItem('ealo-theme', name)
     }
   }
 

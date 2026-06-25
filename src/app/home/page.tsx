@@ -553,10 +553,10 @@ export default function HomePage() {
     const startIndex = Math.max(0, ids.indexOf(todayAffirmation.id))
     if (typeof window !== 'undefined') {
       try {
-        sessionStorage.setItem('mornim-speak-queue', JSON.stringify(ids))
-        sessionStorage.setItem('mornim-speak-index', String(startIndex))
-        sessionStorage.setItem('mornim-speak-phase', 'initial')
-        sessionStorage.removeItem('mornim-repeat-remaining')
+        sessionStorage.setItem('ealo-speak-queue', JSON.stringify(ids))
+        sessionStorage.setItem('ealo-speak-index', String(startIndex))
+        sessionStorage.setItem('ealo-speak-phase', 'initial')
+        sessionStorage.removeItem('ealo-repeat-remaining')
       } catch { /* 프라이빗 브라우징 등 storage 비활성화 환경 */ }
     }
     router.push(`/speak?id=${todayAffirmation.id}`)
@@ -571,8 +571,8 @@ export default function HomePage() {
     const pick = pool[Math.floor(Math.random() * pool.length)]
     if (typeof window !== 'undefined') {
       try {
-        sessionStorage.setItem('mornim-speak-queue', JSON.stringify([pick.id]))
-        sessionStorage.setItem('mornim-speak-index', '0')
+        sessionStorage.setItem('ealo-speak-queue', JSON.stringify([pick.id]))
+        sessionStorage.setItem('ealo-speak-index', '0')
       } catch { /* 프라이빗 브라우징 등 storage 비활성화 환경 */ }
     }
     router.push(`/speak?id=${pick.id}`)

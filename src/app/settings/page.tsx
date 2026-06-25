@@ -629,7 +629,7 @@ function StatsPanel() {
       '▸ 카테고리별 완료',
       ...byCategory.map((c) => `${c.cat}: ${c.count}회`),
     ]
-    downloadText(lines.join('\n'), `mornim-stats-${todayStr()}.txt`)
+    downloadText(lines.join('\n'), `ealo-통계-${todayStr()}.txt`)
   }
 
   const statBox = (label: string, value: string) => (
@@ -747,7 +747,7 @@ function SearchPanel() {
         `   완료 날짜: ${a.completedDates.join(', ') || '없음'}`,
       ].join('\n')),
     ]
-    downloadText(lines.join('\n'), `mornim-search-${todayStr()}.txt`)
+    downloadText(lines.join('\n'), `ealo-검색-${todayStr()}.txt`)
   }
 
 
@@ -830,7 +830,7 @@ function SearchPanel() {
                     return `"${a.text}" (${a.category}) — ${datesInRange.length}회\n  ${datesInRange.join(', ')}`
                   }),
                 ]
-                downloadText(lines.join('\n'), `mornim-search-${dateQuery}-${endStr}.txt`)
+                downloadText(lines.join('\n'), `ealo-검색-${dateQuery}-${endStr}.txt`)
               }
 
               return (
@@ -883,7 +883,7 @@ function BackupPanel() {
       categories: getCategories(),
       calendar: getCalendar(),
       streak: getStreakData(),
-    }, `mornim-backup-${todayStr()}.json`)
+    }, `ealo-백업-${todayStr()}.json`)
   }
 
   const handleRestoreFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -897,10 +897,10 @@ function BackupPanel() {
         const dateStr = data.exportedAt ? new Date(data.exportedAt).toLocaleString('ko-KR') : '알 수 없음'
         if (!confirm(`${dateStr} 백업을 복구할까요?\n현재 데이터가 덮어씌워집니다.`)) return
         if (typeof window === 'undefined') return
-        localStorage.setItem('mornim-affirmations', JSON.stringify(data.affirmations ?? []))
-        localStorage.setItem('mornim-categories', JSON.stringify(data.categories ?? []))
-        localStorage.setItem('mornim-calendar', JSON.stringify(data.calendar ?? []))
-        localStorage.setItem('mornim-streak', JSON.stringify(data.streak ?? { currentStreak: 0, lastCompletedDate: null, shields: 0 }))
+        localStorage.setItem('ealo-affirmations', JSON.stringify(data.affirmations ?? []))
+        localStorage.setItem('ealo-categories', JSON.stringify(data.categories ?? []))
+        localStorage.setItem('ealo-calendar', JSON.stringify(data.calendar ?? []))
+        localStorage.setItem('ealo-streak', JSON.stringify(data.streak ?? { currentStreak: 0, lastCompletedDate: null, shields: 0 }))
         alert('복구 완료! 앱을 다시 시작해요.')
         window.location.reload()
       } catch { alert('파일을 읽을 수 없어요.') }
@@ -947,8 +947,8 @@ function DeletePanel() {
       try { await deleteAudioRecordsByAffirmationId(a.id) } catch { /* ignore */ }
     }
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('mornim-affirmations')
-      localStorage.removeItem('mornim-today-affirmations')
+      localStorage.removeItem('ealo-affirmations')
+      localStorage.removeItem('ealo-today-affirmations')
     }
     showMsg('성공의 말과 녹음이 삭제됐어요.')
   }

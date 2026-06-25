@@ -1,4 +1,4 @@
-const DB_NAME = 'mornim-face'
+const DB_NAME = 'ealo-face'
 const STORE_NAME = 'profiles'
 const DB_VERSION = 1
 

@@ -1,4 +1,4 @@
-const DB_NAME = 'mornim-audio'
+const DB_NAME = 'ealo-audio'
 const STORE_NAME = 'recordings'
 const DB_VERSION = 1
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000

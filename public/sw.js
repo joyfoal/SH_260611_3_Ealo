@@ -1,5 +1,5 @@
-// Service Worker for Mornim alarm notifications
-const CACHE_NAME = 'mornim-v1'
+// Service Worker for Ealo alarm notifications
+const CACHE_NAME = 'ealo-v1'
 
 self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()))
@@ -17,9 +17,9 @@ self.addEventListener('message', (event) => {
     alarmTimers[id] = setTimeout(() => {
       self.registration.showNotification(title, {
         body,
-        icon: '/mornim.png',
-        badge: '/mornim.png',
-        tag: `mornim-alarm-${id}`,
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        tag: `ealo-alarm-${id}`,
         renotify: true,
         requireInteraction: true,
       })

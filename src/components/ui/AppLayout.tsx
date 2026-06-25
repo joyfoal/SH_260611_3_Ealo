@@ -18,7 +18,7 @@ function SpriteIcon({ index, size }: { index: number; size: number }) {
         width: size,
         height: size,
         borderRadius: size * 0.22,
-        backgroundImage: 'url(/mornim.png)',
+        backgroundImage: 'url(/ealo.png)',
         backgroundSize: '300% 300%',
         backgroundPosition: `${col * 50}% ${row * 50}%`,
         flexShrink: 0,

@@ -87,9 +87,9 @@ function SpeakPageInner() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const storedQueue = sessionStorage.getItem('mornim-speak-queue')
-    const storedIndex = sessionStorage.getItem('mornim-speak-index')
-    const storedPhase = sessionStorage.getItem('mornim-speak-phase') as SpeakPhase | null
+    const storedQueue = sessionStorage.getItem('ealo-speak-queue')
+    const storedIndex = sessionStorage.getItem('ealo-speak-index')
+    const storedPhase = sessionStorage.getItem('ealo-speak-phase') as SpeakPhase | null
     const q = storedQueue ? (JSON.parse(storedQueue) as string[]) : []
     const idx = storedIndex ? parseInt(storedIndex) : 0
     if (storedPhase) speakPhaseRef.current = storedPhase
@@ -316,11 +316,11 @@ function SpeakPageInner() {
     } else {
       const phase = speakPhaseRef.current
       if (phase === 'repeat') {
-        const remaining: string[] = JSON.parse(sessionStorage.getItem('mornim-repeat-remaining') ?? '[]')
+        const remaining: string[] = JSON.parse(sessionStorage.getItem('ealo-repeat-remaining') ?? '[]')
         if (remaining.length > 0) {
           setCelebrationVariant('repeat_batch_done')
         } else {
-          sessionStorage.removeItem('mornim-repeat-remaining')
+          sessionStorage.removeItem('ealo-repeat-remaining')
           setTodayRepeatDone()
           setCelebrationVariant('repeat_done')
         }
@@ -407,9 +407,9 @@ function SpeakPageInner() {
     if (ids.length === 0) return
     speakPhaseRef.current = phase
     if (typeof window !== 'undefined') {
-      sessionStorage.setItem('mornim-speak-queue', JSON.stringify(ids))
-      sessionStorage.setItem('mornim-speak-index', '0')
-      sessionStorage.setItem('mornim-speak-phase', phase)
+      sessionStorage.setItem('ealo-speak-queue', JSON.stringify(ids))
+      sessionStorage.setItem('ealo-speak-index', '0')
+      sessionStorage.setItem('ealo-speak-phase', phase)
     }
     const all = getAffirmations()
     const first = all.find((a) => a.id === ids[0])
@@ -426,7 +426,7 @@ function SpeakPageInner() {
     const nextIndex = currentIndexRef.current + 1
     const nextId = queueRef.current[nextIndex]
     if (!nextId) return
-    if (typeof window !== 'undefined') sessionStorage.setItem('mornim-speak-index', String(nextIndex))
+    if (typeof window !== 'undefined') sessionStorage.setItem('ealo-speak-index', String(nextIndex))
     const all = getAffirmations()
     const next = all.find((a) => a.id === nextId)
     if (next) {
@@ -440,9 +440,9 @@ function SpeakPageInner() {
   // ── 오늘은 여기까지 ────────────────────────────────────────────────
   const handleGoHome = useCallback(() => {
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('mornim-speak-queue')
-      sessionStorage.removeItem('mornim-speak-index')
-      sessionStorage.removeItem('mornim-speak-phase')
+      sessionStorage.removeItem('ealo-speak-queue')
+      sessionStorage.removeItem('ealo-speak-index')
+      sessionStorage.removeItem('ealo-speak-phase')
     }
     if (isTomorrowEnabled() && getNaegeSeenDate() !== todayStr()) {
       router.push('/tomorrow')
@@ -482,22 +482,22 @@ function SpeakPageInner() {
     const shuffled = [...pool].sort(() => Math.random() - 0.5)
     const first3 = shuffled.slice(0, 3)
     const rest = shuffled.slice(3)
-    sessionStorage.setItem('mornim-repeat-remaining', JSON.stringify(rest.map((a) => a.id)))
+    sessionStorage.setItem('ealo-repeat-remaining', JSON.stringify(rest.map((a) => a.id)))
     startQueue(first3.map((a) => a.id), 'repeat')
   }, [startQueue])
 
   // ── 반복 계속하기 ─────────────────────────────────────────────────
   const handleRepeatMore = useCallback(() => {
-    const remaining: string[] = JSON.parse(sessionStorage.getItem('mornim-repeat-remaining') ?? '[]')
+    const remaining: string[] = JSON.parse(sessionStorage.getItem('ealo-repeat-remaining') ?? '[]')
     if (remaining.length === 0) {
-      sessionStorage.removeItem('mornim-repeat-remaining')
+      sessionStorage.removeItem('ealo-repeat-remaining')
       setTodayRepeatDone()
       setCelebrationVariant('repeat_done')
       return
     }
     const next3 = remaining.slice(0, 3)
     const rest = remaining.slice(3)
-    sessionStorage.setItem('mornim-repeat-remaining', JSON.stringify(rest))
+    sessionStorage.setItem('ealo-repeat-remaining', JSON.stringify(rest))
     startQueue(next3, 'repeat')
   }, [startQueue])
 
