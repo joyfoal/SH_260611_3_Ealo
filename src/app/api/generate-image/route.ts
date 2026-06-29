@@ -52,11 +52,18 @@ Strict Rule: Maintain 100% facial consistency, bone structure, and identity of C
 - Eyewear: ${eyewearRule}
 - Full description: ${fd.generationPrompt}
 
+[Youth & Beauty Enhancement — MANDATORY]
+CRITICAL: Render Ch_RegisteredFace as significantly younger and more beautiful than they appear in the source photo.
+- Target appearance age: 20–28 years old maximum
+- Skin: smooth, flawless, radiant — no visible wrinkles, lines, or age spots
+- Face: lifted, sculpted, vibrant — youthful facial volume and glow
+- Overall: the most attractive, energetic, and beautiful version of this person at their peak youth
+This is a visualization of their ideal successful future self — youthful transformation is intentional and essential.
+
 [Current Scene & Situation]
 Ch_RegisteredFace is now in a scene that embodies: ${scene}
 Ch_RegisteredFace is wearing appropriate attire for this success theme and making a genuinely joyful, warm, confident, deeply fulfilled expression — radiating positivity from within.
 The art style must be Photorealistic with warm golden light.
-Keep their current young appearance — do NOT age the face.
 
 Maintain the exact same facial structure, identity, and features of Ch_RegisteredFace across this new setting.
 The facial features, eye shape, nose structure, and skin tone must remain identical — only the background, clothing, and environment change.
@@ -95,11 +102,12 @@ export async function POST(req: NextRequest) {
 
       const prompt = imageStyle === 'cartoon'
         ? `Transform this person into a warm anime/illustration style character, preserving their facial features, hair color, and identity.
+IMPORTANT — Youth & Beauty: Make the character look significantly younger and more beautiful than in the original photo. Target age: 20–25 years old. Smooth, glowing skin, vibrant youthful energy, peak attractiveness. This is their ideal future self.
 Place them in a beautiful, magical success scene that visually embodies: ${sceneContext}
 Art style: Studio Ghibli anime — soft colors, warm golden light, painterly and heartwarming.
 The character radiates genuine joy, confidence, and deep fulfillment.
 NO TEXT OR LETTERS in the image.`
-        : `Keep this person's appearance, face, and identity EXACTLY as shown.
+        : `Render this person as a significantly younger and more beautiful version of themselves — target appearance age: 20–28 years old maximum. Smooth flawless skin, youthful facial volume, radiant glow, and peak attractiveness. This is their ideal successful future self. Preserve their facial bone structure, identity, hair color, and distinctive features — only make them look younger and more beautiful.
 Place them in a beautiful, inspiring success scene that visually embodies: ${sceneContext}
 The person radiates genuine joy, deep fulfillment, confidence, and inner peace.
 Style: Photorealistic, warm golden light, cinematic photography quality.
@@ -130,7 +138,7 @@ NO TEXT OR LETTERS in the image.`
 
       const prompt = faceData
         ? buildIdentityMatrix(faceData, sceneContext)
-        : `Reproduce this person's appearance with absolute fidelity. Keep their current young appearance — do NOT age the face.
+        : `Render this person as a significantly younger and more beautiful version of themselves — target appearance age: 20–28 years old. Smooth flawless skin, youthful facial volume, radiant glow, and peak attractiveness. Preserve their facial identity, bone structure, and distinctive features.
 Place them in a beautiful, uplifting scene that visually embodies: ${sceneContext}
 The person radiates genuine joy, confidence, and deep fulfillment.
 The image must be deeply positive, hopeful, and inspiring.
@@ -162,7 +170,7 @@ NO TEXT OR LETTERS. Style: warm golden light, photorealistic.`
       b64 = response.data?.[0]?.b64_json
     } else {
       // 얼굴 정보 없음: 일반 생성
-      const prompt = `A beautiful, heartwarming scene of a radiant, confident person whose face glows with genuine joy, fulfillment, and inner peace.
+      const prompt = `A beautiful, heartwarming scene of a radiant, youthful person in their mid-20s — glowing skin, vibrant energy, peak attractiveness — whose face shines with genuine joy, fulfillment, and inner peace.
 The scene visually embodies these positive themes: ${sceneContext}
 Surround them with symbolic elements and an environment that represents hope, growth, and success.
 The person's warm, joyful expression radiates positivity and is the emotional heart of the image.
