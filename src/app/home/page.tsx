@@ -755,52 +755,6 @@ export default function HomePage() {
         {/* Shortcuts */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', padding: '0 16px 16px' }}>
           <button
-            onClick={() => router.push('/create')}
-            style={{
-              padding: '12px 6px',
-              background: 'var(--color-bg-card)',
-              border: '1.5px solid var(--color-accent-primary)',
-              borderRadius: '12px',
-              color: 'var(--color-accent-primary)',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              wordBreak: 'keep-all',
-              lineHeight: 1.4,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-              minHeight: '56px',
-              fontFamily: 'inherit',
-            }}
-          >
-            성공의 말 만들기
-          </button>
-          <button
-            onClick={() => router.push('/games/success-image')}
-            style={{
-              padding: '12px 6px',
-              background: 'var(--color-accent-primary)',
-              border: '1.5px solid var(--color-accent-primary)',
-              borderRadius: '12px',
-              color: 'white',
-              fontSize: '12px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              wordBreak: 'keep-all',
-              lineHeight: 1.4,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-              minHeight: '56px',
-              fontFamily: 'inherit',
-            }}
-          >
-            성공 이미지 만들기
-          </button>
-          <button
             onClick={() => router.push('/games')}
             style={{
               padding: '12px 6px',
@@ -822,6 +776,52 @@ export default function HomePage() {
             }}
           >
             게임하기
+          </button>
+          <button
+            onClick={() => router.push('/create')}
+            style={{
+              padding: '12px 6px',
+              background: 'var(--color-accent-primary)',
+              border: '1.5px solid var(--color-accent-primary)',
+              borderRadius: '12px',
+              color: 'white',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              wordBreak: 'keep-all',
+              lineHeight: 1.4,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              minHeight: '56px',
+              fontFamily: 'inherit',
+            }}
+          >
+            성공의 말 만들기
+          </button>
+          <button
+            onClick={() => router.push('/games/success-image')}
+            style={{
+              padding: '12px 6px',
+              background: 'var(--color-bg-card)',
+              border: '1.5px solid var(--color-accent-primary)',
+              borderRadius: '12px',
+              color: 'var(--color-accent-primary)',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              wordBreak: 'keep-all',
+              lineHeight: 1.4,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              minHeight: '56px',
+              fontFamily: 'inherit',
+            }}
+          >
+            성공 이미지 만들기
           </button>
         </div>
 
