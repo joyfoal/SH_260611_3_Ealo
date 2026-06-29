@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppLayout } from '@/components/ui/AppLayout'
-import { Users, Plus, ChevronRight, CheckCircle } from 'lucide-react'
+import { Users, Plus, ChevronRight, CheckCircle, Search, X } from 'lucide-react'
 
 type CommunityTab = '방 둘러보기' | '내 방' | '방 만들기'
 
@@ -22,14 +22,20 @@ export default function CommunityPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<CommunityTab>('방 둘러보기')
   const [selectedTag, setSelectedTag] = useState('전체')
+  const [searchQuery, setSearchQuery] = useState('')
   const [myRooms, setMyRooms] = useState<string[]>(MOCK_MY_ROOMS)
   const [roomName, setRoomName] = useState('')
   const [roomDesc, setRoomDesc] = useState('')
   const [roomTags, setRoomTags] = useState<string[]>([])
 
-  const filteredRooms = MOCK_ROOMS.filter(r =>
-    selectedTag === '전체' || r.tags.includes(selectedTag)
-  ).filter(r => !myRooms.includes(r.id))
+  const filteredRooms = MOCK_ROOMS
+    .filter(r => !myRooms.includes(r.id))
+    .filter(r => selectedTag === '전체' || r.tags.includes(selectedTag))
+    .filter(r => {
+      const q = searchQuery.trim().toLowerCase()
+      if (!q) return true
+      return r.name.toLowerCase().includes(q) || r.desc.toLowerCase().includes(q)
+    })
 
   const myRoomData = MOCK_ROOMS.filter(r => myRooms.includes(r.id))
 
@@ -86,6 +92,35 @@ export default function CommunityPage() {
           {/* 방 둘러보기 */}
           {activeTab === '방 둘러보기' && (
             <div>
+              {/* 검색창 */}
+              <div style={{ position: 'relative', marginBottom: '12px' }}>
+                <Search size={15} color="var(--color-text-muted)" style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                <input
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="방 이름 또는 소개로 검색"
+                  style={{
+                    width: '100%',
+                    padding: '11px 36px',
+                    background: 'var(--color-bg-card)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    color: 'var(--color-text-primary)',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                  >
+                    <X size={15} color="var(--color-text-muted)" />
+                  </button>
+                )}
+              </div>
+
               {/* 태그 필터 */}
               <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', marginBottom: '16px', paddingBottom: '4px' }}>
                 {ALL_TAGS.map(tag => (
@@ -111,7 +146,7 @@ export default function CommunityPage() {
 
               {filteredRooms.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-muted)', fontSize: '14px' }}>
-                  모든 방에 참여 중이에요 🎉
+                  {searchQuery.trim() ? `"${searchQuery}" 검색 결과가 없어요` : '모든 방에 참여 중이에요 🎉'}
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
