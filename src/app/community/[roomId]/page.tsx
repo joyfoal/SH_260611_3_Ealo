@@ -15,7 +15,7 @@ const MOCK_ROOM_INFO: Record<string, { name: string }> = {
   r4: { name: '다이어트 확언단' },
 }
 
-type EmojiKey = '😍' | '👏' | '🔥' | '💪' | '✨' | '🌟' | '💛' | '🙌' | '💯' | '🎯' | '🦋' | '🌈'
+type EmojiKey = '😍' | '👏' | '🔥' | '💪' | '✨' | '🌟' | '💛' | '🙌' | '💯' | '💫' | '🌿' | '🌈'
 type Reactions = Record<EmojiKey, number>
 
 interface FeedItem {
@@ -48,7 +48,7 @@ interface UserProfile {
   googleEmail?: string
 }
 
-const ZERO_REACTIONS: Reactions = { '😍': 0, '👏': 0, '🔥': 0, '💪': 0, '✨': 0, '🌟': 0, '💛': 0, '🙌': 0, '💯': 0, '🎯': 0, '🦋': 0, '🌈': 0 }
+const ZERO_REACTIONS: Reactions = { '😍': 0, '👏': 0, '🔥': 0, '💪': 0, '✨': 0, '🌟': 0, '💛': 0, '🙌': 0, '💯': 0, '💫': 0, '🌿': 0, '🌈': 0 }
 
 const MOCK_FEED: FeedItem[] = [
   { id: 'f1', nickname: '햇살이', initial: '햇', content: '나는 오늘도 최선을 다하고 있다', daysCount: 23, reactions: { ...ZERO_REACTIONS, '😍': 4, '👏': 2, '🔥': 1, '🙌': 3 }, createdAt: '2시간 전' },
@@ -88,8 +88,8 @@ const EMOJIS: Array<{ emoji: EmojiKey; label: string }> = [
   { emoji: '💛', label: '응원해요' },
   { emoji: '🙌', label: '화이팅' },
   { emoji: '💯', label: '완벽해요' },
-  { emoji: '🎯', label: '집중해요' },
-  { emoji: '🦋', label: '변화해요' },
+  { emoji: '💫', label: '반짝여요' },
+  { emoji: '🌿', label: '성장해요' },
   { emoji: '🌈', label: '희망이에요' },
 ]
 
