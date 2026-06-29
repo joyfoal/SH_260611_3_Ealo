@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       generateAffirmations?: boolean
     }
 
-    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your_key_here') {
+    if (!process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY === 'your_key_here') {
       return NextResponse.json({
         reply: generateAffirmations
           ? '대화 내용을 바탕으로 성공의 말을 만들었어요!'
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     }
 
     const OpenAI = (await import('openai')).default
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+    const openai = new OpenAI({ apiKey: process.env.OPENROUTER_API_KEY, baseURL: 'https://openrouter.ai/api/v1' })
 
     let systemPrompt: string
     if (generateAffirmations) {
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     }
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'openai/gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
         ...(messages as Array<{ role: 'user' | 'assistant'; content: string }>),

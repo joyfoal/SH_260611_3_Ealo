@@ -78,7 +78,25 @@ export default function ProfileImagePage() {
   const [existingProfile, setExistingProfile] = useState<FaceProfile | null>(null)
 
   const PROFILE_GEN_KEY = 'ealo-profile-gen-count'
-  const MAX_DAILY = 3
+  const PROFILE_FIRST_COOKIE = 'ealo-profile-first'
+
+  function getFirstGenDate(): string | null {
+    const match = document.cookie.split(';').find((c) => c.trim().startsWith(PROFILE_FIRST_COOKIE + '='))
+    return match ? match.trim().slice(PROFILE_FIRST_COOKIE.length + 1) : null
+  }
+
+  function setFirstGenDate(date: string): void {
+    const expires = new Date()
+    expires.setFullYear(expires.getFullYear() + 1)
+    document.cookie = `${PROFILE_FIRST_COOKIE}=${date}; expires=${expires.toUTCString()}; path=/`
+  }
+
+  function getMaxDaily(): number {
+    const today = new Date().toISOString().split('T')[0]
+    const firstDate = getFirstGenDate()
+    // 첫날(쿠키 없거나 오늘이 첫날)이면 3회, 이후 방문은 1회
+    return (!firstDate || firstDate === today) ? 3 : 1
+  }
 
   function getDailyCount(): number {
     try {
@@ -95,6 +113,7 @@ export default function ProfileImagePage() {
       const today = new Date().toISOString().split('T')[0]
       const current = getDailyCount()
       localStorage.setItem(PROFILE_GEN_KEY, JSON.stringify({ date: today, count: current + 1 }))
+      if (!getFirstGenDate()) setFirstGenDate(today)
     } catch {}
   }
 
@@ -158,8 +177,13 @@ export default function ProfileImagePage() {
 
   const handleGenerate = async () => {
     if (!canGenerate()) return
-    if (getDailyCount() >= MAX_DAILY) {
-      setError('오늘은 프로필 이미지 생성을 모두 사용했어요. 내일 다시 시도해보세요.')
+    const maxDaily = getMaxDaily()
+    if (getDailyCount() >= maxDaily) {
+      setError(
+        maxDaily === 1
+          ? '오늘의 프로필 이미지 생성 1회를 사용했어요. 내일 다시 시도해보세요.'
+          : '오늘의 프로필 이미지 생성을 모두 사용했어요. 내일 다시 시도해보세요.'
+      )
       return
     }
     setGenerating(true)

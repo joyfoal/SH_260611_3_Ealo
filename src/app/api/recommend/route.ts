@@ -48,18 +48,18 @@ export async function POST(req: NextRequest) {
 
     const fallback = (category && CATEGORY_FALLBACKS[category]) ?? DEFAULT_FALLBACKS
 
-    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your_key_here') {
+    if (!process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY === 'your_key_here') {
       return NextResponse.json({ affirmations: fallback })
     }
 
     const OpenAI = (await import('openai')).default
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+    const openai = new OpenAI({ apiKey: process.env.OPENROUTER_API_KEY, baseURL: 'https://openrouter.ai/api/v1' })
 
     const categoryPart = category ? ` 카테고리: ${category}.` : ''
     const userMessage = `${prompt || ''}${categoryPart} 한국어 긍정 확언 5개를 JSON 배열로만 응답하세요. 예: ["확언1","확언2","확언3","확언4","확언5"]`
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'openai/gpt-4o-mini',
       messages: [
         {
           role: 'system',
