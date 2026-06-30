@@ -29,7 +29,7 @@ function resizeImageToBase64(file: File, maxPx = 200): Promise<string> {
   })
 }
 
-type CommunityTab = '내 방' | '방 둘러보기' | '방 만들기' | '랭킹'
+type CommunityTab = '내 방' | '방 둘러보기' | '랭킹'
 type RankingPeriod = '전체' | '연' | '월' | '일'
 
 const MOCK_RANKING: Record<RankingPeriod, Array<{ roomId: string; totalDays: number }>> = {
@@ -143,6 +143,7 @@ export default function CommunityPage() {
   const [creating, setCreating] = useState(false)
   const [rankingPeriod, setRankingPeriod] = useState<RankingPeriod>('일')
   const [rankingType, setRankingType] = useState<'방' | '성공의 말'>('방')
+  const [showCreateSheet, setShowCreateSheet] = useState(false)
 
   // 프로필
   const [userProfile, setUserProfile] = useState<UserProfile>({ nickname: '', profileImage: null })
@@ -257,7 +258,7 @@ export default function CommunityPage() {
     setRoomTag('')
     setRoomNameBanner(null)
     setRoomDescBanner(null)
-    setActiveTab('내 방')
+    setShowCreateSheet(false)
     setCreating(false)
   }
 
@@ -318,9 +319,9 @@ export default function CommunityPage() {
           </p>
         </div>
 
-        {/* 상단 탭: 내 방 → 방 둘러보기 → 방 만들기 */}
+        {/* 상단 탭: 내 방 → 방 둘러보기 → 랭킹 */}
         <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)', marginBottom: '20px' }}>
-          {(['내 방', '방 둘러보기', '방 만들기', '랭킹'] as CommunityTab[]).map(tab => (
+          {(['내 방', '방 둘러보기', '랭킹'] as CommunityTab[]).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} style={tabStyle(tab)}>
               {tab}
             </button>
@@ -331,6 +332,30 @@ export default function CommunityPage() {
           {/* 내 방 */}
           {activeTab === '내 방' && (
             <div>
+              {/* 헤더 */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)' }}>내 방 목록</span>
+                <button
+                  onClick={() => setShowCreateSheet(true)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '7px 14px',
+                    background: '#F59E0B',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Plus size={14} />
+                  방 만들기
+                </button>
+              </div>
+
               {myRoomData.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '60px 0' }}>
                   <div style={{ fontSize: '40px', marginBottom: '12px' }}>🏠</div>
@@ -541,9 +566,20 @@ export default function CommunityPage() {
             </div>
           )}
 
-          {/* 방 만들기 */}
-          {activeTab === '방 만들기' && (
-            <div>
+          {/* 방 만들기 바텀시트 */}
+          {showCreateSheet && (
+            <div
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 200, display: 'flex', alignItems: 'flex-end' }}
+              onClick={(e) => { if (e.target === e.currentTarget) setShowCreateSheet(false) }}
+            >
+              <div style={{ width: '100%', background: 'var(--color-bg-primary)', borderRadius: '20px 20px 0 0', padding: '20px 16px 40px', maxHeight: '90vh', overflowY: 'auto' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                  <span style={{ fontSize: '17px', fontWeight: 700, color: 'var(--color-text-primary)' }}>방 만들기</span>
+                  <button onClick={() => setShowCreateSheet(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '4px' }}>
+                    <X size={20} />
+                  </button>
+                </div>
+                <div>
               {/* 방 이름 */}
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block', marginBottom: '8px' }}>
@@ -757,6 +793,8 @@ export default function CommunityPage() {
                   </>
                 )}
               </button>
+              </div>
+              </div>
             </div>
           )}
 
