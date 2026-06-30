@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { AppLayout } from '@/components/ui/AppLayout'
 import { getAffirmations, type Affirmation } from '@/lib/storage'
 import {
   getFaceProfile,
@@ -254,9 +255,8 @@ export default function SuccessImagePage() {
   const canGenerateSuccess = hasProfile && selectedIds.length > 0 && !successGenerating && !isLimitReached
 
   return (
-    <div style={{ height: '100dvh', overflowY: 'auto', background: 'var(--color-bg-primary)', padding: '20px 16px 48px' }}>
-      {/* 헤더 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+    <AppLayout activeTab="게임">
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--color-bg-primary)', padding: '20px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
         <button
           onClick={() => router.back()}
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: '22px', padding: '4px', lineHeight: 1 }}
@@ -267,6 +267,7 @@ export default function SuccessImagePage() {
           성공 이미지 만들기
         </h1>
       </div>
+      <div style={{ padding: '0 16px 48px' }}>
 
       {/* ───── Step 1: 내 사진 추가 ───── */}
       <div
@@ -655,6 +656,7 @@ export default function SuccessImagePage() {
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
-    </div>
+      </div>
+    </AppLayout>
   )
 }

@@ -136,7 +136,7 @@ export default function AffirmationsPage() {
 
   return (
     <AppLayout activeTab="성공의 말">
-      <div style={{ padding: '20px 16px' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--color-bg-primary)', padding: '20px 16px 0' }}>
         <div className="flex items-center justify-between mb-4">
           <h1 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--color-text-primary)' }}>
             나의 성공의 말
@@ -198,7 +198,8 @@ export default function AffirmationsPage() {
             </button>
           ))}
         </div>
-
+      </div>
+      <div style={{ padding: '0 16px 16px' }}>
         {affirmations.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--color-text-muted)' }}>
             <div style={{ fontSize: '40px', marginBottom: '16px' }}>✨</div>

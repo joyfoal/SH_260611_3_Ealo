@@ -24,14 +24,15 @@ export default function GamesPage() {
 
   return (
     <AppLayout activeTab="게임">
-      <div style={{ padding: '20px 16px' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--color-bg-primary)', padding: '20px 16px 16px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '4px' }}>
           게임
         </h1>
-        <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', marginBottom: '24px' }}>
+        <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', marginBottom: 0 }}>
           게임으로 성공의 말을 익혀보세요
         </p>
-
+      </div>
+      <div style={{ padding: '16px 16px 20px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {GAMES.map((game) => (
             <div
@@ -87,3 +88,4 @@ export default function GamesPage() {
     </AppLayout>
   )
 }
+

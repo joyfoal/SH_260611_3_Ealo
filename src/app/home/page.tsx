@@ -570,7 +570,7 @@ export default function HomePage() {
 
   return (
     <AppLayout activeTab="홈">
-      <div style={{ paddingBottom: '16px' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--color-bg-primary)' }}>
         {/* Greeting + Motto */}
         <div style={{ padding: '20px 16px 12px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px' }}>
           <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--color-text-primary)', whiteSpace: 'nowrap' }}>
@@ -715,7 +715,8 @@ export default function HomePage() {
             </button>
           </div>
         ) : null}
-
+      </div>
+      <div style={{ paddingBottom: '16px' }}>
         {/* Stats / Streak */}
         <div style={{ margin: '0 16px 16px', padding: '14px 16px', background: 'var(--color-bg-card)', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{

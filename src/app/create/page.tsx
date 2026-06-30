@@ -358,7 +358,7 @@ export default function CreatePage() {
 
   return (
     <AppLayout activeTab="성공의 말">
-      <div style={{ padding: '20px 16px' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--color-bg-primary)', padding: '20px 16px 0' }}>
         <div className="flex items-center justify-between w-full mb-4">
           <button
             onClick={() => router.push('/affirmations')}
@@ -402,7 +402,8 @@ export default function CreatePage() {
             </button>
           ))}
         </div>
-
+      </div>
+      <div style={{ padding: '0 16px 20px' }}>
         {savedMsg && (
           <div
             style={{

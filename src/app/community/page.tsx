@@ -287,7 +287,8 @@ export default function CommunityPage() {
 
   return (
     <AppLayout activeTab="함께">
-      <div style={{ paddingBottom: '32px' }}>
+      <div>
+        <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--color-bg-primary)' }}>
         {/* 헤더 */}
         <div style={{ padding: '20px 16px 0' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
@@ -330,7 +331,7 @@ export default function CommunityPage() {
         </div>
 
         {/* 상단 탭: 내 방 → 방 둘러보기 → 랭킹 */}
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)' }}>
           {(['내 방', '방 둘러보기', '랭킹'] as CommunityTab[]).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} style={tabStyle(tab)}>
               {tab}
@@ -338,7 +339,55 @@ export default function CommunityPage() {
           ))}
         </div>
 
-        <div style={{ padding: '0 16px' }}>
+        {/* sticky: 방 둘러보기 검색 + 카테고리 */}
+        {activeTab === '방 둘러보기' && (
+          <div style={{ padding: '12px 16px 0' }}>
+            <div style={{ position: 'relative', marginBottom: '12px' }}>
+              <Search size={15} color="var(--color-text-muted)" style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              <input
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="방 이름 또는 소개로 검색"
+                style={{ width: '100%', padding: '11px 36px', background: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '12px', fontSize: '14px', color: 'var(--color-text-primary)', outline: 'none', boxSizing: 'border-box' }}
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                  <X size={15} color="var(--color-text-muted)" />
+                </button>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', marginBottom: '12px', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+              {ALL_TAGS.map(tag => (
+                <button key={tag} onClick={() => setSelectedTag(tag)} style={{ flexShrink: 0, padding: '6px 14px', borderRadius: '999px', border: selectedTag === tag ? '1.5px solid #F59E0B' : '1.5px solid var(--color-border)', background: selectedTag === tag ? 'var(--color-community-bg)' : 'var(--color-bg-card)', color: selectedTag === tag ? 'var(--color-community-text)' : 'var(--color-text-muted)', fontSize: '13px', fontWeight: selectedTag === tag ? 600 : 400, cursor: 'pointer' }}>
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* sticky: 랭킹 타입 + 기간 */}
+        {activeTab === '랭킹' && (
+          <div style={{ padding: '12px 16px 0' }}>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+              {(['방', '성공의 말'] as const).map(t => (
+                <button key={t} onClick={() => setRankingType(t)} style={{ flex: 1, padding: '10px 0', borderRadius: '12px', border: rankingType === t ? '2px solid #F59E0B' : '1.5px solid var(--color-border)', background: rankingType === t ? 'var(--color-community-accent)' : 'var(--color-bg-card)', color: rankingType === t ? 'white' : 'var(--color-text-muted)', fontSize: '14px', fontWeight: rankingType === t ? 700 : 400, cursor: 'pointer' }}>
+                  {t === '방' ? '🏠 방 랭킹' : '💬 성공의 말 랭킹'}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              {(['전체', '연', '월', '일'] as RankingPeriod[]).map(p => (
+                <button key={p} onClick={() => setRankingPeriod(p)} style={{ flex: 1, padding: '8px 0', borderRadius: '10px', border: rankingPeriod === p ? '1.5px solid #F59E0B' : '1.5px solid var(--color-border)', background: rankingPeriod === p ? 'var(--color-community-bg)' : 'var(--color-bg-card)', color: rankingPeriod === p ? 'var(--color-community-text)' : 'var(--color-text-muted)', fontSize: '13px', fontWeight: rankingPeriod === p ? 700 : 400, cursor: 'pointer' }}>
+                  {p}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        </div>{/* /sticky */}
+
+        <div style={{ padding: '16px 16px 32px' }}>
           {/* 내 방 */}
           {activeTab === '내 방' && (
             <div>
@@ -437,58 +486,6 @@ export default function CommunityPage() {
           {/* 방 둘러보기 */}
           {activeTab === '방 둘러보기' && (
             <div>
-              {/* 검색창 */}
-              <div style={{ position: 'relative', marginBottom: '12px' }}>
-                <Search size={15} color="var(--color-text-muted)" style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-                <input
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="방 이름 또는 소개로 검색"
-                  style={{
-                    width: '100%',
-                    padding: '11px 36px',
-                    background: 'var(--color-bg-card)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: '12px',
-                    fontSize: '14px',
-                    color: 'var(--color-text-primary)',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                  >
-                    <X size={15} color="var(--color-text-muted)" />
-                  </button>
-                )}
-              </div>
-
-              {/* 태그 필터 */}
-              <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', marginBottom: '16px', paddingBottom: '4px', scrollbarWidth: 'none' }}>
-                {ALL_TAGS.map(tag => (
-                  <button
-                    key={tag}
-                    onClick={() => setSelectedTag(tag)}
-                    style={{
-                      flexShrink: 0,
-                      padding: '6px 14px',
-                      borderRadius: '999px',
-                      border: selectedTag === tag ? '1.5px solid #F59E0B' : '1.5px solid var(--color-border)',
-                      background: selectedTag === tag ? 'var(--color-community-bg)' : 'var(--color-bg-card)',
-                      color: selectedTag === tag ? 'var(--color-community-text)' : 'var(--color-text-muted)',
-                      fontSize: '13px',
-                      fontWeight: selectedTag === tag ? 600 : 400,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-
               {filteredRooms.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--color-text-muted)', fontSize: '14px' }}>
                   {searchQuery.trim() ? `"${searchQuery}" 검색 결과가 없어요` : '모든 방에 참여 중이에요 🎉'}
@@ -811,52 +808,6 @@ export default function CommunityPage() {
           {/* 랭킹 */}
           {activeTab === '랭킹' && (
             <div>
-              {/* 랭킹 타입 선택 */}
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-                {(['방', '성공의 말'] as const).map(t => (
-                  <button
-                    key={t}
-                    onClick={() => setRankingType(t)}
-                    style={{
-                      flex: 1,
-                      padding: '10px 0',
-                      borderRadius: '12px',
-                      border: rankingType === t ? '2px solid #F59E0B' : '1.5px solid var(--color-border)',
-                      background: rankingType === t ? 'var(--color-community-accent)' : 'var(--color-bg-card)',
-                      color: rankingType === t ? 'white' : 'var(--color-text-muted)',
-                      fontSize: '14px',
-                      fontWeight: rankingType === t ? 700 : 400,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {t === '방' ? '🏠 방 랭킹' : '💬 성공의 말 랭킹'}
-                  </button>
-                ))}
-              </div>
-
-              {/* 기간 필터 */}
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                {(['전체', '연', '월', '일'] as RankingPeriod[]).map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setRankingPeriod(p)}
-                    style={{
-                      flex: 1,
-                      padding: '8px 0',
-                      borderRadius: '10px',
-                      border: rankingPeriod === p ? '1.5px solid #F59E0B' : '1.5px solid var(--color-border)',
-                      background: rankingPeriod === p ? 'var(--color-community-bg)' : 'var(--color-bg-card)',
-                      color: rankingPeriod === p ? 'var(--color-community-text)' : 'var(--color-text-muted)',
-                      fontSize: '13px',
-                      fontWeight: rankingPeriod === p ? 700 : 400,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-
               {/* 방별 랭킹 */}
               {rankingType === '방' && <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {MOCK_RANKING[rankingPeriod].map((entry, idx) => {
