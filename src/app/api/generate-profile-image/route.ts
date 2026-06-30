@@ -16,6 +16,17 @@ interface FaceData {
   generationPrompt: string
 }
 
+function extractBase64FromContent(content: unknown): string | null {
+  if (!Array.isArray(content)) return null
+  for (const part of content as Array<{ type?: string; image_url?: { url?: string } }>) {
+    if (part?.type === 'image_url') {
+      const url = part.image_url?.url ?? ''
+      return url.replace(/^data:image\/\w+;base64,/, '')
+    }
+  }
+  return null
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { mode, imageStyle, faceImageBase64, faceData, text } = await req.json() as {
@@ -27,14 +38,17 @@ export async function POST(req: NextRequest) {
     }
     const style = imageStyle ?? 'ghibli'
 
-    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your_key_here') {
+    if (!process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY === 'your_key_here') {
       return NextResponse.json({ error: 'API 키가 설정되지 않았어요.' }, { status: 400 })
     }
 
-    const { default: OpenAI, toFile } = await import('openai')
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+    const { default: OpenAI } = await import('openai')
+    const openai = new OpenAI({
+      apiKey: process.env.OPENROUTER_API_KEY,
+      baseURL: 'https://openrouter.ai/api/v1',
+    })
 
-    let b64: string | null | undefined
+    let b64: string | null = null
 
     if (mode === 'text') {
       const mood = text?.trim() ?? ''
@@ -60,19 +74,12 @@ A cheerful person with a peaceful, joyful smile surrounded by cherry blossoms, l
 The scene radiates warmth, hope, and deep positivity — a heartwarming and uplifting image.
 NO TEXT OR LETTERS in the image.`
 
-      const response = await openai.images.generate({
-        model: 'gpt-image-1',
-        prompt,
-        n: 1,
-        size: '1024x1024',
-        quality: 'low',
+      const response = await openai.chat.completions.create({
+        model: 'google/gemini-2.5-flash-image',
+        messages: [{ role: 'user', content: prompt }],
       })
-      b64 = response.data?.[0]?.b64_json
+      b64 = extractBase64FromContent(response.choices[0]?.message?.content)
     } else if (faceImageBase64) {
-      const base64Data = faceImageBase64.replace(/^data:image\/\w+;base64,/, '')
-      const imageBuffer = Buffer.from(base64Data, 'base64')
-      const imageFile = await toFile(imageBuffer, 'face.png', { type: 'image/png' })
-
       const genderLabel = faceData?.gender === 'female' ? 'woman' : faceData?.gender === 'male' ? 'man' : 'person'
       const faceDesc = faceData?.generationPrompt ?? `the ${genderLabel} in this photo`
       const eyewearRule =
@@ -98,15 +105,17 @@ Beautiful magical Ghibli world: warm golden sunlight filtering through trees, ch
 The character radiates joy, warmth, positivity, and hope — a deeply uplifting and heartwarming scene.
 NO TEXT OR LETTERS in the image.`
 
-      const response = await openai.images.edit({
-        model: 'gpt-image-1',
-        image: imageFile,
-        prompt,
-        n: 1,
-        size: '1024x1024',
-        quality: 'low',
+      const response = await openai.chat.completions.create({
+        model: 'google/gemini-2.5-flash-image',
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text: prompt },
+            { type: 'image_url', image_url: { url: faceImageBase64 } },
+          ],
+        }],
       })
-      b64 = response.data?.[0]?.b64_json
+      b64 = extractBase64FromContent(response.choices[0]?.message?.content)
     }
 
     if (!b64) {

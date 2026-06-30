@@ -70,9 +70,20 @@ The facial features, eye shape, nose structure, and skin tone must remain identi
 NO TEXT OR LETTERS of any kind in the image.`
 }
 
+function extractBase64FromContent(content: unknown): string | null {
+  if (!Array.isArray(content)) return null
+  for (const part of content as Array<{ type?: string; image_url?: { url?: string } }>) {
+    if (part?.type === 'image_url') {
+      const url = part.image_url?.url ?? ''
+      return url.replace(/^data:image\/\w+;base64,/, '')
+    }
+  }
+  return null
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { affirmations, faceData, faceImageBase64, faceMaskBase64, profileImageBase64, profileDescription, imageStyle } = await req.json() as {
+    const { affirmations, faceData, faceImageBase64, profileImageBase64, profileDescription, imageStyle } = await req.json() as {
       affirmations: string[]
       faceData?: FaceData
       faceImageBase64?: string
@@ -82,24 +93,21 @@ export async function POST(req: NextRequest) {
       imageStyle?: 'cartoon' | 'realistic'
     }
 
-    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your_key_here') {
+    if (!process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY === 'your_key_here') {
       return NextResponse.json({ error: 'API 키가 설정되지 않았어요.' }, { status: 400 })
     }
 
-    const { default: OpenAI, toFile } = await import('openai')
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+    const { default: OpenAI } = await import('openai')
+    const openai = new OpenAI({
+      apiKey: process.env.OPENROUTER_API_KEY,
+      baseURL: 'https://openrouter.ai/api/v1',
+    })
 
     const affText = affirmations.join(', ')
-    // 프로필 글 + 성공의 말을 함께 씬 컨텍스트로 결합
     const sceneContext = [affText, profileDescription].filter(Boolean).join('. Personal vision: ')
-    let b64: string | null | undefined
+    let b64: string | null = null
 
     if (profileImageBase64) {
-      // 업로드된 사진 기반 성공 이미지 생성
-      const base64Data = profileImageBase64.replace(/^data:image\/\w+;base64,/, '')
-      const imageBuffer = Buffer.from(base64Data, 'base64')
-      const imageFile = await toFile(imageBuffer, 'profile.png', { type: 'image/png' })
-
       const prompt = imageStyle === 'cartoon'
         ? `Transform this person into a warm anime/illustration style character, preserving their facial features, hair color, and identity.
 IMPORTANT — Youth & Beauty: Make the character look significantly younger and more beautiful than in the original photo. Target age: 20–25 years old. Smooth, glowing skin, vibrant youthful energy, peak attractiveness. This is their ideal future self.
@@ -113,29 +121,18 @@ The person radiates genuine joy, deep fulfillment, confidence, and inner peace.
 Style: Photorealistic, warm golden light, cinematic photography quality.
 NO TEXT OR LETTERS in the image.`
 
-      const response = await openai.images.edit({
-        model: 'gpt-image-1',
-        image: imageFile,
-        prompt,
-        n: 1,
-        size: '1024x1024',
-        quality: 'low',
+      const response = await openai.chat.completions.create({
+        model: 'google/gemini-2.5-flash-image',
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text: prompt },
+            { type: 'image_url', image_url: { url: profileImageBase64 } },
+          ],
+        }],
       })
-      b64 = response.data?.[0]?.b64_json
+      b64 = extractBase64FromContent(response.choices[0]?.message?.content)
     } else if (faceImageBase64) {
-      // 얼굴 사진 있음: gpt-image-1 이미지 편집
-      const base64Data = faceImageBase64.replace(/^data:image\/\w+;base64,/, '')
-      const imageBuffer = Buffer.from(base64Data, 'base64')
-      const imageFile = await toFile(imageBuffer, 'face.png', { type: 'image/png' })
-
-      // 마스크: 얼굴 타원 = 불투명(보존), 나머지 = 투명(편집)
-      let maskFile: Awaited<ReturnType<typeof toFile>> | undefined
-      if (faceMaskBase64) {
-        const maskBase64Data = faceMaskBase64.replace(/^data:image\/\w+;base64,/, '')
-        const maskBuffer = Buffer.from(maskBase64Data, 'base64')
-        maskFile = await toFile(maskBuffer, 'mask.png', { type: 'image/png' })
-      }
-
       const prompt = faceData
         ? buildIdentityMatrix(faceData, sceneContext)
         : `Render this person as a significantly younger and more beautiful version of themselves — target appearance age: 20–28 years old. Smooth flawless skin, youthful facial volume, radiant glow, and peak attractiveness. Preserve their facial identity, bone structure, and distinctive features.
@@ -144,32 +141,25 @@ The person radiates genuine joy, confidence, and deep fulfillment.
 The image must be deeply positive, hopeful, and inspiring.
 NO TEXT OR LETTERS. Style: warm golden light, photorealistic.`
 
-      const editParams: Parameters<typeof openai.images.edit>[0] = {
-        model: 'gpt-image-1',
-        image: imageFile,
-        prompt,
-        n: 1,
-        size: '1024x1024',
-        quality: 'low',
-      }
-      if (maskFile) editParams.mask = maskFile
-
-      const response = await openai.images.edit(editParams)
-      b64 = response.data?.[0]?.b64_json
-    } else if (faceData) {
-      // 얼굴 데이터만 있음: Identity Matrix 텍스트 기반 생성
-      const prompt = buildIdentityMatrix(faceData, sceneContext)
-
-      const response = await openai.images.generate({
-        model: 'gpt-image-1',
-        prompt,
-        n: 1,
-        size: '1024x1024',
-        quality: 'low',
+      const response = await openai.chat.completions.create({
+        model: 'google/gemini-2.5-flash-image',
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text: prompt },
+            { type: 'image_url', image_url: { url: faceImageBase64 } },
+          ],
+        }],
       })
-      b64 = response.data?.[0]?.b64_json
+      b64 = extractBase64FromContent(response.choices[0]?.message?.content)
+    } else if (faceData) {
+      const prompt = buildIdentityMatrix(faceData, sceneContext)
+      const response = await openai.chat.completions.create({
+        model: 'google/gemini-2.5-flash-image',
+        messages: [{ role: 'user', content: prompt }],
+      })
+      b64 = extractBase64FromContent(response.choices[0]?.message?.content)
     } else {
-      // 얼굴 정보 없음: 일반 생성
       const prompt = `A beautiful, heartwarming scene of a radiant, youthful person in their mid-20s — glowing skin, vibrant energy, peak attractiveness — whose face shines with genuine joy, fulfillment, and inner peace.
 The scene visually embodies these positive themes: ${sceneContext}
 Surround them with symbolic elements and an environment that represents hope, growth, and success.
@@ -178,14 +168,11 @@ The atmosphere is deeply uplifting, encouraging, and filled with warmth and hope
 NO TEXT OR LETTERS of any kind in the image.
 Style: warm golden light, painterly, Korean aesthetic sensibility, cinematic and deeply positive.`
 
-      const response = await openai.images.generate({
-        model: 'gpt-image-1',
-        prompt,
-        n: 1,
-        size: '1024x1024',
-        quality: 'low',
+      const response = await openai.chat.completions.create({
+        model: 'google/gemini-2.5-flash-image',
+        messages: [{ role: 'user', content: prompt }],
       })
-      b64 = response.data?.[0]?.b64_json
+      b64 = extractBase64FromContent(response.choices[0]?.message?.content)
     }
 
     if (!b64) {
