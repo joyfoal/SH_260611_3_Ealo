@@ -70,14 +70,39 @@ The facial features, eye shape, nose structure, and skin tone must remain identi
 NO TEXT OR LETTERS of any kind in the image.`
 }
 
-function extractBase64FromContent(content: unknown): string | null {
-  if (!Array.isArray(content)) return null
-  for (const part of content as Array<{ type?: string; image_url?: { url?: string } }>) {
-    if (part?.type === 'image_url') {
-      const url = part.image_url?.url ?? ''
-      return url.replace(/^data:image\/\w+;base64,/, '')
+async function extractImageDataUrl(content: unknown): Promise<string | null> {
+  // string 형태 (data: URL 또는 https: URL)
+  if (typeof content === 'string') {
+    if (content.startsWith('data:image/')) return content
+    if (content.startsWith('https://')) {
+      const res = await fetch(content)
+      const buf = await res.arrayBuffer()
+      const b64 = Buffer.from(buf).toString('base64')
+      const mime = res.headers.get('content-type') ?? 'image/png'
+      return `data:${mime};base64,${b64}`
     }
   }
+
+  // 배열 형태 (content parts)
+  if (Array.isArray(content)) {
+    for (const part of content as Array<{ type?: string; image_url?: { url?: string }; text?: string }>) {
+      if (part?.type === 'image_url' && part.image_url?.url) {
+        const url = part.image_url.url
+        if (url.startsWith('data:image/')) return url
+        if (url.startsWith('https://')) {
+          const res = await fetch(url)
+          const buf = await res.arrayBuffer()
+          const b64 = Buffer.from(buf).toString('base64')
+          const mime = res.headers.get('content-type') ?? 'image/png'
+          return `data:${mime};base64,${b64}`
+        }
+      }
+      if (part?.type === 'text' && part.text?.startsWith('data:image/')) {
+        return part.text
+      }
+    }
+  }
+
   return null
 }
 
@@ -105,7 +130,7 @@ export async function POST(req: NextRequest) {
 
     const affText = affirmations.join(', ')
     const sceneContext = [affText, profileDescription].filter(Boolean).join('. Personal vision: ')
-    let b64: string | null = null
+    let imageDataUrl: string | null = null
 
     if (profileImageBase64) {
       const prompt = imageStyle === 'cartoon'
@@ -131,7 +156,7 @@ NO TEXT OR LETTERS in the image.`
           ],
         }],
       })
-      b64 = extractBase64FromContent(response.choices[0]?.message?.content)
+      imageDataUrl = await extractImageDataUrl(response.choices[0]?.message?.content)
     } else if (faceImageBase64) {
       const prompt = faceData
         ? buildIdentityMatrix(faceData, sceneContext)
@@ -151,14 +176,14 @@ NO TEXT OR LETTERS. Style: warm golden light, photorealistic.`
           ],
         }],
       })
-      b64 = extractBase64FromContent(response.choices[0]?.message?.content)
+      imageDataUrl = await extractImageDataUrl(response.choices[0]?.message?.content)
     } else if (faceData) {
       const prompt = buildIdentityMatrix(faceData, sceneContext)
       const response = await openai.chat.completions.create({
         model: 'google/gemini-2.5-flash-image',
         messages: [{ role: 'user', content: prompt }],
       })
-      b64 = extractBase64FromContent(response.choices[0]?.message?.content)
+      imageDataUrl = await extractImageDataUrl(response.choices[0]?.message?.content)
     } else {
       const prompt = `A beautiful, heartwarming scene of a radiant, youthful person in their mid-20s — glowing skin, vibrant energy, peak attractiveness — whose face shines with genuine joy, fulfillment, and inner peace.
 The scene visually embodies these positive themes: ${sceneContext}
@@ -172,14 +197,14 @@ Style: warm golden light, painterly, Korean aesthetic sensibility, cinematic and
         model: 'google/gemini-2.5-flash-image',
         messages: [{ role: 'user', content: prompt }],
       })
-      b64 = extractBase64FromContent(response.choices[0]?.message?.content)
+      imageDataUrl = await extractImageDataUrl(response.choices[0]?.message?.content)
     }
 
-    if (!b64) {
+    if (!imageDataUrl) {
       return NextResponse.json({ error: '이미지 생성에 실패했어요.' }, { status: 500 })
     }
 
-    return NextResponse.json({ url: `data:image/png;base64,${b64}` })
+    return NextResponse.json({ url: imageDataUrl })
   } catch (err) {
     const msg = err instanceof Error ? err.message : '알 수 없는 오류'
     return NextResponse.json({ error: msg }, { status: 500 })
