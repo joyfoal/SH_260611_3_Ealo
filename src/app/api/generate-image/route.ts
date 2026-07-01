@@ -72,6 +72,9 @@ NO TEXT OR LETTERS of any kind in the image.`
 }
 
 async function extractImageDataUrl(content: unknown): Promise<string | null> {
+  console.log('[generate-image] raw content type:', typeof content, Array.isArray(content) ? 'array' : '')
+  if (typeof content === 'string') console.log('[generate-image] content preview:', content.slice(0, 200))
+  if (Array.isArray(content)) console.log('[generate-image] content parts:', JSON.stringify(content).slice(0, 400))
   // string 형태 (data: URL 또는 https: URL)
   if (typeof content === 'string') {
     if (content.startsWith('data:image/')) return content
@@ -196,12 +199,14 @@ Style: warm golden light, painterly, Korean aesthetic sensibility, cinematic and
     }
 
     if (!imageDataUrl) {
+      console.error('[generate-image] imageDataUrl is null — API response did not contain an image')
       return NextResponse.json({ error: '이미지 생성에 실패했어요.' }, { status: 500 })
     }
 
     return NextResponse.json({ url: imageDataUrl })
   } catch (err) {
     const msg = err instanceof Error ? err.message : '알 수 없는 오류'
+    console.error('[generate-image] catch error:', msg)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
