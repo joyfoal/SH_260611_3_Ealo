@@ -1165,6 +1165,7 @@ function CategoryPanel() {
   const dragStartYRef = useRef(0)
   const [addingCat, setAddingCat] = useState(false)
   const [catAlternative, setCatAlternative] = useState<string | null>(null)
+  const [catBlocked, setCatBlocked] = useState(false)
 
   useEffect(() => { setCategories(getCategories()) }, [])
   const reload = () => setCategories(getCategories())
@@ -1217,7 +1218,10 @@ function CategoryPanel() {
     try {
       const res = await fetch('/api/detect-negative', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: name }) })
       const data = await res.json() as { isNegative: boolean; alternative: string | null }
-      if (data.isNegative && data.alternative) { setCatAlternative(data.alternative); setAddingCat(false); return }
+      if (data.isNegative) {
+        if (data.alternative) { setCatAlternative(data.alternative) } else { setCatBlocked(true) }
+        setAddingCat(false); return
+      }
     } catch { /* 네트워크 오류 시 통과 */ }
     setAddingCat(false); doAddCategory(name)
   }
@@ -1279,6 +1283,12 @@ function CategoryPanel() {
             <button onClick={handleAdd} disabled={addingCat} style={{ padding: '10px 16px', background: 'var(--color-accent-primary)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', opacity: addingCat ? 0.6 : 1 }}>{addingCat ? '확인 중...' : '추가'}</button>
             <button onClick={() => { setAddMode(false); setNewCatName(''); setCatAlternative(null) }} style={{ padding: '10px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: '10px', cursor: 'pointer', color: 'var(--color-text-muted)' }}><X size={14} /></button>
           </div>
+          {catBlocked && (
+            <div style={{ marginTop: '8px', padding: '12px', background: '#FFEBEE', borderRadius: '10px', border: '1px solid #FFCDD2' }}>
+              <p style={{ fontSize: '12px', color: '#B71C1C', marginBottom: '6px' }}>🚫 부적절한 표현은 사용할 수 없어요.</p>
+              <button onClick={() => { setNewCatName(''); setCatBlocked(false) }} style={{ width: '100%', padding: '8px', background: 'transparent', color: '#B71C1C', border: '1px solid #FFCDD2', borderRadius: '8px', fontSize: '12px', cursor: 'pointer' }}>다시 쓰기</button>
+            </div>
+          )}
           {catAlternative && (
             <div style={{ marginTop: '8px', padding: '12px', background: 'var(--color-warning-bg)', borderRadius: '10px', border: '1px solid #FFE082' }}>
               <p style={{ fontSize: '12px', color: 'var(--color-warning)', marginBottom: '6px' }}>부정적인 표현이 감지됐어요. 이렇게 바꿔볼까요?</p>

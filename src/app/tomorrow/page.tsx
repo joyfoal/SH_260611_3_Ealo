@@ -18,6 +18,7 @@ export default function TomorrowPage() {
   const [saving, setSaving] = useState(false)
   const [placeholder, setPlaceholder] = useState('오늘도 잘 할 수 있어!')
   const [negativeSuggestion, setNegativeSuggestion] = useState<string | null>(null)
+  const [negativeBlocked, setNegativeBlocked] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef<{ stop: () => void } | null>(null)
 
@@ -69,8 +70,12 @@ export default function TomorrowPage() {
           body: JSON.stringify({ text: trimmed }),
         })
         const data = await res.json() as { isNegative: boolean; alternative: string | null }
-        if (data.isNegative && data.alternative) {
-          setNegativeSuggestion(data.alternative)
+        if (data.isNegative) {
+          if (data.alternative) {
+            setNegativeSuggestion(data.alternative)
+          } else {
+            setNegativeBlocked(true)
+          }
           setSaving(false)
           return
         }
@@ -220,6 +225,17 @@ export default function TomorrowPage() {
 
       {/* Actions */}
       <div className="flex flex-col gap-3">
+        {negativeBlocked && (
+          <div style={{ padding: '14px', background: '#FFEBEE', borderRadius: '12px', border: '1px solid #FFCDD2' }}>
+            <p style={{ fontSize: '13px', color: '#B71C1C', marginBottom: '8px' }}>🚫 부적절한 표현은 저장할 수 없어요.</p>
+            <button
+              onClick={() => { setNegativeBlocked(false); setMessage('') }}
+              style={{ width: '100%', padding: '10px', background: 'transparent', color: '#B71C1C', border: '1px solid #FFCDD2', borderRadius: '10px', fontSize: '13px', cursor: 'pointer' }}
+            >
+              다시 쓰기
+            </button>
+          </div>
+        )}
         {negativeSuggestion && (
           <div style={{ padding: '14px', background: '#FFF3CD', borderRadius: '12px', border: '1px solid #FFE082' }}>
             <p style={{ fontSize: '13px', color: '#795548', marginBottom: '8px' }}>
