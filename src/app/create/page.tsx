@@ -226,6 +226,7 @@ export default function CreatePage() {
       saveTodayAffirmationIds([...currentIds, newId])
     }
     setDirectText('')
+    setDirectCategory(null)
     setNegativeBanner(null)
     showToast('저장되었어요!', 'success')
   }
