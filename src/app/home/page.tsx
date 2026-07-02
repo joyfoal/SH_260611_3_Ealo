@@ -755,13 +755,13 @@ export default function HomePage() {
               }}>
                 <Flame size={20} color={T.gold} strokeWidth={1.75} />
               </div>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                <div>
-                  <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
-                    {streakData.currentStreak}
-                  </span>
-                  <span style={{ fontSize: '11.5px', color: T.muted }}> 일 연속</span>
-                </div>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
+                  {streakData.currentStreak}
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                <div style={{ fontSize: '11.5px', color: T.muted }}>일 연속</div>
                 {streakData.shields > 0 && (
                   <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '6px' }}>
                     보호막 {streakData.shields}개
@@ -779,14 +779,13 @@ export default function HomePage() {
               }}>
                 <Shield size={20} color={T.info} strokeWidth={1.75} />
               </div>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                <div>
-                  <span style={{ fontSize: '11.5px', color: T.muted }}>오늘 </span>
-                  <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
-                    {todayCount}
-                  </span>
-                  <span style={{ fontSize: '11.5px', color: T.muted }}> 개 완료</span>
-                </div>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
+                  {todayCount}
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                <div style={{ fontSize: '11.5px', color: T.muted }}>개 오늘 완료</div>
                 <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '6px' }}>
                   {totalCompletedDays}일 완료
                 </div>
