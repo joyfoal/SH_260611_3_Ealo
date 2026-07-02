@@ -43,7 +43,7 @@ const T = {
   divider: '#F4ECDE',
   gold: '#BA7517',
   goldGrad: 'linear-gradient(135deg, #BA7517, #D98A1C)',
-  goldGradLight: 'linear-gradient(135deg, #CB9851, #E3A755)',
+  goldGradLight: 'linear-gradient(135deg, #D6AC74, #E8B977)',
   goldTint: '#FBF0DA',
   ink: '#2A1801',
   body: '#412402',
@@ -130,7 +130,7 @@ function RecentRecordingPlayer() {
           width: '40px',
           height: '40px',
           borderRadius: '50%',
-          background: T.goldGrad,
+          background: T.goldGradLight,
           border: 'none',
           cursor: 'pointer',
           display: 'flex',
@@ -621,10 +621,10 @@ export default function HomePage() {
                 width: '100%',
                 marginTop: '18px',
                 padding: '14px',
-                background: T.goldGradLight,
+                background: T.goldGrad,
                 border: 'none',
                 borderRadius: '14px',
-                boxShadow: '0 6px 16px rgba(186,117,23,0.18)',
+                boxShadow: '0 6px 16px rgba(186,117,23,0.28)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -749,11 +749,11 @@ export default function HomePage() {
           <div style={{ flex: 1, padding: '14px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px rgba(65,36,2,0.05)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
               <div style={{
-                width: '26px', height: '26px', borderRadius: '8px', flexShrink: 0,
+                width: '34px', height: '34px', borderRadius: '10px', flexShrink: 0,
                 background: 'linear-gradient(135deg, #FBE6BE, #F4C876)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Flame size={14} color={T.gold} strokeWidth={1.75} />
+                <Flame size={20} color={T.gold} strokeWidth={1.75} />
               </div>
               <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
                 {streakData.currentStreak}
@@ -769,11 +769,11 @@ export default function HomePage() {
           <div style={{ flex: 1, padding: '14px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px rgba(65,36,2,0.05)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
               <div style={{
-                width: '26px', height: '26px', borderRadius: '8px', flexShrink: 0,
+                width: '34px', height: '34px', borderRadius: '10px', flexShrink: 0,
                 background: T.infoBg,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Shield size={14} color={T.info} strokeWidth={1.75} />
+                <Shield size={20} color={T.info} strokeWidth={1.75} />
               </div>
               <span style={{ fontSize: '11.5px', color: T.muted }}>오늘</span>
               <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
