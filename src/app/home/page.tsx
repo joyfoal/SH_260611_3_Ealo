@@ -803,7 +803,7 @@ export default function HomePage() {
             onClick={() => router.push('/games')}
             style={{
               padding: '12px 6px',
-              background: T.card,
+              background: T.goldTint,
               border: `1px solid ${T.cardBorder}`,
               borderRadius: '14px',
               color: T.gold,
@@ -829,13 +829,12 @@ export default function HomePage() {
             onClick={() => router.push('/create')}
             style={{
               padding: '12px 6px',
-              background: T.goldGradLight,
-              border: 'none',
+              background: T.goldTint,
+              border: `1px solid ${T.cardBorder}`,
               borderRadius: '14px',
-              boxShadow: '0 6px 16px rgba(186,117,23,0.18)',
-              color: 'white',
+              color: T.gold,
               fontSize: '12px',
-              fontWeight: 700,
+              fontWeight: 600,
               cursor: 'pointer',
               wordBreak: 'keep-all',
               lineHeight: 1.4,
@@ -856,7 +855,7 @@ export default function HomePage() {
             onClick={() => router.push('/home/success-image')}
             style={{
               padding: '12px 6px',
-              background: T.card,
+              background: T.goldTint,
               border: `1px solid ${T.cardBorder}`,
               borderRadius: '14px',
               color: T.gold,
