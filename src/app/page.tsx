@@ -87,10 +87,13 @@ export default function RootPage() {
             priority
             style={{ borderRadius: 44, boxShadow: '0 12px 32px rgba(20,60,45,0.18)' }}
           />
-          {/* star crystal shine, positioned over the star baked into the icon artwork */}
+          {/* star crystal shine, positioned over the star baked into the icon artwork.
+              Centering uses negative margins (not transform: translate) because the
+              scale/rotate keyframes below animate the `transform` property directly,
+              which would overwrite an inline translate() and throw off the position. */}
           <div
             style={{
-              position: 'absolute', left: '48%', top: '24%', transform: 'translate(-50%, -50%)',
+              position: 'absolute', left: '48%', top: '24%', marginLeft: -28, marginTop: -28,
               width: 56, height: 56, borderRadius: '50%', pointerEvents: 'none',
               background: 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,241,196,0.5) 45%, transparent 75%)',
               filter: 'blur(1px)',
@@ -99,7 +102,7 @@ export default function RootPage() {
           />
           <div
             style={{
-              position: 'absolute', left: '48%', top: '24%', transform: 'translate(-50%, -50%)',
+              position: 'absolute', left: '48%', top: '24%', marginLeft: -7, marginTop: -7,
               width: 14, height: 14, pointerEvents: 'none',
               background: '#FFFFFF',
               clipPath: 'polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%)',
@@ -109,7 +112,7 @@ export default function RootPage() {
           />
           <div
             style={{
-              position: 'absolute', left: '61%', top: '17%', transform: 'translate(-50%, -50%)',
+              position: 'absolute', left: '61%', top: '17%', marginLeft: -4, marginTop: -4,
               width: 8, height: 8, pointerEvents: 'none',
               background: '#FFFFFF',
               clipPath: 'polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%)',
@@ -122,14 +125,6 @@ export default function RootPage() {
           <div style={{ fontSize: 22, fontWeight: 700, color: '#4F7A63' }}>말하면, 이루어진다</div>
         </div>
       </div>
-      <div
-        style={{
-          position: 'absolute', bottom: 48, left: '50%', transform: 'translateX(-50%)',
-          width: 24, height: 24, borderRadius: '50%',
-          border: '2.5px solid rgba(186,117,23,0.25)', borderTopColor: '#BA7517',
-          animation: 'swirlSpin 0.9s linear infinite',
-        }}
-      />
     </div>
   )
 }
