@@ -603,7 +603,7 @@ export default function HomePage() {
               border: `1px solid ${T.cardBorder}`,
               boxShadow: '0 8px 28px rgba(65,36,2,0.07)',
               borderRadius: '22px',
-              padding: '22px 20px',
+              padding: '36px 20px',
               margin: '0 16px 16px',
             }}
           >
