@@ -755,7 +755,7 @@ export default function HomePage() {
               }}>
                 <Flame size={20} color={T.gold} strokeWidth={1.75} />
               </div>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', whiteSpace: 'nowrap' }}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
                 <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
                   {streakData.currentStreak}
                 </span>
@@ -780,7 +780,7 @@ export default function HomePage() {
               }}>
                 <Shield size={20} color={T.info} strokeWidth={1.75} />
               </div>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', whiteSpace: 'nowrap' }}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
                 <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
                   {todayCount}
                 </span>
