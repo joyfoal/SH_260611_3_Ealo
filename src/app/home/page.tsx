@@ -747,7 +747,7 @@ export default function HomePage() {
         {/* Stats / Streak — 2분할 */}
         <div style={{ margin: '0 16px 16px', display: 'flex', gap: '10px' }}>
           <div style={{ flex: 1, padding: '14px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px rgba(65,36,2,0.05)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{
                 width: '34px', height: '34px', borderRadius: '10px', flexShrink: 0,
                 background: 'linear-gradient(135deg, #FBE6BE, #F4C876)',
@@ -755,19 +755,23 @@ export default function HomePage() {
               }}>
                 <Flame size={20} color={T.gold} strokeWidth={1.75} />
               </div>
-              <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
-                {streakData.currentStreak}
-              </span>
-              <span style={{ fontSize: '11.5px', color: T.muted }}>일 연속</span>
-            </div>
-            {streakData.shields > 0 && (
-              <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '6px', textAlign: 'right' }}>
-                보호막 {streakData.shields}개
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                <div>
+                  <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
+                    {streakData.currentStreak}
+                  </span>
+                  <span style={{ fontSize: '11.5px', color: T.muted }}> 일 연속</span>
+                </div>
+                {streakData.shields > 0 && (
+                  <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '6px' }}>
+                    보호막 {streakData.shields}개
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
           <div style={{ flex: 1, padding: '14px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px rgba(65,36,2,0.05)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{
                 width: '34px', height: '34px', borderRadius: '10px', flexShrink: 0,
                 background: T.infoBg,
@@ -775,14 +779,18 @@ export default function HomePage() {
               }}>
                 <Shield size={20} color={T.info} strokeWidth={1.75} />
               </div>
-              <span style={{ fontSize: '11.5px', color: T.muted }}>오늘</span>
-              <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
-                {todayCount}
-              </span>
-              <span style={{ fontSize: '11.5px', color: T.muted }}>개 완료</span>
-            </div>
-            <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '6px', textAlign: 'right' }}>
-              {totalCompletedDays}일 완료
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                <div>
+                  <span style={{ fontSize: '11.5px', color: T.muted }}>오늘 </span>
+                  <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
+                    {todayCount}
+                  </span>
+                  <span style={{ fontSize: '11.5px', color: T.muted }}> 개 완료</span>
+                </div>
+                <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '6px' }}>
+                  {totalCompletedDays}일 완료
+                </div>
+              </div>
             </div>
           </div>
         </div>
