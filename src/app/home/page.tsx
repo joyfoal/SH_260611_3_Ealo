@@ -591,13 +591,15 @@ export default function HomePage() {
     <AppLayout activeTab="홈">
       <div style={{ position: 'sticky', top: 0, zIndex: 10, background: T.bgPrimary }}>
         {/* Greeting + Motto */}
-        <div style={{ padding: '20px 16px 12px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px' }}>
+        <div style={{ padding: '20px 16px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
           <div style={{ fontSize: '22px', fontWeight: 800, color: T.ink, whiteSpace: 'nowrap' }}>
             {greeting}
           </div>
-          <div style={{ fontSize: '16px', color: T.gold, fontWeight: 800, letterSpacing: '-0.3px', whiteSpace: 'nowrap' }}>
-            이뤄 <span style={{ color: T.muted }}>Ealo</span>
-          </div>
+          <img
+            src="/ealo-mark.png"
+            alt="이뤄"
+            style={{ width: 32, height: 32, borderRadius: 9, objectFit: 'cover', flexShrink: 0 }}
+          />
         </div>
 
         {/* Affirmation card */}
