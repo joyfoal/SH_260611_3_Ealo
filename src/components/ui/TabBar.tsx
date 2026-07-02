@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Home, Gamepad2, Users, Settings, Mic, type LucideIcon } from 'lucide-react'
+import { Home, Gamepad2, Users, Settings, type LucideIcon } from 'lucide-react'
 import { goToSpeak } from '@/lib/storage'
 
 const LEFT_TABS = [
@@ -75,9 +75,15 @@ export function TabBar({ activeTab }: TabBarProps) {
           <svg width={56} height={56} viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0 }}>
             <path d={STAR_PATH} fill="var(--color-accent-primary)" />
           </svg>
-          <Mic size={22} strokeWidth={2} color="#fff" style={{ position: 'relative' }} />
+          <span
+            style={{
+              position: 'relative', color: '#fff', fontSize: 10, fontWeight: 600,
+              lineHeight: 1.15, textAlign: 'center',
+            }}
+          >
+            성공<br />말하기
+          </span>
         </span>
-        <span style={{ fontSize: 8 }}>성공말하기</span>
       </button>
 
       {RIGHT_TABS.map(({ label, href, icon }) => (
