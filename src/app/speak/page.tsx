@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
-import { Check, Mic } from 'lucide-react'
+import { Check, Mic, ChevronUp } from 'lucide-react'
 import { DynamicText } from '@/components/ui/DynamicText'
 import { CelebrationScreen, type CelebrationVariant } from '@/components/ui/CelebrationScreen'
 import {
@@ -545,21 +545,38 @@ function SpeakPageInner() {
     return (
       <div
         className="flex flex-col items-center justify-center relative"
-        style={{ minHeight: '100dvh', background: 'var(--color-bg-dark)', cursor: 'pointer' }}
+        style={{ minHeight: '100dvh', background: '#140D06', cursor: 'pointer' }}
         onClick={() => setScreen('speak')}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
         {/* 배경 골드 방사형 글로우 */}
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 45% at 50% 0%, rgba(216,154,54,.16) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 90% 50% at 50% 8%, rgba(216,154,54,.22) 0%, transparent 65%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 40% at 50% 100%, rgba(216,154,54,.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-        {/* 진행 표시 알약 */}
+        {/* 진행 표시 — 점 인디케이터 + 기존 진행률 텍스트 */}
         <div style={{
-          position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)',
-          background: 'rgba(255,255,255,0.1)', borderRadius: '20px', padding: '4px 16px',
-          fontSize: '13px', color: 'var(--color-text-muted)', whiteSpace: 'nowrap', zIndex: 1,
+          position: 'absolute', top: '24px', left: '50%', transform: 'translateX(-50%)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', zIndex: 1,
         }}>
-          {progressLabel}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {Array.from({ length: queue.length }, (_, i) => (
+              <span
+                key={i}
+                style={{
+                  width: i === currentIndex ? 26 : 10, height: 4, borderRadius: 2,
+                  background: i === currentIndex ? '#E8C878' : 'rgba(255,255,255,0.18)',
+                  transition: 'width 0.3s ease, background 0.3s ease',
+                }}
+              />
+            ))}
+          </div>
+          <div style={{
+            fontSize: '11px', fontWeight: 600, letterSpacing: '1.5px',
+            color: 'rgba(232,200,120,0.75)', whiteSpace: 'nowrap',
+          }}>
+            {progressLabel}
+          </div>
         </div>
 
         {/* 어절 컬럼 */}
@@ -568,8 +585,22 @@ function SpeakPageInner() {
         </div>
 
         {/* 스와이프 힌트 */}
-        <div style={{ position: 'absolute', bottom: '48px', color: 'var(--color-text-muted)', fontSize: '14px', animation: 'floatHint 2.2s ease-in-out infinite', zIndex: 1 }}>
-          위로 스와이프 ↑
+        <div style={{
+          position: 'absolute', bottom: '40px', left: '50%', transform: 'translateX(-50%)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', zIndex: 1,
+          animation: 'floatHint 2.2s ease-in-out infinite',
+        }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: '50%',
+            border: '1.5px solid rgba(232,200,120,0.35)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'rgba(232,200,120,0.75)',
+          }}>
+            <ChevronUp size={20} strokeWidth={2} />
+          </div>
+          <div style={{ color: 'rgba(232,200,120,0.75)', fontSize: '13px', fontWeight: 500 }}>
+            위로 스와이프 ↑
+          </div>
         </div>
       </div>
     )

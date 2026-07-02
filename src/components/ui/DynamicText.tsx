@@ -53,20 +53,28 @@ function DarkReadingText({ text }: { text: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
       {words.map((word, i) => {
-        const isRead    = i < currentIdx
-        const isCurrent = i === currentIdx
+        // 순수 파생값 — currentIdx(state)로부터 렌더 시점에만 계산, 타이밍 로직은 그대로.
+        const distance = i - currentIdx
+        const color =
+          distance > 1 ? 'rgba(232,200,120,0.28)'
+          : distance === 1 ? 'rgba(232,200,120,0.5)'
+          : distance === 0 ? '#F0D28E'
+          : '#FFF4DC'
+        const textShadow =
+          distance === 0 ? '0 0 24px rgba(232,200,120,.35)'
+          : distance < 0 ? '0 0 32px rgba(240,210,142,.4)'
+          : 'none'
         return (
           <span
             key={i}
             style={{
-              fontSize: '52px',
+              fontSize: '40px',
               fontWeight: 800,
-              letterSpacing: '1px',
+              letterSpacing: '-0.5px',
               lineHeight: 1.15,
-              color: isCurrent ? 'var(--color-text-onDark)' : 'var(--color-accent-light)',
-              opacity: isRead ? 0.55 : isCurrent ? 1 : 0.85,
-              textShadow: isCurrent ? '0 0 24px rgba(232,200,120,.35)' : 'none',
-              transition: 'color 0.4s ease, opacity 0.4s ease, text-shadow 0.4s ease',
+              color,
+              textShadow,
+              transition: 'color 0.4s ease, text-shadow 0.4s ease',
               display: 'block',
             }}
           >
