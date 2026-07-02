@@ -68,7 +68,7 @@ export function TabBar({ activeTab }: TabBarProps) {
           style={{
             position: 'relative', width: 72, height: 72,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transform: 'translateY(-16px)',
+            transform: 'translateY(-0.5px)',
             filter: 'drop-shadow(0 6px 10px rgba(186,117,23,0.45))',
           }}
         >
