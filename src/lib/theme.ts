@@ -21,11 +21,11 @@ export const themes = {
     tab: { active: '#3B6D11', inactive: '#888780' },
   },
   blue: {
-    bg: { primary: '#F4F8FC', card: '#E7EFF7', dark: '#0A1524', surface: '#14243A' },
-    text: { primary: '#0F2337', secondary: '#234875', muted: '#888780', onDark: '#E7EFF7' },
-    accent: { primary: '#1E3A5F', secondary: '#4A72A8', light: '#C7D9EC', highlight: '#234875' },
-    border: '#C7D9EC',
-    tab: { active: '#234875', inactive: '#888780' },
+    bg: { primary: '#F4F6FC', card: '#E7EAF9', dark: '#080D33', surface: '#10184A' },
+    text: { primary: '#0B1550', secondary: '#1E2E8C', muted: '#888780', onDark: '#E7EAF9' },
+    accent: { primary: '#1428A0', secondary: '#3F55C7', light: '#CDD3F2', highlight: '#1E2E8C' },
+    border: '#CDD3F2',
+    tab: { active: '#1E2E8C', inactive: '#888780' },
   },
 } as const
 
