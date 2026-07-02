@@ -61,31 +61,21 @@ export function TabBar({ activeTab }: TabBarProps) {
       <button
         type="button"
         onClick={() => goToSpeak(router)}
-        className="flex flex-col items-center gap-1 min-w-[44px] py-1"
+        className="flex flex-col items-center min-w-[44px] py-1"
         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-tab-inactive)' }}
       >
         <span
           style={{
             position: 'relative', width: 72, height: 72,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transform: 'translateY(-14px)',
+            transform: 'translateY(-16px)',
             filter: 'drop-shadow(0 6px 10px rgba(186,117,23,0.45))',
           }}
         >
           <svg width={72} height={72} viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0 }}>
             <path d={STAR_PATH} fill="var(--color-accent-primary)" />
           </svg>
-          <span
-            style={{
-              position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-              color: '#fff',
-            }}
-          >
-            <Mic size={16} strokeWidth={2} color="#fff" />
-            <span style={{ fontSize: 10, fontWeight: 600, lineHeight: 1.15, textAlign: 'center' }}>
-              성공<br />말하기
-            </span>
-          </span>
+          <Mic size={30} strokeWidth={2} color="#fff" style={{ position: 'relative' }} />
         </span>
       </button>
 
