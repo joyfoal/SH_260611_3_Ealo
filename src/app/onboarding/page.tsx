@@ -7,7 +7,6 @@ import { CATEGORIES } from '@/lib/categories'
 import { saveAffirmation, setOnboarded, saveTodayAffirmationIds, saveDayRecord, todayStr, saveStreakData, saveCategories } from '@/lib/storage'
 import { saveAudioRecord } from '@/lib/audioStorage'
 import { useTheme } from '@/lib/themeContext'
-import { SwirlEmblem } from '@/components/ui/SwirlEmblem'
 
 /* ── Design tokens (warm gold) ───────────────────────────────── */
 const T = {
@@ -471,12 +470,9 @@ export default function OnboardingPage() {
       case 0: return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#FFFCF8' }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 32px' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 44 }}>
-              <SwirlEmblem size={220} inset={26} />
-            </div>
-            <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.6px', color: '#2A1801', lineHeight: 1.28 }}>안녕하세요 :)</div>
-            <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.6px', color: '#BA7517', lineHeight: 1.28 }}>저는 '이뤄'예요.</div>
-            <div style={{ fontSize: 16, fontWeight: 500, color: '#8A7A62', lineHeight: 1.55, marginTop: 14 }}>
+            <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: '-0.6px', color: '#2A1801', lineHeight: 1.28 }}>안녕하세요 :)</div>
+            <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: '-0.6px', color: '#BA7517', lineHeight: 1.28 }}>저는 '이뤄'예요.</div>
+            <div style={{ fontSize: 18, fontWeight: 500, color: '#8A7A62', lineHeight: 1.55, marginTop: 18 }}>
               성공의 말을 자주 하면 이루어진다.
             </div>
           </div>
