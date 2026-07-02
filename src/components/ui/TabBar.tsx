@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Home, Gamepad2, Users, Settings, type LucideIcon } from 'lucide-react'
+import { Home, Gamepad2, Users, Settings, Mic, type LucideIcon } from 'lucide-react'
 import { goToSpeak } from '@/lib/storage'
 
 const LEFT_TABS = [
@@ -66,22 +66,25 @@ export function TabBar({ activeTab }: TabBarProps) {
       >
         <span
           style={{
-            position: 'relative', width: 56, height: 56,
+            position: 'relative', width: 72, height: 72,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transform: 'translateY(-10px)',
+            transform: 'translateY(-14px)',
             filter: 'drop-shadow(0 6px 10px rgba(186,117,23,0.45))',
           }}
         >
-          <svg width={56} height={56} viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0 }}>
+          <svg width={72} height={72} viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0 }}>
             <path d={STAR_PATH} fill="var(--color-accent-primary)" />
           </svg>
           <span
             style={{
-              position: 'relative', color: '#fff', fontSize: 10, fontWeight: 600,
-              lineHeight: 1.15, textAlign: 'center',
+              position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+              color: '#fff',
             }}
           >
-            성공<br />말하기
+            <Mic size={16} strokeWidth={2} color="#fff" />
+            <span style={{ fontSize: 10, fontWeight: 600, lineHeight: 1.15, textAlign: 'center' }}>
+              성공<br />말하기
+            </span>
           </span>
         </span>
       </button>
