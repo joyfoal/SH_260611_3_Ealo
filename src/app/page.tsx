@@ -78,7 +78,7 @@ export default function RootPage() {
         }}
       />
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{ position: 'relative', width: 200, height: 200 }}>
+        <div style={{ position: 'relative', width: 200, height: 200, overflow: 'hidden', borderRadius: 44 }}>
           <Image
             src="/splash-icon.png"
             alt="이뤄"
