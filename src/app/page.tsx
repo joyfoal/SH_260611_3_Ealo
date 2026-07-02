@@ -78,46 +78,14 @@ export default function RootPage() {
         }}
       />
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{ position: 'relative', width: 200, height: 200 }}>
-          <Image
-            src="/splash-icon.png"
-            alt="이뤄"
-            width={200}
-            height={200}
-            priority
-            style={{ borderRadius: 44, boxShadow: '0 12px 32px rgba(20,60,45,0.18)' }}
-          />
-          {/* star crystal shine, positioned over the star baked into the icon artwork */}
-          <div
-            style={{
-              position: 'absolute', left: '48%', top: '24%', transform: 'translate(-50%, -50%)',
-              width: 56, height: 56, borderRadius: '50%', pointerEvents: 'none',
-              background: 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,241,196,0.5) 45%, transparent 75%)',
-              filter: 'blur(1px)',
-              animation: 'starGlow 2.4s ease-in-out infinite',
-            }}
-          />
-          <div
-            style={{
-              position: 'absolute', left: '48%', top: '24%', transform: 'translate(-50%, -50%)',
-              width: 14, height: 14, pointerEvents: 'none',
-              background: '#FFFFFF',
-              clipPath: 'polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%)',
-              animation: 'starTwinkle 2.4s ease-in-out infinite',
-              animationDelay: '0s',
-            }}
-          />
-          <div
-            style={{
-              position: 'absolute', left: '61%', top: '17%', transform: 'translate(-50%, -50%)',
-              width: 8, height: 8, pointerEvents: 'none',
-              background: '#FFFFFF',
-              clipPath: 'polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%)',
-              animation: 'starTwinkle 2.4s ease-in-out infinite',
-              animationDelay: '1.1s',
-            }}
-          />
-        </div>
+        <Image
+          src="/splash-icon.png"
+          alt="이뤄"
+          width={200}
+          height={200}
+          priority
+          style={{ borderRadius: 44, boxShadow: '0 12px 32px rgba(20,60,45,0.18)' }}
+        />
         <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ fontSize: 15, fontWeight: 600, color: '#4F7A63' }}>말하면, 이루어진다</div>
         </div>
