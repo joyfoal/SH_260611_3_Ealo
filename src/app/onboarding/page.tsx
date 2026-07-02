@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Sprout, Briefcase, TrendingUp, Heart, Leaf, Flame, Moon, Sun, type LucideIcon } from 'lucide-react'
 import { CATEGORIES } from '@/lib/categories'
-import { saveAffirmation, setOnboarded, saveTodayAffirmationIds, saveAlarmList, saveDayRecord, todayStr, saveStreakData, saveCategories } from '@/lib/storage'
+import { saveAffirmation, setOnboarded, saveTodayAffirmationIds, saveDayRecord, todayStr, saveStreakData, saveCategories } from '@/lib/storage'
 import { saveAudioRecord } from '@/lib/audioStorage'
 import { useTheme } from '@/lib/themeContext'
 import { SwirlEmblem } from '@/components/ui/SwirlEmblem'
@@ -53,13 +53,6 @@ function getPhrase(cats: string[]): string {
   return (c && SUGGESTIONS[c]?.[1]) ?? '나는 매일 성장한다.'
 }
 
-function fmtTime(min: number): string {
-  const h = Math.floor(min / 60), m = min % 60
-  const ampm = h < 12 ? '오전' : '오후'
-  const hh = ((h + 11) % 12) + 1
-  return `${ampm} ${String(hh).padStart(2, '0')}:${String(m).padStart(2, '0')}`
-}
-
 function getSupportedMimeType(): string {
   const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg']
   for (const type of types) {
@@ -87,22 +80,6 @@ const btnText: React.CSSProperties = {
 }
 
 /* ── Icons ───────────────────────────────────────────────────── */
-function BellIcon() {
-  return (
-    <svg width={34} height={34} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" />
-    </svg>
-  )
-}
-
-function ClockIcon() {
-  return (
-    <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
-    </svg>
-  )
-}
-
 function PlayIcon() {
   return <svg width={22} height={22} viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z" /></svg>
 }
@@ -146,8 +123,6 @@ export default function OnboardingPage() {
   const catsRef = useRef<string[]>([])
   const [rec, setRec] = useState<RecState>('idle')
   const [transcript, setTranscript] = useState('')
-  const [notifTime, setNotifTime] = useState(480)
-  const [notifAllowed, setNotifAllowed] = useState(false)
   const [isFinishing, setIsFinishing] = useState(false)
   const recRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -469,13 +444,6 @@ export default function OnboardingPage() {
     saveDayRecord({ date: today, completedCount: 1, dominantCategory: category })
     ids.push(voiceId)
 
-    if (notifAllowed) {
-      saveAlarmList([{ id: 'alarm-onboarding', affirmationId: '', audioId: onbAudioRecordIdRef.current, hour: Math.floor(notifTime / 60), minute: notifTime % 60, repeatDays: [], endType: 'none', endDate: '', endCount: 0, firedCount: 0 }])
-      import('@/lib/alarmScheduler').then(({ registerSW, scheduleAlarm }) =>
-        registerSW().then(() => scheduleAlarm()).catch(() => {})
-      ).catch(() => {})
-    }
-
     // 2. 화면 1에서 추천된 성공의 말 — 선택한 카테고리당 1개씩만
     cats.forEach((cat, i) => {
       const suggestion = SUGGESTIONS[cat]?.[0]
@@ -494,7 +462,6 @@ export default function OnboardingPage() {
     router.push('/home')
   }
 
-  const TIME_PRESETS = [360, 420, 480, 540, 600, 660]
   const phrase = transcript || onbPhrase
   const onbWords = onbPhrase.split(' ')
 
@@ -824,84 +791,8 @@ export default function OnboardingPage() {
         </div>
       )
 
-      /* ── 3: Notification + time ───────────────────────────────── */
+      /* ── 3: Done ──────────────────────────────────────────────── */
       case 3: return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 26px', gap: 22 }}>
-            <div style={{
-              width: 72, height: 72, borderRadius: 22,
-              background: T.goldTint, color: T.gold,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <BellIcon />
-            </div>
-            <div>
-              <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.6px', color: T.ink, lineHeight: 1.28, marginBottom: 10 }}>
-                매일, 성공의 말로<br />하루를 시작하세요
-              </div>
-              <div style={{ fontSize: 16, fontWeight: 500, color: T.ink2, lineHeight: 1.55 }}>
-                알림을 켜면 정한 시간에 오늘의 성공의 말을 보내드려요.
-              </div>
-            </div>
-            <div style={{ background: T.bgSoft, border: `1.5px solid ${T.line}`, borderRadius: 16, padding: '18px 18px 22px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, color: T.ink2, fontWeight: 600, fontSize: 14 }}>
-                <ClockIcon /> 알림 시간
-              </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 10, marginBottom: 14 }}>
-                <span style={{ fontSize: 20, fontWeight: 700, color: T.ink2 }}>
-                  {notifTime < 720 ? '오전' : '오후'}
-                </span>
-                <span style={{ fontSize: 56, fontWeight: 800, letterSpacing: '-1px', color: T.ink, fontVariantNumeric: 'tabular-nums' }}>
-                  {(() => {
-                    const h = Math.floor(notifTime / 60), m = notifTime % 60
-                    const hh = ((h + 11) % 12) + 1
-                    return `${String(hh).padStart(2, '0')}:${String(m).padStart(2, '0')}`
-                  })()}
-                </span>
-              </div>
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-                {TIME_PRESETS.map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setNotifTime(p)}
-                    style={{
-                      border: `1.5px solid ${notifTime === p ? T.gold : T.line}`,
-                      background: notifTime === p ? T.gold : T.bgSoft,
-                      color: notifTime === p ? '#fff' : T.ink2,
-                      borderRadius: 999, padding: '9px 15px',
-                      fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                      transition: 'border-color .15s, background .15s, color .15s',
-                    }}
-                  >
-                    {fmtTime(p)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div style={{ padding: '12px 26px 48px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <button
-              style={btnPrimary}
-              onClick={async () => {
-                let allowed = typeof Notification !== 'undefined' && Notification.permission === 'granted'
-                if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {
-                  const result = await Notification.requestPermission()
-                  allowed = result === 'granted'
-                }
-                setNotifAllowed(allowed)
-                goTo(4)
-              }}
-            >
-              알림 허용하기
-            </button>
-            <button style={btnText} onClick={() => goTo(4)}>나중에 할게요</button>
-          </div>
-        </div>
-      )
-
-      /* ── 4: Done ──────────────────────────────────────────────── */
-      case 4: return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 26px', gap: 22 }}>
             <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '.4px', color: T.gold }}>말하면, 이루어진다.</div>
