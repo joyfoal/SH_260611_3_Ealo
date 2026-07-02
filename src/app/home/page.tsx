@@ -755,10 +755,11 @@ export default function HomePage() {
               }}>
                 <Flame size={20} color={T.gold} strokeWidth={1.75} />
               </div>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink, whiteSpace: 'nowrap' }}>
-                  {streakData.currentStreak}일
+              <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
+                  {streakData.currentStreak}
                 </span>
+                <span style={{ fontSize: '11.5px', color: T.muted }}>일</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                 <div style={{ fontSize: '11.5px', color: T.muted }}>연속</div>
@@ -779,10 +780,11 @@ export default function HomePage() {
               }}>
                 <Shield size={20} color={T.info} strokeWidth={1.75} />
               </div>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink, whiteSpace: 'nowrap' }}>
-                  {todayCount}개
+              <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
+                  {todayCount}
                 </span>
+                <span style={{ fontSize: '11.5px', color: T.muted }}>개</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                 <div style={{ fontSize: '11.5px', color: T.muted }}>오늘 완료</div>
