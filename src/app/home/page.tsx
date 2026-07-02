@@ -43,6 +43,7 @@ const T = {
   divider: '#F4ECDE',
   gold: '#BA7517',
   goldGrad: 'linear-gradient(135deg, #BA7517, #D98A1C)',
+  goldGradLight: 'linear-gradient(135deg, #CB9851, #E3A755)',
   goldTint: '#FBF0DA',
   ink: '#2A1801',
   body: '#412402',
@@ -589,7 +590,7 @@ export default function HomePage() {
           <div style={{ fontSize: '22px', fontWeight: 800, color: T.ink, whiteSpace: 'nowrap' }}>
             {greeting}
           </div>
-          <div style={{ fontSize: '16px', color: T.gold, fontWeight: 800, letterSpacing: '-0.3px', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: '22px', color: T.gold, fontWeight: 800, letterSpacing: '-0.3px', whiteSpace: 'nowrap' }}>
             이뤄
           </div>
         </div>
@@ -620,10 +621,10 @@ export default function HomePage() {
                 width: '100%',
                 marginTop: '18px',
                 padding: '14px',
-                background: T.goldGrad,
+                background: T.goldGradLight,
                 border: 'none',
                 borderRadius: '14px',
-                boxShadow: '0 6px 16px rgba(186,117,23,0.28)',
+                boxShadow: '0 6px 16px rgba(186,117,23,0.18)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -746,7 +747,7 @@ export default function HomePage() {
         {/* Stats / Streak — 2분할 */}
         <div style={{ margin: '0 16px 16px', display: 'flex', gap: '10px' }}>
           <div style={{ flex: 1, padding: '14px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px rgba(65,36,2,0.05)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
               <div style={{
                 width: '26px', height: '26px', borderRadius: '8px', flexShrink: 0,
                 background: 'linear-gradient(135deg, #FBE6BE, #F4C876)',
@@ -759,12 +760,14 @@ export default function HomePage() {
               </span>
               <span style={{ fontSize: '11.5px', color: T.muted }}>일 연속</span>
             </div>
-            <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '6px' }}>
-              {streakData.shields > 0 ? `${totalCompletedDays}일 완료 · 보호막 ${streakData.shields}개` : `${totalCompletedDays}일 완료`}
-            </div>
+            {streakData.shields > 0 && (
+              <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '6px', textAlign: 'right' }}>
+                보호막 {streakData.shields}개
+              </div>
+            )}
           </div>
           <div style={{ flex: 1, padding: '14px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px rgba(65,36,2,0.05)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
               <div style={{
                 width: '26px', height: '26px', borderRadius: '8px', flexShrink: 0,
                 background: T.infoBg,
@@ -772,12 +775,15 @@ export default function HomePage() {
               }}>
                 <Shield size={14} color={T.info} strokeWidth={1.75} />
               </div>
+              <span style={{ fontSize: '11.5px', color: T.muted }}>오늘</span>
               <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
                 {todayCount}
               </span>
               <span style={{ fontSize: '11.5px', color: T.muted }}>개 완료</span>
             </div>
-            <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '6px' }}>오늘 완료</div>
+            <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '6px', textAlign: 'right' }}>
+              {totalCompletedDays}일 완료
+            </div>
           </div>
         </div>
 
@@ -816,10 +822,10 @@ export default function HomePage() {
             onClick={() => router.push('/create')}
             style={{
               padding: '12px 6px',
-              background: T.goldGrad,
+              background: T.goldGradLight,
               border: 'none',
               borderRadius: '14px',
-              boxShadow: '0 6px 16px rgba(186,117,23,0.28)',
+              boxShadow: '0 6px 16px rgba(186,117,23,0.18)',
               color: 'white',
               fontSize: '12px',
               fontWeight: 700,
