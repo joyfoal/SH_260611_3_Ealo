@@ -421,3 +421,30 @@ export function clearAllData(): void {
     // ignore
   }
 }
+
+// Prime today's speak session and navigate to /speak with the next uncompleted affirmation.
+// Falls back to /home if there's nothing left to speak today.
+export function goToSpeak(router: { push: (href: string) => void }): void {
+  let ids = getTodayAffirmationIds()
+  if (ids.length === 0) {
+    ids = generateTodayQueue()
+    saveTodayAffirmationIds(ids)
+  }
+  const affirmations = getAffirmations()
+  const today = todayStr()
+  const notDone = affirmations.filter((a) => ids.includes(a.id) && !a.completedDates.includes(today))
+  const target = notDone[0]
+  if (!target) {
+    router.push('/home')
+    return
+  }
+  if (typeof window !== 'undefined') {
+    try {
+      sessionStorage.setItem('ealo-speak-queue', JSON.stringify(ids))
+      sessionStorage.setItem('ealo-speak-index', String(ids.indexOf(target.id)))
+      sessionStorage.setItem('ealo-speak-phase', 'initial')
+      sessionStorage.removeItem('ealo-repeat-remaining')
+    } catch { /* 프라이빗 브라우징 등 storage 비활성화 환경 */ }
+  }
+  router.push(`/speak?id=${target.id}`)
+}

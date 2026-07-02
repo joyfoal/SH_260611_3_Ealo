@@ -26,6 +26,7 @@ import {
   saveAlarmSettings,
   getAlarmLastShown,
   setAlarmLastShown,
+  goToSpeak,
   type Affirmation,
   type DayRecord,
   type StreakData,
@@ -552,17 +553,7 @@ export default function HomePage() {
 
   const handlePlay = () => {
     if (!todayAffirmation) return
-    const ids = getTodayAffirmationIds()
-    const startIndex = Math.max(0, ids.indexOf(todayAffirmation.id))
-    if (typeof window !== 'undefined') {
-      try {
-        sessionStorage.setItem('ealo-speak-queue', JSON.stringify(ids))
-        sessionStorage.setItem('ealo-speak-index', String(startIndex))
-        sessionStorage.setItem('ealo-speak-phase', 'initial')
-        sessionStorage.removeItem('ealo-repeat-remaining')
-      } catch { /* 프라이빗 브라우징 등 storage 비활성화 환경 */ }
-    }
-    router.push(`/speak?id=${todayAffirmation.id}`)
+    goToSpeak(router)
   }
 
   const handleMore = () => {
