@@ -9,6 +9,7 @@ import {
   getTodayAffirmationIds,
   saveTodayAffirmationIds,
   getDayRecord,
+  getCalendar,
   getStreakData,
   getTomorrowNote,
   isTomorrowEnabled,
@@ -462,6 +463,7 @@ export default function HomePage() {
   const [hasAffirmations, setHasAffirmations] = useState(true)
   const [streakData, setStreakData] = useState<StreakData>({ currentStreak: 0, lastCompletedDate: null, shields: 0 })
   const [todayCount, setTodayCount] = useState(0)
+  const [totalCompletedDays, setTotalCompletedDays] = useState(0)
   const [tomorrowNote, setTomorrowNote] = useState<string | null>(null)
   const [tomorrowEnabled, setTomorrowEnabled] = useState(false)
   const [naegeSavedToday, setNaegeSavedToday] = useState(false)
@@ -536,6 +538,7 @@ export default function HomePage() {
     setRepeatDone(getTodayRepeatDone())
     setStreakData(getStreakData())
     setTodayCount(getDayRecord(todayStr())?.completedCount ?? 0)
+    setTotalCompletedDays(getCalendar().filter((r) => r.completedCount > 0).length)
     const dayNote = getDayNote(today)
     if (dayNote) setTomorrowNote(dayNote)
     setTomorrowEnabled(isTomorrowEnabled())
@@ -743,32 +746,38 @@ export default function HomePage() {
         {/* Stats / Streak — 2분할 */}
         <div style={{ margin: '0 16px 16px', display: 'flex', gap: '10px' }}>
           <div style={{ flex: 1, padding: '14px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px rgba(65,36,2,0.05)' }}>
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '10px',
-              background: 'linear-gradient(135deg, #FBE6BE, #F4C876)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px',
-            }}>
-              <Flame size={16} color={T.gold} strokeWidth={1.75} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{
+                width: '26px', height: '26px', borderRadius: '8px', flexShrink: 0,
+                background: 'linear-gradient(135deg, #FBE6BE, #F4C876)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Flame size={14} color={T.gold} strokeWidth={1.75} />
+              </div>
+              <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
+                {streakData.currentStreak}
+              </span>
+              <span style={{ fontSize: '11.5px', color: T.muted }}>일 연속</span>
             </div>
-            <div style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
-              {streakData.currentStreak}
+            <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '6px' }}>
+              {streakData.shields > 0 ? `${totalCompletedDays}일 완료 · 보호막 ${streakData.shields}개` : `${totalCompletedDays}일 완료`}
             </div>
-            <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '2px' }}>일 연속</div>
           </div>
           <div style={{ flex: 1, padding: '14px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px rgba(65,36,2,0.05)' }}>
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '10px',
-              background: T.infoBg,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px',
-            }}>
-              <Shield size={16} color={T.info} strokeWidth={1.75} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{
+                width: '26px', height: '26px', borderRadius: '8px', flexShrink: 0,
+                background: T.infoBg,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Shield size={14} color={T.info} strokeWidth={1.75} />
+              </div>
+              <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
+                {todayCount}
+              </span>
+              <span style={{ fontSize: '11.5px', color: T.muted }}>개 완료</span>
             </div>
-            <div style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
-              {todayCount}
-            </div>
-            <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '2px' }}>
-              {streakData.shields > 0 ? `오늘 완료 · 보호막 ${streakData.shields}개` : '오늘 완료'}
-            </div>
+            <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '6px' }}>오늘 완료</div>
           </div>
         </div>
 
