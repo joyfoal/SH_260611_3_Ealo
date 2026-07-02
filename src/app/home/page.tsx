@@ -127,8 +127,8 @@ function RecentRecordingPlayer() {
       <button
         onClick={handleToggle}
         style={{
-          width: '40px',
-          height: '40px',
+          width: '32px',
+          height: '32px',
           borderRadius: '50%',
           background: T.goldGradLight,
           border: 'none',
@@ -139,7 +139,7 @@ function RecentRecordingPlayer() {
           flexShrink: 0,
         }}
       >
-        {isPlaying ? <Pause size={16} color="white" fill="white" /> : <Play size={16} color="white" fill="white" />}
+        {isPlaying ? <Pause size={13} color="white" fill="white" /> : <Play size={13} color="white" fill="white" />}
       </button>
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ fontSize: '10px', color: T.muted, marginBottom: '2px', fontWeight: 500 }}>최근 녹음</div>
@@ -756,14 +756,14 @@ export default function HomePage() {
                 <Flame size={20} color={T.gold} strokeWidth={1.75} />
               </div>
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
-                  {streakData.currentStreak}
+                <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink, whiteSpace: 'nowrap' }}>
+                  {streakData.currentStreak}일
                 </span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                <div style={{ fontSize: '11.5px', color: T.muted }}>일 연속</div>
+                <div style={{ fontSize: '11.5px', color: T.muted }}>연속</div>
                 {streakData.shields > 0 && (
-                  <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '6px' }}>
+                  <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '6px', whiteSpace: 'nowrap' }}>
                     보호막 {streakData.shields}개
                   </div>
                 )}
@@ -780,12 +780,12 @@ export default function HomePage() {
                 <Shield size={20} color={T.info} strokeWidth={1.75} />
               </div>
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
-                  {todayCount}
+                <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink, whiteSpace: 'nowrap' }}>
+                  {todayCount}개
                 </span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                <div style={{ fontSize: '11.5px', color: T.muted }}>개 오늘 완료</div>
+                <div style={{ fontSize: '11.5px', color: T.muted }}>오늘 완료</div>
                 <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '6px' }}>
                   {totalCompletedDays}일 완료
                 </div>
@@ -803,7 +803,7 @@ export default function HomePage() {
             onClick={() => router.push('/games')}
             style={{
               padding: '12px 6px',
-              background: T.goldTint,
+              background: 'linear-gradient(160deg, #FFFFFF, #FFF9EE)',
               border: `1px solid ${T.cardBorder}`,
               borderRadius: '14px',
               color: T.gold,
@@ -829,7 +829,7 @@ export default function HomePage() {
             onClick={() => router.push('/create')}
             style={{
               padding: '12px 6px',
-              background: T.goldTint,
+              background: 'linear-gradient(160deg, #FFFFFF, #FFF9EE)',
               border: `1px solid ${T.cardBorder}`,
               borderRadius: '14px',
               color: T.gold,
@@ -855,7 +855,7 @@ export default function HomePage() {
             onClick={() => router.push('/home/success-image')}
             style={{
               padding: '12px 6px',
-              background: T.goldTint,
+              background: 'linear-gradient(160deg, #FFFFFF, #FFF9EE)',
               border: `1px solid ${T.cardBorder}`,
               borderRadius: '14px',
               color: T.gold,
