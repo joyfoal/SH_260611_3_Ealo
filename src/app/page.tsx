@@ -13,7 +13,7 @@ import {
 } from '@/lib/storage'
 
 const FADE_MS = 280
-const MIN_SPLASH_MS = 2000
+const MIN_SPLASH_MS = 1500
 
 export default function RootPage() {
   const router = useRouter()
