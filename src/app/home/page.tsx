@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef, type ReactElement } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppLayout } from '@/components/ui/AppLayout'
-import { Play, Pause, Flame, Shield, Mic, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Sun, CloudSun, Moon, Check, Sprout } from 'lucide-react'
+import { Play, Pause, Flame, Shield, Mic, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Sun, CloudSun, Moon, Check, Sprout, Grid2X2, Plus, Image as ImageIcon } from 'lucide-react'
 import {
   getAffirmations,
   getTodayAffirmationIds,
@@ -30,15 +30,30 @@ import {
   type DayRecord,
   type StreakData,
 } from '@/lib/storage'
-import { useTheme } from '@/lib/themeContext'
 import { getRecentAudioRecord, deleteExpiredAudioRecords, getAudioRecordsByAffirmationId, type AudioRecord } from '@/lib/audioStorage'
 import { getSuccessImage } from '@/lib/successImageStorage'
 import { WeeklyReportModal } from '@/components/ui/WeeklyReportModal'
 
+const T = {
+  bgPrimary: '#FFFCF8',
+  card: '#FFFFFF',
+  cardBorder: '#F0E3CB',
+  divider: '#F4ECDE',
+  gold: '#BA7517',
+  goldGrad: 'linear-gradient(135deg, #BA7517, #D98A1C)',
+  goldTint: '#FBF0DA',
+  ink: '#2A1801',
+  body: '#412402',
+  muted: '#A0937E',
+  info: '#1E88E5',
+  infoBg: '#EAF2FB',
+  waveform: '#E0C89A',
+}
+
 function getGreeting(): ReactElement {
   const h = new Date().getHours()
-  if (h < 12) return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>좋은 아침이에요 <Sun size={20} color="#F59E0B" /></span>
-  if (h < 18) return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>좋은 오후예요 <CloudSun size={20} color="#F59E0B" /></span>
+  if (h < 12) return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>좋은 아침이에요 <Sun size={20} color={T.gold} /></span>
+  if (h < 18) return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>좋은 오후예요 <CloudSun size={20} color={T.gold} /></span>
   return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>좋은 저녁이에요 <Moon size={20} color="#8B5CF6" /></span>
 }
 
@@ -49,9 +64,9 @@ function HighlightedSentence({ text }: { text: string }) {
   const normalWords = words.slice(0, words.length - highlightCount)
   const goldWords = words.slice(words.length - highlightCount)
   return (
-    <p style={{ fontSize: '26px', fontWeight: 800, lineHeight: 1.4, color: 'var(--color-text-primary)', margin: 0, wordBreak: 'keep-all' }}>
+    <p style={{ fontSize: '26px', fontWeight: 800, lineHeight: 1.4, color: T.ink, margin: 0, wordBreak: 'keep-all' }}>
       {normalWords.length > 0 && <span>{normalWords.join(' ')} </span>}
-      <span style={{ color: 'var(--color-accent-primary)' }}>{goldWords.join(' ')}</span>
+      <span style={{ color: T.gold }}>{goldWords.join(' ')}</span>
     </p>
   )
 }
@@ -97,9 +112,10 @@ function RecentRecordingPlayer() {
       style={{
         margin: '0 16px 16px',
         padding: '14px 16px',
-        background: 'var(--color-bg-card)',
+        background: T.card,
         borderRadius: '16px',
-        border: '1px solid var(--color-border)',
+        border: `1px solid ${T.cardBorder}`,
+        boxShadow: '0 4px 16px rgba(65,36,2,0.05)',
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
@@ -111,7 +127,7 @@ function RecentRecordingPlayer() {
           width: '40px',
           height: '40px',
           borderRadius: '50%',
-          background: 'var(--color-accent-primary)',
+          background: T.goldGrad,
           border: 'none',
           cursor: 'pointer',
           display: 'flex',
@@ -122,12 +138,12 @@ function RecentRecordingPlayer() {
       >
         {isPlaying ? <Pause size={16} color="white" fill="white" /> : <Play size={16} color="white" fill="white" />}
       </button>
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: '10px', color: 'var(--color-text-muted)', marginBottom: '2px', fontWeight: 500 }}>최근 녹음</div>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ fontSize: '10px', color: T.muted, marginBottom: '2px', fontWeight: 500 }}>최근 녹음</div>
         <div
           style={{
             fontSize: '13px',
-            color: 'var(--color-text-secondary)',
+            color: T.body,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -135,6 +151,18 @@ function RecentRecordingPlayer() {
         >
           {record.affirmationText}
         </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 18, flexShrink: 0 }}>
+        {[55, 80, 60, 100, 70, 85, 50].map((pct, k) => (
+          <span key={k} style={{
+            display: 'block', width: 3, borderRadius: 2,
+            background: T.waveform,
+            height: isPlaying ? undefined : `${pct}%`,
+            minHeight: isPlaying ? 3 : undefined,
+            animation: isPlaying ? `waveBar 0.45s ease-in-out ${k * 0.07}s infinite` : 'none',
+            opacity: isPlaying ? 1 : 0.7,
+          }} />
+        ))}
       </div>
     </div>
   )
@@ -210,22 +238,13 @@ function CalendarView() {
     (date) => records.find((r) => r.date === date) ?? { date, completedCount: 0, dominantCategory: null as null }
   )
 
-  const { theme } = useTheme()
-
   const renderDayBtn = (rec: DayRecord, size = 32) => {
     const day = parseInt(rec.date.split('-')[2])
     const isToday = rec.date === today
     const isSelected = selectedDay?.date === rec.date
     const c = rec.completedCount
-    const bgColor =
-      c === 0 ? 'transparent'
-      : c <= 3 ? theme.accent.light + '99'
-      : c <= 6 ? theme.accent.secondary + 'CC'
-      : theme.accent.primary
-    const textColor =
-      c === 0 ? 'var(--color-text-muted)'
-      : c <= 3 ? theme.accent.highlight
-      : '#FFFFFF'
+    const bgColor = c === 0 ? '#F7F1E6' : c < 3 ? '#FBEBCF' : '#F4CE85'
+    const textColor = c === 0 ? T.muted : T.body
     const isGoldFill = isToday || isSelected
     return (
       <button
@@ -234,8 +253,8 @@ function CalendarView() {
         style={{
           width: size,
           height: size,
-          borderRadius: isGoldFill ? '50%' : '8px',
-          background: isGoldFill ? 'var(--color-accent-primary)' : bgColor,
+          borderRadius: '10px',
+          background: isGoldFill ? T.goldGrad : bgColor,
           border: '1px solid transparent',
           fontSize: '11px',
           color: isGoldFill ? '#FFFFFF' : textColor,
@@ -254,23 +273,23 @@ function CalendarView() {
   }
 
   return (
-    <div style={{ padding: '0 16px 16px' }}>
+    <div style={{ margin: '0 16px 16px', padding: '16px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px rgba(65,36,2,0.05)' }}>
       {/* 헤더 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
           <button
             onClick={handlePrevMonth}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--color-accent-primary)', display: 'flex', alignItems: 'center' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: T.gold, display: 'flex', alignItems: 'center' }}
           >
             <ChevronLeft size={18} strokeWidth={1.75} />
           </button>
-          <span style={{ fontSize: '14px', color: 'var(--color-text-secondary)', fontWeight: 600, minWidth: '80px', textAlign: 'center' }}>
+          <span style={{ fontSize: '14px', color: T.body, fontWeight: 600, minWidth: '80px', textAlign: 'center' }}>
             {viewYear}년 {viewMonth + 1}월
           </span>
           <button
             onClick={handleNextMonth}
             disabled={isCurrentMonth}
-            style={{ background: 'none', border: 'none', cursor: isCurrentMonth ? 'default' : 'pointer', padding: '4px', color: isCurrentMonth ? 'var(--color-border)' : 'var(--color-accent-primary)', display: 'flex', alignItems: 'center' }}
+            style={{ background: 'none', border: 'none', cursor: isCurrentMonth ? 'default' : 'pointer', padding: '4px', color: isCurrentMonth ? T.divider : T.gold, display: 'flex', alignItems: 'center' }}
           >
             <ChevronRight size={18} strokeWidth={1.75} />
           </button>
@@ -278,7 +297,7 @@ function CalendarView() {
         {isCurrentMonth && (
           <button
             onClick={() => { setExpanded((v) => !v); setSelectedDay(null) }}
-            style={{ fontSize: '12px', color: 'var(--color-accent-primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '2px' }}
+            style={{ fontSize: '12px', color: T.gold, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '2px' }}
           >
             {expanded ? '접기' : '전체 보기'}
             {expanded
@@ -292,7 +311,7 @@ function CalendarView() {
       {/* 요일 레이블 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '4px' }}>
         {DAY_LABELS.map((d) => (
-          <div key={d} style={{ fontSize: '11px', color: 'var(--color-text-muted)', textAlign: 'center', padding: '2px 0' }}>
+          <div key={d} style={{ fontSize: '10px', color: '#B7AB96', textAlign: 'center', padding: '2px 0' }}>
             {d}
           </div>
         ))}
@@ -319,19 +338,19 @@ function CalendarView() {
           style={{
             marginTop: '12px',
             padding: '14px 16px',
-            background: 'var(--color-bg-card)',
+            background: '#FBF3E4',
             borderRadius: '14px',
             fontSize: '13px',
-            color: 'var(--color-text-secondary)',
+            color: T.body,
           }}
         >
-          <div style={{ fontWeight: 600, marginBottom: '8px', color: 'var(--color-text-primary)' }}>
+          <div style={{ fontWeight: 600, marginBottom: '8px', color: T.ink }}>
             {selectedDay.date}
           </div>
 
           {selectedDay.completedCount > 0 ? (
             <>
-              <div style={{ marginBottom: '8px', color: 'var(--color-text-muted)' }}>
+              <div style={{ marginBottom: '8px', color: T.muted }}>
                 완료: {selectedDay.completedCount}개
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
@@ -340,45 +359,45 @@ function CalendarView() {
                     key={a.id}
                     style={{
                       padding: '8px 10px',
-                      background: 'var(--color-bg-primary)',
-                      border: '1px solid var(--color-border)',
+                      background: T.card,
+                      border: `1px solid ${T.cardBorder}`,
                       borderRadius: '8px',
                       fontSize: '13px',
-                      color: 'var(--color-text-primary)',
+                      color: T.ink,
                       lineHeight: 1.4,
                     }}
                   >
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={13} color="#43A047" /> {a.text}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={13} color="#3B8B4E" /> {a.text}</span>
                   </div>
                 )) : (
-                  <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                  <div style={{ fontSize: '12px', color: T.muted }}>
                     완료한 성공의 말이 삭제되었어요
                   </div>
                 )}
               </div>
             </>
           ) : (
-            <div style={{ marginBottom: '8px', color: 'var(--color-text-muted)' }}>아직 기록이 없어요</div>
+            <div style={{ marginBottom: '8px', color: T.muted }}>아직 기록이 없어요</div>
           )}
 
           {selectedNote && (
             <div
               style={{
                 padding: '10px 12px',
-                background: '#FFFAE6',
+                background: T.goldTint,
                 borderRadius: '10px',
-                border: '1px solid #F5E066',
+                border: `1px solid ${T.cardBorder}`,
                 marginBottom: '8px',
               }}
             >
-              <div style={{ fontSize: '10px', color: '#9B8A00', marginBottom: '4px' }}>오늘의 나에게</div>
-              <div style={{ fontSize: '13px', color: '#4A3C00', lineHeight: 1.5 }}>{selectedNote}</div>
+              <div style={{ fontSize: '10px', color: T.gold, marginBottom: '4px' }}>오늘의 나에게</div>
+              <div style={{ fontSize: '13px', color: T.body, lineHeight: 1.5 }}>{selectedNote}</div>
             </div>
           )}
 
           <button
             onClick={() => setSelectedDay(null)}
-            style={{ marginTop: '4px', fontSize: '12px', color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+            style={{ marginTop: '4px', fontSize: '12px', color: T.muted, background: 'none', border: 'none', cursor: 'pointer' }}
           >
             닫기
           </button>
@@ -570,14 +589,14 @@ export default function HomePage() {
 
   return (
     <AppLayout activeTab="홈">
-      <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--color-bg-primary)' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, background: T.bgPrimary }}>
         {/* Greeting + Motto */}
         <div style={{ padding: '20px 16px 12px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px' }}>
-          <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--color-text-primary)', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: '22px', fontWeight: 800, color: T.ink, whiteSpace: 'nowrap' }}>
             {greeting}
           </div>
-          <div style={{ fontSize: '22px', color: 'var(--color-accent-primary)', fontWeight: 700, letterSpacing: '-0.3px', whiteSpace: 'nowrap' }}>
-            이뤄 <span style={{ color: 'var(--color-accent-light)' }}>Ealo</span>
+          <div style={{ fontSize: '16px', color: T.gold, fontWeight: 800, letterSpacing: '-0.3px', whiteSpace: 'nowrap' }}>
+            이뤄 <span style={{ color: T.muted }}>Ealo</span>
           </div>
         </div>
 
@@ -585,13 +604,19 @@ export default function HomePage() {
         {todayAffirmation ? (
           <div
             style={{
-              background: 'var(--color-bg-card)',
-              borderRadius: '20px',
-              padding: '20px 16px',
+              background: 'linear-gradient(160deg, #FFFFFF, #FFF9EE)',
+              border: `1px solid ${T.cardBorder}`,
+              boxShadow: '0 8px 28px rgba(65,36,2,0.07)',
+              borderRadius: '22px',
+              padding: '22px 20px',
               margin: '0 16px 16px',
             }}
           >
-            <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-accent-primary)', marginBottom: '12px', letterSpacing: '0.2px' }}>
+            <div style={{
+              display: 'inline-block', fontSize: '11px', fontWeight: 700, color: T.gold,
+              marginBottom: '12px', letterSpacing: '0.2px',
+              padding: '4px 10px', borderRadius: '999px', background: T.goldTint,
+            }}>
               오늘의 성공의 말
             </div>
             <HighlightedSentence text={todayAffirmation.text} />
@@ -601,9 +626,10 @@ export default function HomePage() {
                 width: '100%',
                 marginTop: '18px',
                 padding: '14px',
-                background: 'var(--color-accent-primary)',
+                background: T.goldGrad,
                 border: 'none',
                 borderRadius: '14px',
+                boxShadow: '0 6px 16px rgba(186,117,23,0.28)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -622,30 +648,33 @@ export default function HomePage() {
         ) : allDone ? (
           <div
             style={{
-              background: 'var(--color-bg-card)',
-              borderRadius: '20px',
+              background: 'linear-gradient(160deg, #FFFFFF, #FFF9EE)',
+              border: `1px solid ${T.cardBorder}`,
+              boxShadow: '0 8px 28px rgba(65,36,2,0.07)',
+              borderRadius: '22px',
               padding: '24px 16px',
               margin: '0 16px 16px',
               textAlign: 'center',
             }}
           >
             {repeatDone ? (
-              <div style={{ fontSize: '15px', color: 'var(--color-text-secondary)' }}>
+              <div style={{ fontSize: '15px', color: T.body }}>
                 오늘의 성공의 말하기는 반복까지 완료했어요 🎉
               </div>
             ) : (
               <>
-                <div style={{ fontSize: '15px', color: 'var(--color-text-secondary)', marginBottom: '14px' }}>
+                <div style={{ fontSize: '15px', color: T.body, marginBottom: '14px' }}>
                   오늘의 성공의 말하기 완료했어요 🎉
                 </div>
                 <button
                   onClick={handleMore}
                   style={{
                     padding: '12px 28px',
-                    background: 'var(--color-accent-primary)',
+                    background: T.goldGrad,
                     color: 'white',
                     border: 'none',
                     borderRadius: '14px',
+                    boxShadow: '0 6px 16px rgba(186,117,23,0.28)',
                     fontSize: '14px',
                     fontWeight: 600,
                     cursor: 'pointer',
@@ -660,22 +689,22 @@ export default function HomePage() {
                 style={{
                   marginTop: '16px',
                   padding: '14px 16px',
-                  background: '#FFFAE6',
+                  background: T.goldTint,
                   borderRadius: '12px',
-                  border: '1px solid #F5E066',
+                  border: `1px solid ${T.cardBorder}`,
                   textAlign: 'left',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: tomorrowNote ? '4px' : 0 }}>
-                  <div style={{ fontSize: '11px', color: '#9B8A00' }}>오늘 나에게</div>
+                  <div style={{ fontSize: '11px', color: T.gold }}>오늘 나에게</div>
                   <button
                     onClick={() => router.push('/tomorrow')}
-                    style={{ fontSize: '11px', color: '#9B8A00', background: 'transparent', border: '1px solid #F5E066', borderRadius: '6px', padding: '2px 8px', cursor: 'pointer' }}
+                    style={{ fontSize: '11px', color: T.gold, background: 'transparent', border: `1px solid ${T.cardBorder}`, borderRadius: '6px', padding: '2px 8px', cursor: 'pointer' }}
                   >
                     수정
                   </button>
                 </div>
-                <div style={{ fontSize: '14px', color: tomorrowNote ? '#4A3C00' : '#9B8A00', lineHeight: 1.5 }}>
+                <div style={{ fontSize: '14px', color: tomorrowNote ? T.body : T.gold, lineHeight: 1.5 }}>
                   {tomorrowNote ?? tomorrowFallback}
                 </div>
               </div>
@@ -684,28 +713,31 @@ export default function HomePage() {
         ) : !hasAffirmations ? (
           <div
             style={{
-              background: 'var(--color-bg-card)',
-              borderRadius: '20px',
+              background: 'linear-gradient(160deg, #FFFFFF, #FFF9EE)',
+              border: `1px solid ${T.cardBorder}`,
+              boxShadow: '0 8px 28px rgba(65,36,2,0.07)',
+              borderRadius: '22px',
               padding: '28px 20px',
               margin: '0 16px 16px',
               textAlign: 'center',
             }}
           >
-            <Sprout size={36} color="var(--color-accent-primary)" style={{ marginBottom: '10px' }} />
-            <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '6px' }}>
+            <Sprout size={36} color={T.gold} style={{ marginBottom: '10px' }} />
+            <div style={{ fontSize: '15px', fontWeight: 600, color: T.ink, marginBottom: '6px' }}>
               아직 성공의 말이 없어요
             </div>
-            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '18px' }}>
+            <div style={{ fontSize: '13px', color: T.muted, marginBottom: '18px' }}>
               첫 번째 성공의 말을 만들어보세요
             </div>
             <button
               onClick={() => router.push('/create')}
               style={{
                 padding: '12px 28px',
-                background: 'var(--color-accent-primary)',
+                background: T.goldGrad,
                 color: 'white',
                 border: 'none',
                 borderRadius: '14px',
+                boxShadow: '0 6px 16px rgba(186,117,23,0.28)',
                 fontSize: '14px',
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -717,36 +749,35 @@ export default function HomePage() {
         ) : null}
       </div>
       <div style={{ paddingBottom: '16px' }}>
-        {/* Stats / Streak */}
-        <div style={{ margin: '0 16px 16px', padding: '14px 16px', background: 'var(--color-bg-card)', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '12px',
-            background: 'var(--color-accent-light)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <Flame size={20} color="var(--color-accent-primary)" strokeWidth={1.75} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-              {streakData.currentStreak}일 연속
+        {/* Stats / Streak — 2분할 */}
+        <div style={{ margin: '0 16px 16px', display: 'flex', gap: '10px' }}>
+          <div style={{ flex: 1, padding: '14px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px rgba(65,36,2,0.05)' }}>
+            <div style={{
+              width: '32px', height: '32px', borderRadius: '10px',
+              background: 'linear-gradient(135deg, #FBE6BE, #F4C876)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px',
+            }}>
+              <Flame size={16} color={T.gold} strokeWidth={1.75} />
             </div>
-            {streakData.shields > 0 && (
-              <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '1px' }}>
-                <Shield size={14} color="#1E88E5" strokeWidth={1.75} />
-                연속 기록 보호막 {streakData.shields}개
-              </div>
-            )}
-          </div>
-          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-accent-primary)' }}>
-              성공의 말 {todayCount}개
+            <div style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
+              {streakData.currentStreak}
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '1px' }}>오늘 완료</div>
+            <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '2px' }}>일 연속</div>
+          </div>
+          <div style={{ flex: 1, padding: '14px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px rgba(65,36,2,0.05)' }}>
+            <div style={{
+              width: '32px', height: '32px', borderRadius: '10px',
+              background: T.infoBg,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '10px',
+            }}>
+              <Shield size={16} color={T.info} strokeWidth={1.75} />
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
+              {todayCount}
+            </div>
+            <div style={{ fontSize: '11.5px', color: T.muted, marginTop: '2px' }}>
+              {streakData.shields > 0 ? `오늘 완료 · 보호막 ${streakData.shields}개` : '오늘 완료'}
+            </div>
           </div>
         </div>
 
@@ -759,32 +790,36 @@ export default function HomePage() {
             onClick={() => router.push('/games')}
             style={{
               padding: '12px 6px',
-              background: 'var(--color-bg-card)',
-              border: '1.5px solid var(--color-accent-primary)',
-              borderRadius: '12px',
-              color: 'var(--color-accent-primary)',
+              background: T.card,
+              border: `1px solid ${T.cardBorder}`,
+              borderRadius: '14px',
+              color: T.gold,
               fontSize: '12px',
               fontWeight: 600,
               cursor: 'pointer',
               wordBreak: 'keep-all',
               lineHeight: 1.4,
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
+              gap: '6px',
               textAlign: 'center',
-              minHeight: '56px',
+              minHeight: '64px',
               fontFamily: 'inherit',
             }}
           >
+            <Grid2X2 size={18} strokeWidth={1.75} />
             게임하기
           </button>
           <button
             onClick={() => router.push('/create')}
             style={{
               padding: '12px 6px',
-              background: 'var(--color-accent-primary)',
-              border: '1.5px solid var(--color-accent-primary)',
-              borderRadius: '12px',
+              background: T.goldGrad,
+              border: 'none',
+              borderRadius: '14px',
+              boxShadow: '0 6px 16px rgba(186,117,23,0.28)',
               color: 'white',
               fontSize: '12px',
               fontWeight: 700,
@@ -792,36 +827,42 @@ export default function HomePage() {
               wordBreak: 'keep-all',
               lineHeight: 1.4,
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
+              gap: '6px',
               textAlign: 'center',
-              minHeight: '56px',
+              minHeight: '64px',
               fontFamily: 'inherit',
             }}
           >
+            <Plus size={18} strokeWidth={1.75} />
             성공의 말 만들기
           </button>
           <button
             onClick={() => router.push('/home/success-image')}
             style={{
               padding: '12px 6px',
-              background: 'var(--color-bg-card)',
-              border: '1.5px solid var(--color-accent-primary)',
-              borderRadius: '12px',
-              color: 'var(--color-accent-primary)',
+              background: T.card,
+              border: `1px solid ${T.cardBorder}`,
+              borderRadius: '14px',
+              color: T.gold,
               fontSize: '12px',
               fontWeight: 600,
               cursor: 'pointer',
               wordBreak: 'keep-all',
               lineHeight: 1.4,
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
+              gap: '6px',
               textAlign: 'center',
-              minHeight: '56px',
+              minHeight: '64px',
               fontFamily: 'inherit',
             }}
           >
+            <ImageIcon size={18} strokeWidth={1.75} />
             성공 이미지 만들기
           </button>
         </div>
