@@ -1,4 +1,4 @@
-export type ThemeName = 'warm' | 'dark' | 'green'
+export type ThemeName = 'warm' | 'dark' | 'green' | 'blue'
 
 export type AffirmationCategory = string
 

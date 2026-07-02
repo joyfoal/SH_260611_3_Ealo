@@ -157,9 +157,10 @@ function Panel({ children }: { children: React.ReactNode }) {
 function ThemePanel() {
   const { themeName, setTheme } = useTheme()
   const THEMES = [
-    { name: 'warm' as const, label: '따뜻한 황금', color: themes.warm.accent.primary, colorSecondary: themes.warm.accent.secondary, bg: themes.warm.bg.primary },
-    { name: 'dark' as const, label: '딥 퍼플', color: themes.dark.accent.primary, colorSecondary: themes.dark.accent.secondary, bg: themes.dark.bg.primary },
-    { name: 'green' as const, label: '내추럴 그린', color: themes.green.accent.primary, colorSecondary: themes.green.accent.secondary, bg: themes.green.bg.primary },
+    { name: 'warm' as const, label: '행운의 황금', color: themes.warm.accent.primary, colorSecondary: themes.warm.accent.secondary, bg: themes.warm.bg.primary },
+    { name: 'dark' as const, label: '고귀한 보라', color: themes.dark.accent.primary, colorSecondary: themes.dark.accent.secondary, bg: themes.dark.bg.primary },
+    { name: 'green' as const, label: '풍요의 초록', color: themes.green.accent.primary, colorSecondary: themes.green.accent.secondary, bg: themes.green.bg.primary },
+    { name: 'blue' as const, label: '번영의 파랑', color: themes.blue.accent.primary, colorSecondary: themes.blue.accent.secondary, bg: themes.blue.bg.primary },
   ]
   return (
     <Panel>
@@ -1436,7 +1437,7 @@ function ManualPanel() {
     {
       title: '설정',
       items: [
-        '테마: 따뜻한 황금 · 딥 퍼플 · 내추럴 그린 3가지 색상 테마를 선택해요.',
+        '테마: 행운의 황금 · 고귀한 보라 · 풍요의 초록 · 번영의 파랑 4가지 색상 테마를 선택해요.',
         'On/Off: 홈 화면의 최근 녹음 · 성공 이미지 · 달력 표시 여부와 "나에게" 기능을 켜고 꺼요.',
         '알림: 성공의 말을 선택해 매일 정해진 시간에 알림을 받아요. 반복 요일과 종료 조건도 설정 가능해요.',
         '통계: 완료 횟수, 최근 14일 그래프, 많이 한 성공의 말 TOP 10, 카테고리별 기록을 확인해요.',
