@@ -17,8 +17,6 @@ self.addEventListener('message', (event) => {
     alarmTimers[id] = setTimeout(() => {
       self.registration.showNotification(title, {
         body,
-        icon: '/icon-192.png',
-        badge: '/icon-192.png',
         tag: `ealo-alarm-${id}`,
         renotify: true,
         requireInteraction: true,
