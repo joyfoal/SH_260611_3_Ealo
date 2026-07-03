@@ -334,6 +334,22 @@ function CalendarView() {
         </div>
       )}
 
+      {/* 완료 개수 색상 범례 */}
+      {showExpanded && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', marginTop: '10px' }}>
+          {[
+            { color: '#F7F1E6', label: '미완료' },
+            { color: '#FBEBCF', label: '1-2개 완료' },
+            { color: '#F4CE85', label: '3개 이상 완료' },
+          ].map((item) => (
+            <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{ width: 9, height: 9, borderRadius: '50%', background: item.color, border: '1px solid rgba(0,0,0,0.06)' }} />
+              <span style={{ fontSize: 10.5, color: T.muted }}>{item.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* 선택된 날 상세 */}
       {selectedDay && (
         <div
