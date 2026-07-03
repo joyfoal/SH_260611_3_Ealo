@@ -703,9 +703,6 @@ export default function OnboardingPage() {
                 backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
                 border: '1px solid rgba(232,200,120,.45)', borderRadius: 20, padding: '22px 20px',
               }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(232,200,120,.7)', letterSpacing: '.4px', marginBottom: 8 }}>
-                  당신의 첫 성공의 말이에요
-                </div>
                 <div style={{ fontSize: 19, fontWeight: 800, lineHeight: 1.45, color: '#fff', marginBottom: 14 }}>
                   &ldquo;{transcript}&rdquo;
                 </div>
