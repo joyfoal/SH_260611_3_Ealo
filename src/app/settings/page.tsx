@@ -1531,7 +1531,7 @@ export default function SettingsPage() {
             return (
               <div key={rowIdx}>
                 {isGroupStart && (
-                  <div style={{ height: '1px', background: 'var(--color-border)', margin: '10px 4px 6px' }} />
+                  <div style={{ height: '1px', background: T.divider, margin: '8px 4px' }} />
                 )}
                 {/* 버튼 행 */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
