@@ -1525,14 +1525,16 @@ export default function SettingsPage() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {rows.map((row, rowIdx) => {
+          {rows.flatMap((row, rowIdx) => {
             const rowActive = row.find((btn) => btn.id === active)
-            const isGroupStart = rowIdx === 1 || rowIdx === 2 || rowIdx === 4
-            return (
+            const elements = []
+            if (rowIdx > 0) {
+              elements.push(
+                <div key={`divider-${rowIdx}`} style={{ height: '1px', background: T.divider, margin: '0 4px' }} />
+              )
+            }
+            elements.push(
               <div key={rowIdx}>
-                {isGroupStart && (
-                  <div style={{ height: '1px', background: T.divider, margin: '8px 4px' }} />
-                )}
                 {/* 버튼 행 */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
                   {row.map((btn) => {
@@ -1572,6 +1574,7 @@ export default function SettingsPage() {
                 )}
               </div>
             )
+            return elements
           })}
         </div>
       </div>
