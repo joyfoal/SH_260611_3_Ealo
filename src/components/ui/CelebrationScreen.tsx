@@ -85,7 +85,7 @@ export function CelebrationScreen({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [variant])
 
-  const iconColor = '#F59E0B'
+  const iconColor = 'var(--color-accent-secondary)'
   const mainIcon =
     variant === 'repeat_done' ? <PartyPopper size={isBig ? 72 : 56} color={iconColor} /> :
     isBig ? <PartyPopper size={72} color={iconColor} /> :

@@ -58,8 +58,8 @@ function DarkReadingText({ text }: { text: string }) {
         const color =
           distance > 1 ? 'rgba(232,200,120,0.28)'
           : distance === 1 ? 'rgba(232,200,120,0.5)'
-          : distance === 0 ? '#F0D28E'
-          : '#FFF4DC'
+          : distance === 0 ? 'var(--color-accent-light)'
+          : 'var(--color-text-onDark)'
         const textShadow =
           distance === 0 ? '0 0 24px rgba(232,200,120,.35)'
           : distance < 0 ? '0 0 32px rgba(240,210,142,.4)'
