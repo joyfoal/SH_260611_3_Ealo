@@ -66,7 +66,7 @@ export default function RootPage() {
       style={{
         position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        background: 'radial-gradient(ellipse 90% 55% at 50% 42%, #F4F9F0 0%, #EAF3DE 55%, #C0DD97 100%)',
+        background: 'radial-gradient(ellipse 90% 55% at 50% 42%, #FFF6E5 0%, #FAE9C8 55%, #F0D9A8 100%)',
         opacity: fadingOut ? 0 : 1,
         transition: `opacity ${FADE_MS}ms ease`,
       }}
@@ -74,7 +74,7 @@ export default function RootPage() {
       <div
         style={{
           position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse 70% 45% at 50% 42%, rgba(99,153,34,0.14), transparent 70%)',
+          background: 'radial-gradient(ellipse 70% 45% at 50% 42%, rgba(186,117,23,0.12), transparent 70%)',
         }}
       />
       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -85,7 +85,7 @@ export default function RootPage() {
             width={200}
             height={200}
             priority
-            style={{ borderRadius: 44, boxShadow: '0 12px 32px rgba(15,32,16,0.18)' }}
+            style={{ borderRadius: 44, boxShadow: '0 12px 32px rgba(90,64,20,0.18)' }}
           />
           {/* star crystal shine, positioned over the star baked into the icon artwork.
               Centering uses negative margins (not transform: translate) because the
@@ -122,7 +122,7 @@ export default function RootPage() {
           />
         </div>
         <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ fontSize: 22, fontWeight: 700, color: '#3B6D11' }}>말하면, 이루어진다</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#8A6D3F' }}>말하면, 이루어진다</div>
         </div>
       </div>
     </div>
