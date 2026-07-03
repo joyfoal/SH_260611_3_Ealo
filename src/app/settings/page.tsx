@@ -1527,18 +1527,11 @@ export default function SettingsPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {rows.map((row, rowIdx) => {
             const rowActive = row.find((btn) => btn.id === active)
-            const sectionLabel =
-              rowIdx === 0 ? '개인화'
-              : rowIdx === 1 ? '알림 · 통계'
-              : rowIdx === 2 ? '데이터'
-              : rowIdx === 4 ? '지원'
-              : null
+            const isGroupStart = rowIdx === 1 || rowIdx === 2 || rowIdx === 4
             return (
               <div key={rowIdx}>
-                {sectionLabel && (
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-text-muted)', margin: '6px 4px 2px', letterSpacing: '0.3px' }}>
-                    {sectionLabel}
-                  </div>
+                {isGroupStart && (
+                  <div style={{ height: '1px', background: 'var(--color-border)', margin: '10px 4px 6px' }} />
                 )}
                 {/* 버튼 행 */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
