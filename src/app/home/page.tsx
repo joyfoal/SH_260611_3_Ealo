@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback, useRef, type ReactElement } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppLayout } from '@/components/ui/AppLayout'
-import { Play, Pause, Flame, Shield, Mic, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Sun, CloudSun, Moon, Check, Sprout, Grid2X2, Plus, Image as ImageIcon } from 'lucide-react'
+import { Play, Pause, Flame, Shield, Mic, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Sun, CloudSun, Moon, Check, Sprout } from 'lucide-react'
+import { PuzzlePieceIcon, PlusCircleIcon, PhotoIcon } from '@heroicons/react/24/solid'
 import {
   getAffirmations,
   getTodayAffirmationIds,
@@ -824,13 +825,7 @@ export default function HomePage() {
               fontFamily: 'inherit',
             }}
           >
-            <div style={{
-              width: 44, height: 44, borderRadius: '14px',
-              background: T.goldGrad,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Grid2X2 size={22} color="#fff" fill="#fff" fillOpacity={0.25} strokeWidth={2} />
-            </div>
+            <PuzzlePieceIcon style={{ width: 22, height: 22, color: T.gold }} />
             게임하기
           </button>
           <button
@@ -856,13 +851,7 @@ export default function HomePage() {
               fontFamily: 'inherit',
             }}
           >
-            <div style={{
-              width: 44, height: 44, borderRadius: '14px',
-              background: T.goldGrad,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Plus size={22} color="#fff" fill="#fff" fillOpacity={0.25} strokeWidth={2} />
-            </div>
+            <PlusCircleIcon style={{ width: 22, height: 22, color: T.gold }} />
             성공의 말 만들기
           </button>
           <button
@@ -888,13 +877,7 @@ export default function HomePage() {
               fontFamily: 'inherit',
             }}
           >
-            <div style={{
-              width: 44, height: 44, borderRadius: '14px',
-              background: T.goldGrad,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <ImageIcon size={22} color="#fff" fill="#fff" fillOpacity={0.25} strokeWidth={2} />
-            </div>
+            <PhotoIcon style={{ width: 22, height: 22, color: T.gold }} />
             성공 이미지 만들기
           </button>
         </div>
