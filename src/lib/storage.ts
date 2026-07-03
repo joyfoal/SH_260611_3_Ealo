@@ -69,6 +69,7 @@ const KEYS = {
   SHOW_RECENT_REC: 'ealo-show-recent-rec',
   SHOW_SUCCESS_IMG: 'ealo-show-success-img',
   SHOW_CALENDAR: 'ealo-show-calendar',
+  CAMERA_NOTICE_SHOWN_AT: 'ealo-camera-notice-shown-at',
 } as const
 
 const DEFAULT_CATEGORIES = [
@@ -332,6 +333,15 @@ export function getNaegeSeenDate(): string | null {
 
 export function setNaegeSeenDate(dateStr: string): void {
   safeSet(KEYS.NAEGE_SEEN_DATE, dateStr)
+}
+
+// Camera privacy notice — tracks when it was last shown on the speak screen (re-shown every 7 days)
+export function getCameraNoticeShownAt(): string | null {
+  return safeGet<string | null>(KEYS.CAMERA_NOTICE_SHOWN_AT, null)
+}
+
+export function setCameraNoticeShownAt(dateStr: string): void {
+  safeSet(KEYS.CAMERA_NOTICE_SHOWN_AT, dateStr)
 }
 
 // Day notes ("오늘의 나에게" messages)

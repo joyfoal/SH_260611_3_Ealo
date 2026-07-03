@@ -15,6 +15,8 @@ import {
   todayStr,
   setTodayRepeatDone,
   getNaegeSeenDate,
+  getCameraNoticeShownAt,
+  setCameraNoticeShownAt,
   type Affirmation,
 } from '@/lib/storage'
 import { updateStreak } from '@/lib/streak'
@@ -63,6 +65,9 @@ function SpeakPageInner() {
   const prewarmStreamRef = useRef<MediaStream | null>(null)
 
   const [isRecording, setIsRecording] = useState(false)
+  const [showCameraNotice, setShowCameraNotice] = useState(false)
+  const cameraNoticeCheckedRef = useRef(false)
+  const cameraNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const recognitionRef = useRef<{ stop: () => void } | null>(null)
@@ -250,10 +255,24 @@ function SpeakPageInner() {
       shouldListenRef.current = true
       startCamera()
       startSTT()
+
+      if (!cameraNoticeCheckedRef.current) {
+        cameraNoticeCheckedRef.current = true
+        const lastShown = getCameraNoticeShownAt()
+        const daysSince = lastShown
+          ? (Date.now() - new Date(lastShown).getTime()) / (1000 * 60 * 60 * 24)
+          : Infinity
+        if (daysSince >= 7) {
+          setShowCameraNotice(true)
+          setCameraNoticeShownAt(todayStr())
+          cameraNoticeTimerRef.current = setTimeout(() => setShowCameraNotice(false), 5000)
+        }
+      }
     }
     return () => {
       shouldListenRef.current = false
       if (speakTimerRef.current) clearTimeout(speakTimerRef.current)
+      if (cameraNoticeTimerRef.current) clearTimeout(cameraNoticeTimerRef.current)
       if (recognitionRef.current) recognitionRef.current.stop()
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop())
@@ -640,6 +659,18 @@ function SpeakPageInner() {
           </div>
         )}
       </div>
+
+      {/* 카메라 안내 배너 */}
+      {showCameraNotice && (
+        <div style={{ position: 'relative', zIndex: 10, padding: '10px 16px 0', display: 'flex', justifyContent: 'center' }}>
+          <div style={{
+            background: 'rgba(0,0,0,0.55)', borderRadius: '14px', padding: '10px 14px',
+            fontSize: '12.5px', color: 'var(--color-text-onDark)', lineHeight: 1.5, textAlign: 'center', maxWidth: '320px',
+          }}>
+            화면에 얼굴이 보여도 촬영·녹화되지 않아요.<br />녹음 파일은 내 기기에만 저장돼요.
+          </div>
+        </div>
+      )}
 
       {/* Words overlay */}
       <div style={{ position: 'relative', zIndex: 10, flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
