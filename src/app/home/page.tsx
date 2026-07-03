@@ -823,7 +823,7 @@ export default function HomePage() {
               fontFamily: 'inherit',
             }}
           >
-            <PuzzlePieceIcon style={{ width: 22, height: 22, color: T.gold }} />
+            <PuzzlePieceIcon style={{ width: 32, height: 32, color: T.gold }} />
             게임하기
           </button>
           <button
@@ -849,7 +849,7 @@ export default function HomePage() {
               fontFamily: 'inherit',
             }}
           >
-            <PlusCircleIcon style={{ width: 22, height: 22, color: T.gold }} />
+            <PlusCircleIcon style={{ width: 32, height: 32, color: T.gold }} />
             성공의 말 만들기
           </button>
           <button
@@ -875,7 +875,7 @@ export default function HomePage() {
               fontFamily: 'inherit',
             }}
           >
-            <PhotoIcon style={{ width: 22, height: 22, color: T.gold }} />
+            <PhotoIcon style={{ width: 32, height: 32, color: T.gold }} />
             성공 이미지 만들기
           </button>
         </div>
