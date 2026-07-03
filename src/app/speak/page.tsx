@@ -545,14 +545,14 @@ function SpeakPageInner() {
     return (
       <div
         className="flex flex-col items-center justify-center relative"
-        style={{ minHeight: '100dvh', background: '#140D06', cursor: 'pointer' }}
+        style={{ minHeight: '100dvh', background: 'var(--color-bg-dark)', cursor: 'pointer' }}
         onClick={() => setScreen('speak')}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
         {/* 배경 골드 방사형 글로우 */}
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 90% 50% at 50% 8%, rgba(216,154,54,.22) 0%, transparent 65%)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 40% at 50% 100%, rgba(216,154,54,.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 90% 50% at 50% 8%, color-mix(in srgb, var(--color-accent-secondary) 22%, transparent) 0%, transparent 65%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 40% at 50% 100%, color-mix(in srgb, var(--color-accent-secondary) 8%, transparent) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
         {/* 진행 표시 — 점 인디케이터 + 기존 진행률 텍스트 */}
         <div style={{
@@ -565,7 +565,7 @@ function SpeakPageInner() {
                 key={i}
                 style={{
                   width: i === currentIndex ? 26 : 10, height: 4, borderRadius: 2,
-                  background: i === currentIndex ? '#E8C878' : 'rgba(255,255,255,0.18)',
+                  background: i === currentIndex ? 'var(--color-accent-light)' : 'rgba(255,255,255,0.18)',
                   transition: 'width 0.3s ease, background 0.3s ease',
                 }}
               />
@@ -573,7 +573,7 @@ function SpeakPageInner() {
           </div>
           <div style={{
             fontSize: '11px', fontWeight: 600, letterSpacing: '1.5px',
-            color: 'rgba(232,200,120,0.75)', whiteSpace: 'nowrap',
+            color: 'color-mix(in srgb, var(--color-accent-light) 75%, transparent)', whiteSpace: 'nowrap',
           }}>
             {progressLabel}
           </div>
@@ -592,13 +592,13 @@ function SpeakPageInner() {
         }}>
           <div style={{
             width: 44, height: 44, borderRadius: '50%',
-            border: '1.5px solid rgba(232,200,120,0.35)',
+            border: '1.5px solid color-mix(in srgb, var(--color-accent-light) 35%, transparent)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'rgba(232,200,120,0.75)',
+            color: 'color-mix(in srgb, var(--color-accent-light) 75%, transparent)',
           }}>
             <ChevronUp size={20} strokeWidth={2} />
           </div>
-          <div style={{ color: 'rgba(232,200,120,0.75)', fontSize: '13px', fontWeight: 500 }}>
+          <div style={{ color: 'color-mix(in srgb, var(--color-accent-light) 75%, transparent)', fontSize: '13px', fontWeight: 500 }}>
             위로 스와이프 ↑
           </div>
         </div>

@@ -69,7 +69,7 @@ export function TabBar({ activeTab }: TabBarProps) {
             position: 'relative', width: 72, height: 72,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transform: 'translateY(-8px)',
-            filter: 'drop-shadow(0 6px 10px rgba(186,117,23,0.45))',
+            filter: 'drop-shadow(0 6px 10px var(--color-accent-primary))',
           }}
         >
           <svg width={72} height={72} viewBox="0 0 100 100" style={{ position: 'absolute', inset: 0 }}>

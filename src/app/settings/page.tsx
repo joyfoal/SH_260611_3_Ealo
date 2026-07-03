@@ -139,10 +139,9 @@ function CategoryDeleteModal({
 
 // ─── Panel wrapper ─────────────────────────────────────────────────────────────
 const T = {
-  cardBorder: '#F0E7D6',
-  gold: '#BA7517',
-  divider: '#F4ECDE',
-  goldGrad: 'linear-gradient(135deg, #BA7517, #D98A1C)',
+  cardBorder: 'var(--color-border)',
+  divider: 'var(--color-border)',
+  goldGrad: 'linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary))',
 }
 
 function Panel({ children }: { children: React.ReactNode }) {

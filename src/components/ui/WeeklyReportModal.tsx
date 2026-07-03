@@ -49,7 +49,7 @@ export function WeeklyReportModal({ onClose }: { onClose: () => void }) {
             const isToday = rec.date === todayStr()
             return (
               <div key={rec.date} className="flex flex-col items-center gap-1" style={{ flex: 1 }}>
-                <div style={{ width: '100%', aspectRatio: '1', borderRadius: '8px', background: rec.count > 0 ? `rgba(186,117,23,${Math.min(0.3 + rec.count * 0.15, 1)})` : 'var(--color-bg-card)', border: isToday ? '2px solid var(--color-accent-primary)' : '1px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: rec.count > 0 ? 'var(--color-accent-primary)' : 'var(--color-text-muted)', fontWeight: rec.count > 0 ? 600 : 400 }}>
+                <div style={{ width: '100%', aspectRatio: '1', borderRadius: '8px', background: rec.count > 0 ? `color-mix(in srgb, var(--color-accent-primary) ${Math.min(30 + rec.count * 15, 100)}%, transparent)` : 'var(--color-bg-card)', border: isToday ? '2px solid var(--color-accent-primary)' : '1px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: rec.count > 0 ? 'var(--color-accent-primary)' : 'var(--color-text-muted)', fontWeight: rec.count > 0 ? 600 : 400 }}>
                   {rec.count || ''}
                 </div>
                 <span style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>{dayLabel}</span>
