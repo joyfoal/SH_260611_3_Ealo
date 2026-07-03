@@ -56,13 +56,13 @@ function DarkReadingText({ text }: { text: string }) {
         // 순수 파생값 — currentIdx(state)로부터 렌더 시점에만 계산, 타이밍 로직은 그대로.
         const distance = i - currentIdx
         const color =
-          distance > 1 ? 'rgba(232,200,120,0.28)'
-          : distance === 1 ? 'rgba(232,200,120,0.5)'
+          distance > 1 ? 'color-mix(in srgb, var(--color-accent-light) 28%, transparent)'
+          : distance === 1 ? 'color-mix(in srgb, var(--color-accent-light) 50%, transparent)'
           : distance === 0 ? 'var(--color-accent-light)'
           : 'var(--color-text-onDark)'
         const textShadow =
-          distance === 0 ? '0 0 24px rgba(232,200,120,.35)'
-          : distance < 0 ? '0 0 32px rgba(240,210,142,.4)'
+          distance === 0 ? '0 0 24px color-mix(in srgb, var(--color-accent-light) 35%, transparent)'
+          : distance < 0 ? '0 0 32px color-mix(in srgb, var(--color-accent-light) 40%, transparent)'
           : 'none'
         return (
           <span

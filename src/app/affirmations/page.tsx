@@ -9,16 +9,16 @@ import { getCategoryColor } from '@/lib/categories'
 import { getAudioRecords, moveAudioToTrash, type AudioRecord } from '@/lib/audioStorage'
 
 const T = {
-  ink: '#2A1801',
-  body: '#412402',
+  ink: 'var(--color-text-primary)',
+  body: 'var(--color-text-primary)',
   muted: 'var(--color-text-muted)',
   gold: 'var(--color-accent-primary)',
   goldGrad: 'linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary))',
   goldTint: 'var(--color-accent-light)',
-  cardBorder: '#F0E7D6',
-  chipInactiveBorder: '#EFE6D6',
-  recordingBg: '#FBF6EC',
-  waveform: '#E0C89A',
+  cardBorder: 'var(--color-border)',
+  chipInactiveBorder: 'var(--color-border)',
+  recordingBg: 'color-mix(in srgb, var(--color-accent-light) 20%, var(--color-bg-card))',
+  waveform: 'var(--color-accent-light)',
 }
 
 export default function AffirmationsPage() {
@@ -159,7 +159,7 @@ export default function AffirmationsPage() {
             style={{
               width: '38px', height: '38px', borderRadius: '50%',
               background: T.goldGrad, border: 'none',
-              boxShadow: '0 6px 16px rgba(186,117,23,0.28)',
+              boxShadow: '0 6px 16px color-mix(in srgb, var(--color-accent-primary) 28%, transparent)',
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
@@ -192,7 +192,7 @@ export default function AffirmationsPage() {
             style={{
               padding: '6px 14px', borderRadius: '999px', flexShrink: 0,
               border: !filterCategory ? 'none' : `1px solid ${T.chipInactiveBorder}`,
-              background: !filterCategory ? T.body : '#FFFFFF',
+              background: !filterCategory ? T.body : 'var(--color-bg-card)',
               color: !filterCategory ? 'var(--color-text-onDark)' : T.muted,
               fontSize: '12px', fontWeight: 600, cursor: 'pointer',
             }}
@@ -206,7 +206,7 @@ export default function AffirmationsPage() {
               style={{
                 padding: '6px 14px', borderRadius: '999px', flexShrink: 0,
                 border: filterCategory === cat ? 'none' : `1px solid ${T.chipInactiveBorder}`,
-                background: filterCategory === cat ? T.body : '#FFFFFF',
+                background: filterCategory === cat ? T.body : 'var(--color-bg-card)',
                 color: filterCategory === cat ? 'var(--color-text-onDark)' : T.muted,
                 fontSize: '12px', fontWeight: 600, cursor: 'pointer',
               }}
@@ -254,10 +254,10 @@ export default function AffirmationsPage() {
                     <div
                       key={affirmation.id}
                       style={{
-                        padding: '14px 16px', background: '#FFFFFF',
+                        padding: '14px 16px', background: 'var(--color-bg-card)',
                         borderRadius: '18px', marginBottom: '8px',
                         border: `1px solid ${T.cardBorder}`,
-                        boxShadow: '0 4px 16px rgba(65,36,2,0.05)',
+                        boxShadow: '0 4px 16px color-mix(in srgb, var(--color-text-primary) 5%, transparent)',
                       }}
                     >
                       {/* 텍스트 + 완료 횟수 */}

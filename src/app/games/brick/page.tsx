@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { getAffirmations, updateAffirmation, getDayRecord, saveDayRecord, todayStr } from '@/lib/storage'
 import { getAudioRecordsByAffirmationId } from '@/lib/audioStorage'
+import { useTheme } from '@/lib/themeContext'
 
 async function playAffirmationAudio(affirmationId: string, affirmationText: string) {
   try {
@@ -54,6 +55,9 @@ const COLORS = ['#FAEEDA', '#E6F1FB', '#EAF3DE', '#FBEAF0', '#E1F5EE', '#FCEBEB'
 
 export default function BrickGamePage() {
   const router = useRouter()
+  const { theme } = useTheme()
+  const themeRef = useRef(theme)
+  useEffect(() => { themeRef.current = theme }, [theme])
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animRef = useRef<number>(0)
   const gameRef = useRef({
@@ -130,7 +134,7 @@ export default function BrickGamePage() {
     if (!g.running) return
 
     // Clear
-    ctx.fillStyle = '#1A0E05'
+    ctx.fillStyle = themeRef.current.bg.dark
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
 
     // Move ball
@@ -223,19 +227,19 @@ export default function BrickGamePage() {
     })
 
     // Draw ball
-    ctx.fillStyle = '#EF9F27'
+    ctx.fillStyle = themeRef.current.accent.secondary
     ctx.beginPath()
     ctx.arc(g.ball.x, g.ball.y, BALL_R, 0, Math.PI * 2)
     ctx.fill()
 
     // Draw paddle
-    ctx.fillStyle = '#BA7517'
+    ctx.fillStyle = themeRef.current.accent.primary
     ctx.beginPath()
     ctx.roundRect(g.paddle.x, CANVAS_HEIGHT - 30, PADDLE_W, PADDLE_H, 6)
     ctx.fill()
 
     // Timer
-    ctx.fillStyle = '#888780'
+    ctx.fillStyle = themeRef.current.text.muted
     ctx.font = '12px Pretendard, sans-serif'
     ctx.textAlign = 'right'
     ctx.fillText(`${g.timeLeft}초`, CANVAS_WIDTH - 16, 20)

@@ -1050,10 +1050,10 @@ function DeletePanel() {
           <p style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: '10px' }}>날짜 선택 지우기</p>
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
             <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
-              style={{ flex: 1, minWidth: '110px', padding: '8px 10px', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '13px', background: 'white', color: 'var(--color-text-primary)', outline: 'none' }} />
+              style={{ flex: 1, minWidth: '110px', padding: '8px 10px', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '13px', background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', outline: 'none' }} />
             <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>~</span>
             <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
-              style={{ flex: 1, minWidth: '110px', padding: '8px 10px', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '13px', background: 'white', color: 'var(--color-text-primary)', outline: 'none' }} />
+              style={{ flex: 1, minWidth: '110px', padding: '8px 10px', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '13px', background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', outline: 'none' }} />
           </div>
           <button onClick={handleDeleteDateRange} disabled={!dateFrom}
             style={{ width: '100%', padding: '9px', background: dateFrom ? 'var(--color-danger-orange)' : 'var(--color-border)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', cursor: dateFrom ? 'pointer' : 'not-allowed', fontWeight: 500 }}>
@@ -1278,7 +1278,7 @@ function CategoryPanel() {
                   <>
                     <input autoFocus value={editValue} onChange={(e) => setEditValue(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) commitEdit(); if (e.key === 'Escape') setEditingIdx(null) }}
-                      style={{ flex: 1, background: 'white', border: `1px solid ${colors.dark}`, borderRadius: '6px', padding: '6px 10px', fontSize: '13px', color: colors.dark, outline: 'none' }} />
+                      style={{ flex: 1, background: 'var(--color-bg-primary)', border: `1px solid ${colors.dark}`, borderRadius: '6px', padding: '6px 10px', fontSize: '13px', color: colors.dark, outline: 'none' }} />
                     <button onClick={commitEdit} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.dark, padding: '2px' }}><Check size={16} /></button>
                     <button onClick={() => setEditingIdx(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '2px' }}><X size={16} /></button>
                   </>
@@ -1303,7 +1303,7 @@ function CategoryPanel() {
             <input autoFocus value={newCatName} onChange={(e) => { setNewCatName(e.target.value); setCatAlternative(null) }}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleAdd(); if (e.key === 'Escape') { setAddMode(false); setNewCatName(''); setCatAlternative(null) } }}
               placeholder="새 카테고리 이름"
-              style={{ flex: 1, padding: '10px 12px', background: 'white', border: '1px solid var(--color-border)', borderRadius: '10px', fontSize: '13px', color: 'var(--color-text-primary)', outline: 'none' }} />
+              style={{ flex: 1, padding: '10px 12px', background: 'var(--color-bg-primary)', border: '1px solid var(--color-border)', borderRadius: '10px', fontSize: '13px', color: 'var(--color-text-primary)', outline: 'none' }} />
             <button onClick={handleAdd} disabled={addingCat} style={{ padding: '10px 16px', background: 'var(--color-accent-primary)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', opacity: addingCat ? 0.6 : 1 }}>{addingCat ? '확인 중...' : '추가'}</button>
             <button onClick={() => { setAddMode(false); setNewCatName(''); setCatAlternative(null) }} style={{ padding: '10px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: '10px', cursor: 'pointer', color: 'var(--color-text-muted)' }}><X size={14} /></button>
           </div>

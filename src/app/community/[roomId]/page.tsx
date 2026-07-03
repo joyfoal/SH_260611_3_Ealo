@@ -836,7 +836,7 @@ export default function RoomPage() {
       {toast && (
         <div style={{
           position: 'fixed', bottom: '80px', left: '50%', transform: 'translateX(-50%)',
-          background: 'rgba(0,0,0,0.75)', color: 'white',
+          background: 'var(--color-accent-primary)', color: 'white',
           padding: '10px 20px', borderRadius: '999px',
           fontSize: '13px', fontWeight: 500,
           zIndex: 100, whiteSpace: 'nowrap',

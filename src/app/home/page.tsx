@@ -39,17 +39,17 @@ import { WeeklyReportModal } from '@/components/ui/WeeklyReportModal'
 
 const T = {
   bgPrimary: 'var(--color-bg-primary)',
-  card: '#FFFFFF',
-  cardBorder: '#F0E3CB',
-  divider: '#F4ECDE',
+  card: 'var(--color-bg-card)',
+  cardBorder: 'var(--color-border)',
+  divider: 'var(--color-border)',
   gold: 'var(--color-accent-primary)',
   goldGrad: 'linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary))',
-  goldGradLight: 'linear-gradient(135deg, #D6AC74, #E8B977)',
+  goldGradLight: 'linear-gradient(135deg, var(--color-accent-light), var(--color-accent-secondary))',
   goldTint: 'var(--color-accent-light)',
-  ink: '#2A1801',
-  body: '#412402',
+  ink: 'var(--color-text-primary)',
+  body: 'var(--color-text-primary)',
   muted: 'var(--color-text-muted)',
-  waveform: '#E0C89A',
+  waveform: 'var(--color-accent-light)',
 }
 
 function getGreeting(): ReactElement {
@@ -117,7 +117,7 @@ function RecentRecordingPlayer() {
         background: T.card,
         borderRadius: '16px',
         border: `1px solid ${T.cardBorder}`,
-        boxShadow: '0 4px 16px rgba(65,36,2,0.05)',
+        boxShadow: '0 4px 16px color-mix(in srgb, var(--color-text-primary) 5%, transparent)',
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
@@ -245,7 +245,11 @@ function CalendarView() {
     const isToday = rec.date === today
     const isSelected = selectedDay?.date === rec.date
     const c = rec.completedCount
-    const bgColor = c === 0 ? '#F7F1E6' : c < 3 ? '#FBEBCF' : '#F4CE85'
+    const bgColor = c === 0
+      ? 'color-mix(in srgb, var(--color-accent-light) 12%, var(--color-bg-card))'
+      : c < 3
+        ? 'color-mix(in srgb, var(--color-accent-light) 45%, var(--color-bg-card))'
+        : 'var(--color-accent-light)'
     const textColor = c === 0 ? T.muted : T.body
     const isGoldFill = isToday || isSelected
     return (
@@ -275,7 +279,7 @@ function CalendarView() {
   }
 
   return (
-    <div style={{ margin: '0 16px 16px', padding: '16px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px rgba(65,36,2,0.05)' }}>
+    <div style={{ margin: '0 16px 16px', padding: '16px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px color-mix(in srgb, var(--color-text-primary) 5%, transparent)' }}>
       {/* 헤더 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
@@ -313,7 +317,7 @@ function CalendarView() {
       {/* 요일 레이블 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '4px' }}>
         {DAY_LABELS.map((d) => (
-          <div key={d} style={{ fontSize: '10px', color: '#B7AB96', textAlign: 'center', padding: '2px 0' }}>
+          <div key={d} style={{ fontSize: '10px', color: 'var(--color-text-muted)', textAlign: 'center', padding: '2px 0' }}>
             {d}
           </div>
         ))}
@@ -338,9 +342,9 @@ function CalendarView() {
       {showExpanded && (
         <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', marginTop: '10px' }}>
           {[
-            { color: '#F7F1E6', label: '미완료' },
-            { color: '#FBEBCF', label: '1-2개 완료' },
-            { color: '#F4CE85', label: '3개 이상 완료' },
+            { color: 'color-mix(in srgb, var(--color-accent-light) 12%, var(--color-bg-card))', label: '미완료' },
+            { color: 'color-mix(in srgb, var(--color-accent-light) 45%, var(--color-bg-card))', label: '1-2개 완료' },
+            { color: 'var(--color-accent-light)', label: '3개 이상 완료' },
           ].map((item) => (
             <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <div style={{ width: 9, height: 9, borderRadius: '50%', background: item.color, border: '1px solid rgba(0,0,0,0.06)' }} />
@@ -356,7 +360,7 @@ function CalendarView() {
           style={{
             marginTop: '12px',
             padding: '14px 16px',
-            background: '#FBF3E4',
+            background: 'color-mix(in srgb, var(--color-accent-light) 20%, var(--color-bg-card))',
             borderRadius: '14px',
             fontSize: '13px',
             color: T.body,
@@ -614,9 +618,9 @@ export default function HomePage() {
         {todayAffirmation ? (
           <div
             style={{
-              background: 'linear-gradient(160deg, #FFFFFF, #FFF9EE)',
+              background: 'linear-gradient(160deg, var(--color-bg-primary), var(--color-bg-card))',
               border: `1px solid ${T.cardBorder}`,
-              boxShadow: '0 8px 28px rgba(65,36,2,0.07)',
+              boxShadow: '0 8px 28px color-mix(in srgb, var(--color-text-primary) 7%, transparent)',
               borderRadius: '22px',
               padding: '36px 20px',
               margin: '0 16px 16px',
@@ -639,7 +643,7 @@ export default function HomePage() {
                 background: T.goldGrad,
                 border: 'none',
                 borderRadius: '14px',
-                boxShadow: '0 6px 16px rgba(186,117,23,0.28)',
+                boxShadow: '0 6px 16px color-mix(in srgb, var(--color-accent-primary) 28%, transparent)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -658,9 +662,9 @@ export default function HomePage() {
         ) : allDone ? (
           <div
             style={{
-              background: 'linear-gradient(160deg, #FFFFFF, #FFF9EE)',
+              background: 'linear-gradient(160deg, var(--color-bg-primary), var(--color-bg-card))',
               border: `1px solid ${T.cardBorder}`,
-              boxShadow: '0 8px 28px rgba(65,36,2,0.07)',
+              boxShadow: '0 8px 28px color-mix(in srgb, var(--color-text-primary) 7%, transparent)',
               borderRadius: '22px',
               padding: '24px 16px',
               margin: '0 16px 16px',
@@ -684,7 +688,7 @@ export default function HomePage() {
                     color: 'white',
                     border: 'none',
                     borderRadius: '14px',
-                    boxShadow: '0 6px 16px rgba(186,117,23,0.28)',
+                    boxShadow: '0 6px 16px color-mix(in srgb, var(--color-accent-primary) 28%, transparent)',
                     fontSize: '14px',
                     fontWeight: 600,
                     cursor: 'pointer',
@@ -723,9 +727,9 @@ export default function HomePage() {
         ) : !hasAffirmations ? (
           <div
             style={{
-              background: 'linear-gradient(160deg, #FFFFFF, #FFF9EE)',
+              background: 'linear-gradient(160deg, var(--color-bg-primary), var(--color-bg-card))',
               border: `1px solid ${T.cardBorder}`,
-              boxShadow: '0 8px 28px rgba(65,36,2,0.07)',
+              boxShadow: '0 8px 28px color-mix(in srgb, var(--color-text-primary) 7%, transparent)',
               borderRadius: '22px',
               padding: '28px 20px',
               margin: '0 16px 16px',
@@ -747,7 +751,7 @@ export default function HomePage() {
                 color: 'white',
                 border: 'none',
                 borderRadius: '14px',
-                boxShadow: '0 6px 16px rgba(186,117,23,0.28)',
+                boxShadow: '0 6px 16px color-mix(in srgb, var(--color-accent-primary) 28%, transparent)',
                 fontSize: '14px',
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -761,7 +765,7 @@ export default function HomePage() {
       <div style={{ paddingBottom: '16px' }}>
         {/* Stats / Streak — 2분할 */}
         <div style={{ margin: '0 16px 16px', display: 'flex', gap: '10px' }}>
-          <div style={{ flex: 1, padding: '14px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px rgba(65,36,2,0.05)' }}>
+          <div style={{ flex: 1, padding: '14px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px color-mix(in srgb, var(--color-text-primary) 5%, transparent)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <FireIcon style={{ width: 34, height: 34, color: T.gold, flexShrink: 0 }} />
               <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
@@ -780,7 +784,7 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-          <div style={{ flex: 1, padding: '14px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px rgba(65,36,2,0.05)' }}>
+          <div style={{ flex: 1, padding: '14px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px color-mix(in srgb, var(--color-text-primary) 5%, transparent)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <ShieldCheckIcon style={{ width: 34, height: 34, color: T.gold, flexShrink: 0 }} />
               <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
@@ -808,7 +812,7 @@ export default function HomePage() {
             onClick={() => router.push('/games')}
             style={{
               padding: '12px 6px',
-              background: 'linear-gradient(160deg, #FFFFFF, #FFF9EE)',
+              background: 'linear-gradient(160deg, var(--color-bg-primary), var(--color-bg-card))',
               border: `1px solid ${T.cardBorder}`,
               borderRadius: '14px',
               color: T.gold,
@@ -834,7 +838,7 @@ export default function HomePage() {
             onClick={() => router.push('/create')}
             style={{
               padding: '12px 6px',
-              background: 'linear-gradient(160deg, #FFFFFF, #FFF9EE)',
+              background: 'linear-gradient(160deg, var(--color-bg-primary), var(--color-bg-card))',
               border: `1px solid ${T.cardBorder}`,
               borderRadius: '14px',
               color: T.gold,
@@ -860,7 +864,7 @@ export default function HomePage() {
             onClick={() => router.push('/home/success-image')}
             style={{
               padding: '12px 6px',
-              background: 'linear-gradient(160deg, #FFFFFF, #FFF9EE)',
+              background: 'linear-gradient(160deg, var(--color-bg-primary), var(--color-bg-card))',
               border: `1px solid ${T.cardBorder}`,
               borderRadius: '14px',
               color: T.gold,

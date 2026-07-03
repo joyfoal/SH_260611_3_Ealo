@@ -5,9 +5,9 @@ import { AppLayout } from '@/components/ui/AppLayout'
 import { Grid2X2, ArrowUpDown, Play } from 'lucide-react'
 
 const T = {
-  ink: '#2A1801',
+  ink: 'var(--color-text-primary)',
   muted: 'var(--color-text-muted)',
-  cardBorder: '#F0E7D6',
+  cardBorder: 'var(--color-border)',
   goldGrad: 'linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary))',
   greenGrad: 'linear-gradient(135deg, var(--color-accent-secondary), var(--color-accent-primary))',
 }
@@ -18,7 +18,7 @@ const GAMES = [
     title: '벽돌 깨기',
     desc: '성공의 말 단어들이 벽돌 뒤에 있어요. 모두 깨면 성공의 말 완성!',
     route: '/games/brick',
-    cardBg: 'linear-gradient(150deg, #FFFFFF, #FFF6E6)',
+    cardBg: 'linear-gradient(150deg, var(--color-bg-primary), var(--color-bg-card))',
     chipBg: T.goldGrad,
   },
   {
@@ -26,7 +26,7 @@ const GAMES = [
     title: '단어 정렬',
     desc: '뒤섞인 성공의 말 단어를 올바른 순서로 맞춰보세요!',
     route: '/games/word-sort',
-    cardBg: 'linear-gradient(150deg, #FFFFFF, #F3F7EF)',
+    cardBg: 'linear-gradient(150deg, var(--color-bg-primary), var(--color-bg-card))',
     chipBg: T.greenGrad,
   },
 ]
@@ -55,14 +55,14 @@ export default function GamesPage() {
                 borderRadius: '22px',
                 padding: '20px',
                 border: `1px solid ${T.cardBorder}`,
-                boxShadow: '0 8px 26px rgba(65,36,2,0.07)',
+                boxShadow: '0 8px 26px color-mix(in srgb, var(--color-text-primary) 7%, transparent)',
                 overflow: 'hidden',
               }}
             >
               <div
                 style={{
                   position: 'absolute', top: -20, right: -20, width: 90, height: 90, borderRadius: '50%',
-                  background: 'radial-gradient(circle, rgba(186,117,23,0.12), transparent 70%)',
+                  background: 'radial-gradient(circle, color-mix(in srgb, var(--color-accent-primary) 12%, transparent), transparent 70%)',
                   pointerEvents: 'none',
                 }}
               />
@@ -105,7 +105,7 @@ export default function GamesPage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 8,
-                  boxShadow: '0 6px 16px rgba(186,117,23,0.28)',
+                  boxShadow: '0 6px 16px color-mix(in srgb, var(--color-accent-primary) 28%, transparent)',
                 }}
               >
                 <Play size={16} fill="#fff" color="#fff" />

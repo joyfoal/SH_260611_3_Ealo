@@ -6,12 +6,12 @@ import { AppLayout } from '@/components/ui/AppLayout'
 import { Users, Plus, ChevronRight, CheckCircle, Search, X, UserCircle, Camera, Home, MessageCircle, Lightbulb, Ban, Loader2, User, Flame } from 'lucide-react'
 
 const T = {
-  ink: '#2A1801',
-  muted: '#A0937E',
-  cardBorder: '#F0E7D6',
-  goldGrad: 'linear-gradient(135deg, #BA7517, #D98A1C)',
-  goldTint: '#FBF0DA',
-  segTrack: '#F1E7D6',
+  ink: 'var(--color-text-primary)',
+  muted: 'var(--color-text-muted)',
+  cardBorder: 'var(--color-border)',
+  goldGrad: 'linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary))',
+  goldTint: 'var(--color-accent-light)',
+  segTrack: 'var(--color-bg-card)',
 }
 
 function RankBadge({ rank }: { rank: number }) {
@@ -326,10 +326,10 @@ export default function CommunityPage() {
   const tabStyle = (tab: CommunityTab): React.CSSProperties => ({
     flex: 1,
     padding: '8px 0',
-    background: activeTab === tab ? '#FFFFFF' : 'transparent',
+    background: activeTab === tab ? 'var(--color-bg-primary)' : 'transparent',
     border: 'none',
     borderRadius: 10,
-    boxShadow: activeTab === tab ? '0 2px 8px rgba(65,36,2,0.08)' : 'none',
+    boxShadow: activeTab === tab ? '0 2px 8px color-mix(in srgb, var(--color-text-primary) 8%, transparent)' : 'none',
     color: activeTab === tab ? T.ink : T.muted,
     fontSize: '14px',
     fontWeight: activeTab === tab ? 700 : 500,
@@ -458,7 +458,7 @@ export default function CommunityPage() {
                     gap: '5px',
                     padding: '7px 14px',
                     background: T.goldGrad,
-                    boxShadow: '0 6px 16px rgba(186,117,23,0.28)',
+                    boxShadow: '0 6px 16px color-mix(in srgb, var(--color-accent-primary) 28%, transparent)',
                     color: 'white',
                     border: 'none',
                     borderRadius: '10px',
@@ -833,7 +833,7 @@ export default function CommunityPage() {
                   width: '100%',
                   padding: '14px',
                   background: roomName.trim() && !creating ? T.goldGrad : 'var(--color-border)',
-                  boxShadow: roomName.trim() && !creating ? '0 6px 16px rgba(186,117,23,0.28)' : 'none',
+                  boxShadow: roomName.trim() && !creating ? '0 6px 16px color-mix(in srgb, var(--color-accent-primary) 28%, transparent)' : 'none',
                   color: roomName.trim() && !creating ? 'white' : 'var(--color-text-muted)',
                   border: 'none',
                   borderRadius: '14px',
