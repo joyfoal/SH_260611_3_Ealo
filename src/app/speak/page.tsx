@@ -587,6 +587,7 @@ function SpeakPageInner() {
         {/* 스와이프 힌트 */}
         <div style={{
           position: 'absolute', bottom: '40px', left: '50%', transform: 'translateX(-50%)',
+          width: '100%',
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', zIndex: 1,
           animation: 'floatHint 2.2s ease-in-out infinite',
         }}>
@@ -598,8 +599,8 @@ function SpeakPageInner() {
           }}>
             <ChevronUp size={20} strokeWidth={2} />
           </div>
-          <div style={{ color: 'color-mix(in srgb, var(--color-accent-light) 75%, transparent)', fontSize: '13px', fontWeight: 500 }}>
-            위로 스와이프 ↑
+          <div style={{ color: 'color-mix(in srgb, var(--color-accent-light) 75%, transparent)', fontSize: '13px', fontWeight: 500, textAlign: 'center' }}>
+            위로 스와이프
           </div>
         </div>
       </div>

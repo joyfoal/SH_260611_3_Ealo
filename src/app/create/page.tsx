@@ -431,7 +431,7 @@ export default function CreatePage() {
               left: '50%',
               transform: 'translateX(-50%)',
               padding: '12px 24px',
-              background: msgType === 'success' ? 'var(--color-success)' : 'var(--color-danger-orange-dark)',
+              background: msgType === 'success' ? 'var(--color-accent-primary)' : 'var(--color-danger-orange-dark)',
               borderRadius: '24px',
               color: 'white',
               fontSize: '14px',

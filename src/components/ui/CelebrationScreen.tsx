@@ -154,6 +154,7 @@ export function CelebrationScreen({
             marginBottom: '12px',
             lineHeight: 1.4,
             whiteSpace: 'pre-line',
+            wordBreak: 'keep-all',
           }}
         >
           {mainMessage}
