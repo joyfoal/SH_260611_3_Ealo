@@ -9,7 +9,7 @@ const T = {
   muted: 'var(--color-text-muted)',
   cardBorder: '#F0E7D6',
   goldGrad: 'linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary))',
-  greenGrad: 'linear-gradient(135deg, #5E9E2E, #7DB543)',
+  greenGrad: 'linear-gradient(135deg, var(--color-accent-secondary), var(--color-accent-primary))',
 }
 
 const GAMES = [

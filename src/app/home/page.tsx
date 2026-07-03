@@ -658,7 +658,7 @@ export default function HomePage() {
             ) : (
               <>
                 <div style={{ fontSize: '15px', color: T.body, marginBottom: '14px' }}>
-                  오늘의 성공의 말하기 완료했어요 🎉
+                  오늘의 성공의 말하기 완료했어요
                 </div>
                 <button
                   onClick={handleMore}
@@ -747,13 +747,7 @@ export default function HomePage() {
         <div style={{ margin: '0 16px 16px', display: 'flex', gap: '10px' }}>
           <div style={{ flex: 1, padding: '14px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px rgba(65,36,2,0.05)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                width: '34px', height: '34px', borderRadius: '10px', flexShrink: 0,
-                background: 'linear-gradient(135deg, #FBE6BE, #F4C876)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <FireIcon style={{ width: 20, height: 20, color: T.gold }} />
-              </div>
+              <FireIcon style={{ width: 28, height: 28, color: T.gold, flexShrink: 0 }} />
               <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
                 <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
                   {streakData.currentStreak}
@@ -772,13 +766,7 @@ export default function HomePage() {
           </div>
           <div style={{ flex: 1, padding: '14px', background: T.card, borderRadius: '18px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px rgba(65,36,2,0.05)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                width: '34px', height: '34px', borderRadius: '10px', flexShrink: 0,
-                background: 'linear-gradient(135deg, #FBE6BE, #F4C876)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <ShieldCheckIcon style={{ width: 20, height: 20, color: T.gold }} />
-              </div>
+              <ShieldCheckIcon style={{ width: 28, height: 28, color: T.gold, flexShrink: 0 }} />
               <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
                 <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
                   {todayCount}
