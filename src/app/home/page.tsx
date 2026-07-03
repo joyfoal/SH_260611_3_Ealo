@@ -49,8 +49,6 @@ const T = {
   ink: '#2A1801',
   body: '#412402',
   muted: 'var(--color-text-muted)',
-  info: '#1E88E5',
-  infoBg: '#EAF2FB',
   waveform: '#E0C89A',
 }
 
@@ -776,10 +774,10 @@ export default function HomePage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div style={{
                 width: '34px', height: '34px', borderRadius: '10px', flexShrink: 0,
-                background: T.infoBg,
+                background: 'linear-gradient(135deg, #FBE6BE, #F4C876)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Shield size={20} color={T.info} strokeWidth={1.75} />
+                <Shield size={20} color={T.gold} strokeWidth={1.75} />
               </div>
               <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
                 <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
