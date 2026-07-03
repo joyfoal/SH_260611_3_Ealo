@@ -6,9 +6,9 @@ import { Grid2X2, ArrowUpDown, Play } from 'lucide-react'
 
 const T = {
   ink: '#2A1801',
-  muted: '#A0937E',
+  muted: 'var(--color-text-muted)',
   cardBorder: '#F0E7D6',
-  goldGrad: 'linear-gradient(135deg, #BA7517, #D98A1C)',
+  goldGrad: 'linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary))',
   greenGrad: 'linear-gradient(135deg, #5E9E2E, #7DB543)',
 }
 
@@ -37,7 +37,7 @@ export default function GamesPage() {
   return (
     <AppLayout activeTab="게임">
       <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--color-bg-primary)', padding: '20px 16px 16px' }}>
-        <h1 style={{ fontSize: '26px', fontWeight: 800, color: T.ink, marginBottom: '4px' }}>
+        <h1 style={{ fontSize: '26px', fontWeight: 800, color: 'var(--color-text-primary)', marginBottom: '4px' }}>
           게임
         </h1>
         <p style={{ fontSize: '13.5px', color: T.muted, marginBottom: 0 }}>

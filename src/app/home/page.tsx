@@ -37,17 +37,17 @@ import { getSuccessImage } from '@/lib/successImageStorage'
 import { WeeklyReportModal } from '@/components/ui/WeeklyReportModal'
 
 const T = {
-  bgPrimary: '#FFFCF8',
+  bgPrimary: 'var(--color-bg-primary)',
   card: '#FFFFFF',
   cardBorder: '#F0E3CB',
   divider: '#F4ECDE',
-  gold: '#BA7517',
-  goldGrad: 'linear-gradient(135deg, #BA7517, #D98A1C)',
+  gold: 'var(--color-accent-primary)',
+  goldGrad: 'linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary))',
   goldGradLight: 'linear-gradient(135deg, #D6AC74, #E8B977)',
-  goldTint: '#FBF0DA',
+  goldTint: 'var(--color-accent-light)',
   ink: '#2A1801',
   body: '#412402',
-  muted: '#A0937E',
+  muted: 'var(--color-text-muted)',
   info: '#1E88E5',
   infoBg: '#EAF2FB',
   waveform: '#E0C89A',
@@ -587,7 +587,7 @@ export default function HomePage() {
       <div style={{ position: 'sticky', top: 0, zIndex: 10, background: T.bgPrimary }}>
         {/* Greeting + Motto */}
         <div style={{ padding: '20px 16px 12px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px' }}>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: T.ink, whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--color-text-primary)', whiteSpace: 'nowrap' }}>
             {greeting}
           </div>
           <div style={{ fontSize: '22px', color: T.gold, fontWeight: 800, letterSpacing: '-0.3px', whiteSpace: 'nowrap' }}>

@@ -11,10 +11,10 @@ import { getAudioRecords, moveAudioToTrash, type AudioRecord } from '@/lib/audio
 const T = {
   ink: '#2A1801',
   body: '#412402',
-  muted: '#A0937E',
-  gold: '#BA7517',
-  goldGrad: 'linear-gradient(135deg, #BA7517, #D98A1C)',
-  goldTint: '#FBF0DA',
+  muted: 'var(--color-text-muted)',
+  gold: 'var(--color-accent-primary)',
+  goldGrad: 'linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary))',
+  goldTint: 'var(--color-accent-light)',
   cardBorder: '#F0E7D6',
   chipInactiveBorder: '#EFE6D6',
   recordingBg: '#FBF6EC',
@@ -151,7 +151,7 @@ export default function AffirmationsPage() {
     <AppLayout activeTab="성공의 말">
       <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--color-bg-primary)', padding: '20px 16px 0' }}>
         <div className="flex items-center justify-between mb-1">
-          <h1 style={{ fontSize: '24px', fontWeight: 800, color: T.ink, letterSpacing: '-0.5px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-text-primary)', letterSpacing: '-0.5px' }}>
             나의 성공의 말
           </h1>
           <button
@@ -193,7 +193,7 @@ export default function AffirmationsPage() {
               padding: '6px 14px', borderRadius: '999px', flexShrink: 0,
               border: !filterCategory ? 'none' : `1px solid ${T.chipInactiveBorder}`,
               background: !filterCategory ? T.body : '#FFFFFF',
-              color: !filterCategory ? '#FAEEDA' : T.muted,
+              color: !filterCategory ? 'var(--color-text-onDark)' : T.muted,
               fontSize: '12px', fontWeight: 600, cursor: 'pointer',
             }}
           >
@@ -207,7 +207,7 @@ export default function AffirmationsPage() {
                 padding: '6px 14px', borderRadius: '999px', flexShrink: 0,
                 border: filterCategory === cat ? 'none' : `1px solid ${T.chipInactiveBorder}`,
                 background: filterCategory === cat ? T.body : '#FFFFFF',
-                color: filterCategory === cat ? '#FAEEDA' : T.muted,
+                color: filterCategory === cat ? 'var(--color-text-onDark)' : T.muted,
                 fontSize: '12px', fontWeight: 600, cursor: 'pointer',
               }}
             >
@@ -244,7 +244,7 @@ export default function AffirmationsPage() {
                   marginBottom: '8px',
                 }}>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: colors.dark, flexShrink: 0 }} />
-                  <span style={{ fontSize: '13px', fontWeight: 700, color: T.ink }}>{cat}</span>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-primary)' }}>{cat}</span>
                   <span style={{ fontSize: '12px', color: T.muted }}>({items.length})</span>
                 </div>
                 {items.map((affirmation) => {
