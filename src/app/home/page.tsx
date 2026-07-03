@@ -3,8 +3,8 @@
 import { useEffect, useState, useCallback, useRef, type ReactElement } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppLayout } from '@/components/ui/AppLayout'
-import { Play, Pause, Flame, Shield, Mic, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Sun, CloudSun, Moon, Check, Sprout } from 'lucide-react'
-import { PuzzlePieceIcon, PlusCircleIcon, PhotoIcon } from '@heroicons/react/24/solid'
+import { Play, Pause, Mic, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Sun, CloudSun, Moon, Check, Sprout } from 'lucide-react'
+import { PuzzlePieceIcon, PlusCircleIcon, PhotoIcon, FireIcon, ShieldCheckIcon } from '@heroicons/react/24/solid'
 import {
   getAffirmations,
   getTodayAffirmationIds,
@@ -752,7 +752,7 @@ export default function HomePage() {
                 background: 'linear-gradient(135deg, #FBE6BE, #F4C876)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Flame size={20} color={T.gold} strokeWidth={1.75} />
+                <FireIcon style={{ width: 20, height: 20, color: T.gold }} />
               </div>
               <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
                 <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
@@ -777,7 +777,7 @@ export default function HomePage() {
                 background: 'linear-gradient(135deg, #FBE6BE, #F4C876)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Shield size={20} color={T.gold} strokeWidth={1.75} />
+                <ShieldCheckIcon style={{ width: 20, height: 20, color: T.gold }} />
               </div>
               <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
                 <span style={{ fontSize: '24px', fontWeight: 800, color: T.ink }}>
