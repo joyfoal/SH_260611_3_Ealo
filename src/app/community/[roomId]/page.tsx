@@ -443,7 +443,6 @@ export default function RoomPage() {
 
                     {/* 성공의 말 문구 */}
                     <p style={{
-                      fontFamily: 'Georgia, serif',
                       fontSize: '16px',
                       color: 'var(--color-text-primary)',
                       lineHeight: 1.6,
@@ -588,7 +587,6 @@ export default function RoomPage() {
                           </div>
                         )}
                         <p style={{
-                          fontFamily: 'Georgia, serif',
                           fontSize: '15px',
                           color: 'var(--color-text-primary)',
                           fontWeight: 600,
@@ -759,7 +757,6 @@ export default function RoomPage() {
                     >
                       <div style={{ minWidth: 0 }}>
                         <p style={{
-                          fontFamily: 'Georgia, serif',
                           fontSize: '14px',
                           color: 'var(--color-text-primary)',
                           marginBottom: '4px',

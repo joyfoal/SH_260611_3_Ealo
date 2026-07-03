@@ -943,7 +943,7 @@ export default function CommunityPage() {
                       >
                         <RankBadge rank={idx + 1} />
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontFamily: 'Georgia, serif', fontSize: '14px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {entry.phrase}
                           </p>
                           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
