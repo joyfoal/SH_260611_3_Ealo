@@ -824,7 +824,13 @@ export default function HomePage() {
               fontFamily: 'inherit',
             }}
           >
-            <Grid2X2 size={18} strokeWidth={1.75} />
+            <div style={{
+              width: 44, height: 44, borderRadius: '14px',
+              background: T.goldGrad,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Grid2X2 size={22} color="#fff" fill="#fff" fillOpacity={0.25} strokeWidth={2} />
+            </div>
             게임하기
           </button>
           <button
@@ -850,7 +856,13 @@ export default function HomePage() {
               fontFamily: 'inherit',
             }}
           >
-            <Plus size={18} strokeWidth={1.75} />
+            <div style={{
+              width: 44, height: 44, borderRadius: '14px',
+              background: T.goldGrad,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Plus size={22} color="#fff" fill="#fff" fillOpacity={0.25} strokeWidth={2} />
+            </div>
             성공의 말 만들기
           </button>
           <button
@@ -876,7 +888,13 @@ export default function HomePage() {
               fontFamily: 'inherit',
             }}
           >
-            <ImageIcon size={18} strokeWidth={1.75} />
+            <div style={{
+              width: 44, height: 44, borderRadius: '14px',
+              background: T.goldGrad,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <ImageIcon size={22} color="#fff" fill="#fff" fillOpacity={0.25} strokeWidth={2} />
+            </div>
             성공 이미지 만들기
           </button>
         </div>
