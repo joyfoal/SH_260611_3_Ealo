@@ -425,7 +425,8 @@ export function clearAllData(): void {
 }
 
 // Prime today's speak session and navigate to /speak with the next uncompleted affirmation.
-// Shows a toast in place (no navigation) if there's nothing left to speak today.
+// If today's main queue is already done, falls into the same "반복하기"(repeat) flow as
+// home's 더 말하기, and only shows a toast once repeat is done too (mirrors home's allDone/repeatDone UI).
 export function goToSpeak(router: { push: (href: string) => void }): void {
   let ids = getTodayAffirmationIds()
   if (ids.length === 0) {
@@ -436,17 +437,42 @@ export function goToSpeak(router: { push: (href: string) => void }): void {
   const today = todayStr()
   const notDone = affirmations.filter((a) => ids.includes(a.id) && !a.completedDates.includes(today))
   const target = notDone[0]
-  if (!target) {
+
+  if (target) {
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem('ealo-speak-queue', JSON.stringify(ids))
+        sessionStorage.setItem('ealo-speak-index', String(ids.indexOf(target.id)))
+        sessionStorage.setItem('ealo-speak-phase', 'initial')
+        sessionStorage.removeItem('ealo-repeat-remaining')
+      } catch { /* 프라이빗 브라우징 등 storage 비활성화 환경 */ }
+    }
+    router.push(`/speak?id=${target.id}`)
+    return
+  }
+
+  if (getTodayRepeatDone()) {
+    showToast('오늘의 성공의 말하기는 반복까지 완료했어요 🎉')
+    return
+  }
+
+  if (affirmations.length === 0) {
     showToast('오늘의 성공의 말을 모두 완료했어요')
     return
   }
+
+  const notDoneToday = affirmations.filter((a) => !a.completedDates.includes(today))
+  const pool = notDoneToday.length > 0 ? notDoneToday : affirmations
+  const shuffled = [...pool].sort(() => Math.random() - 0.5)
+  const first3 = shuffled.slice(0, 3)
+  const rest = shuffled.slice(3)
   if (typeof window !== 'undefined') {
     try {
-      sessionStorage.setItem('ealo-speak-queue', JSON.stringify(ids))
-      sessionStorage.setItem('ealo-speak-index', String(ids.indexOf(target.id)))
-      sessionStorage.setItem('ealo-speak-phase', 'initial')
-      sessionStorage.removeItem('ealo-repeat-remaining')
+      sessionStorage.setItem('ealo-repeat-remaining', JSON.stringify(rest.map((a) => a.id)))
+      sessionStorage.setItem('ealo-speak-queue', JSON.stringify(first3.map((a) => a.id)))
+      sessionStorage.setItem('ealo-speak-index', '0')
+      sessionStorage.setItem('ealo-speak-phase', 'repeat')
     } catch { /* 프라이빗 브라우징 등 storage 비활성화 환경 */ }
   }
-  router.push(`/speak?id=${target.id}`)
+  router.push(`/speak?id=${first3[0].id}`)
 }
