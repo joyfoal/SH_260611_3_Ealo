@@ -66,7 +66,7 @@ export default function RootPage() {
       style={{
         position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        background: 'radial-gradient(ellipse 90% 55% at 50% 42%, #FFF6E5 0%, #FAE9C8 55%, #F0D9A8 100%)',
+        background: 'radial-gradient(ellipse 90% 55% at 50% 42%, #FFFDF9 0%, #FFF8ED 55%, #FBEFDA 100%)',
         opacity: fadingOut ? 0 : 1,
         transition: `opacity ${FADE_MS}ms ease`,
       }}
