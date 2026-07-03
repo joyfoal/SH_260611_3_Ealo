@@ -1,3 +1,5 @@
+import { showToast } from './toast'
+
 export type ThemeName = 'warm' | 'dark' | 'green' | 'blue'
 
 export type AffirmationCategory = string
@@ -423,7 +425,7 @@ export function clearAllData(): void {
 }
 
 // Prime today's speak session and navigate to /speak with the next uncompleted affirmation.
-// Falls back to /home if there's nothing left to speak today.
+// Shows a toast in place (no navigation) if there's nothing left to speak today.
 export function goToSpeak(router: { push: (href: string) => void }): void {
   let ids = getTodayAffirmationIds()
   if (ids.length === 0) {
@@ -435,7 +437,7 @@ export function goToSpeak(router: { push: (href: string) => void }): void {
   const notDone = affirmations.filter((a) => ids.includes(a.id) && !a.completedDates.includes(today))
   const target = notDone[0]
   if (!target) {
-    router.push('/home')
+    showToast('오늘의 성공의 말을 모두 완료했어요')
     return
   }
   if (typeof window !== 'undefined') {
