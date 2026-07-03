@@ -8,20 +8,20 @@ import { saveAffirmation, setOnboarded, saveTodayAffirmationIds, saveDayRecord, 
 import { saveAudioRecord } from '@/lib/audioStorage'
 import { useTheme } from '@/lib/themeContext'
 
-/* ── Design tokens (natural green) ──────────────────────────── */
+/* ── Design tokens (warm gold) ───────────────────────────────── */
 const T = {
-  bg: '#F4F9F0',
-  bgSoft: '#EAF3DE',
-  bgSink: '#E3EFD3',
-  line: '#C0DD97',
-  gold: '#639922',
-  goldDeep: '#3B6D11',
-  goldTint: '#E8F3DC',
-  ink: '#173404',
-  ink2: '#3B6D11',
-  ink3: '#888780',
-  onDark: '#EAF3DE',
-  onDark2: '#C0DD97',
+  bg: '#faf4ea',
+  bgSoft: '#f6edda',
+  bgSink: '#f1e6cf',
+  line: '#e7d8bb',
+  gold: '#bd821f',
+  goldDeep: '#a36c14',
+  goldTint: '#f3e6c8',
+  ink: '#2c2314',
+  ink2: '#6f5f44',
+  ink3: '#a08c68',
+  onDark: '#f6efe0',
+  onDark2: '#c7b48d',
 }
 
 const CAT_ICONS: Record<string, LucideIcon> = {
@@ -272,9 +272,9 @@ export default function OnboardingPage() {
     setEncouragement(pool[Math.floor(Math.random() * pool.length)])
     setRec('done')
     import('canvas-confetti').then(({ default: confetti }) => {
-      confetti({ particleCount: 80, spread: 60, origin: { y: 0.5 }, colors: ['#639922', '#97C459', '#C0DD97', '#ffffff'] })
-      setTimeout(() => confetti({ particleCount: 50, angle: 60, spread: 50, origin: { x: 0, y: 0.6 }, colors: ['#639922', '#97C459'] }), 300)
-      setTimeout(() => confetti({ particleCount: 50, angle: 120, spread: 50, origin: { x: 1, y: 0.6 }, colors: ['#639922', '#97C459'] }), 500)
+      confetti({ particleCount: 80, spread: 60, origin: { y: 0.5 }, colors: ['#bd821f', '#e8c878', '#f3e6c8', '#ffffff'] })
+      setTimeout(() => confetti({ particleCount: 50, angle: 60, spread: 50, origin: { x: 0, y: 0.6 }, colors: ['#bd821f', '#FFD700'] }), 300)
+      setTimeout(() => confetti({ particleCount: 50, angle: 120, spread: 50, origin: { x: 1, y: 0.6 }, colors: ['#bd821f', '#FFD700'] }), 500)
     }).catch(() => {})
   }, [])
 
@@ -468,11 +468,11 @@ export default function OnboardingPage() {
     switch (idx) {
       /* ── 0: Welcome ───────────────────────────────────────────── */
       case 0: return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: T.bg }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#FFFCF8' }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 32px' }}>
-            <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: '-0.6px', color: T.ink, lineHeight: 1.28 }}>안녕하세요 :)</div>
-            <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: '-0.6px', color: T.gold, lineHeight: 1.28 }}>저는 '이뤄'예요.</div>
-            <div style={{ fontSize: 18, fontWeight: 500, color: T.ink2, lineHeight: 1.55, marginTop: 18 }}>
+            <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: '-0.6px', color: '#2A1801', lineHeight: 1.28 }}>안녕하세요 :)</div>
+            <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: '-0.6px', color: '#BA7517', lineHeight: 1.28 }}>저는 '이뤄'예요.</div>
+            <div style={{ fontSize: 18, fontWeight: 500, color: '#8A7A62', lineHeight: 1.55, marginTop: 18 }}>
               성공의 말을 자주 하면 이루어진다.
             </div>
           </div>
@@ -480,9 +480,9 @@ export default function OnboardingPage() {
             <button
               style={{
                 ...btnBase,
-                background: `linear-gradient(135deg, ${T.gold}, #97C459)`,
+                background: 'linear-gradient(135deg, #BA7517, #D98A1C)',
                 color: '#fff',
-                boxShadow: '0 10px 26px rgba(99,153,34,0.34)',
+                boxShadow: '0 10px 26px rgba(186,117,23,0.34)',
               }}
               onClick={() => goTo(1)}
             >
@@ -564,7 +564,7 @@ export default function OnboardingPage() {
 
       /* ── 2: Voice recording — full-screen camera like speak page ── */
       case 2: return (
-        <div style={{ position: 'relative', height: '100%', background: '#0F2010', overflow: 'hidden' }}>
+        <div style={{ position: 'relative', height: '100%', background: '#1a140a', overflow: 'hidden' }}>
           {/* Full-screen camera */}
           <video
             ref={onbVideoRef}
@@ -710,7 +710,7 @@ export default function OnboardingPage() {
                   &ldquo;{transcript}&rdquo;
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#C0DD97' }}>{encouragement}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#e8c878' }}>{encouragement}</div>
                   {onbAudioBlobRef.current && (
                     <button
                       onClick={() => {
