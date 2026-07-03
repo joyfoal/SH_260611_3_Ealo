@@ -2,12 +2,12 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Home, Gamepad2, Users, Settings, Mic, type LucideIcon } from 'lucide-react'
+import { Home, Sparkles, Users, Settings, Mic, type LucideIcon } from 'lucide-react'
 import { goToSpeak } from '@/lib/storage'
 
 const LEFT_TABS = [
   { label: '홈', href: '/home', icon: Home },
-  { label: '게임', href: '/games', icon: Gamepad2 },
+  { label: '성고의 말', href: '/affirmations', icon: Sparkles },
 ] as const
 
 const RIGHT_TABS = [

@@ -376,7 +376,7 @@ export default function CreatePage() {
   }
 
   return (
-    <AppLayout activeTab="성공의 말">
+    <AppLayout activeTab="성고의 말">
       <div style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--color-bg-primary)', padding: '20px 16px 0' }}>
         <div className="flex items-center justify-between w-full mb-4">
           <button
