@@ -590,6 +590,18 @@ export default function OnboardingPage() {
             }} />
           )}
 
+          {/* 카메라 안내 배너 */}
+          {rec !== 'done' && (
+            <div style={{ position: 'absolute', top: 74, left: 22, right: 22, zIndex: 3, display: 'flex', justifyContent: 'center' }}>
+              <div style={{
+                background: 'rgba(0,0,0,0.55)', borderRadius: '14px', padding: '10px 14px',
+                fontSize: '12.5px', color: '#fff', lineHeight: 1.5, textAlign: 'center', maxWidth: '320px',
+              }}>
+                화면에 얼굴이 보여도 촬영·녹화되지 않아요.<br />녹음 파일은 내 기기에만 저장돼요.
+              </div>
+            </div>
+          )}
+
           {/* Top: title */}
           <div style={{ position: 'absolute', top: 22, left: 22, right: 22, zIndex: 3, textAlign: 'center' }}>
             {rec === 'done' ? (

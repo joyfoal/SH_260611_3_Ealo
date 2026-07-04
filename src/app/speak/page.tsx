@@ -67,7 +67,6 @@ function SpeakPageInner() {
   const [isRecording, setIsRecording] = useState(false)
   const [showCameraNotice, setShowCameraNotice] = useState(false)
   const cameraNoticeCheckedRef = useRef(false)
-  const cameraNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const recognitionRef = useRef<{ stop: () => void } | null>(null)
@@ -265,14 +264,12 @@ function SpeakPageInner() {
         if (daysSince >= 7) {
           setShowCameraNotice(true)
           setCameraNoticeShownAt(todayStr())
-          cameraNoticeTimerRef.current = setTimeout(() => setShowCameraNotice(false), 5000)
         }
       }
     }
     return () => {
       shouldListenRef.current = false
       if (speakTimerRef.current) clearTimeout(speakTimerRef.current)
-      if (cameraNoticeTimerRef.current) clearTimeout(cameraNoticeTimerRef.current)
       if (recognitionRef.current) recognitionRef.current.stop()
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop())
@@ -301,6 +298,7 @@ function SpeakPageInner() {
 
   const handleComplete = useCallback(() => {
     if (!affirmation) return
+    setShowCameraNotice(false)
     if (reRecordState === 'recording') {
       stopReRecord()
       return
