@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppLayout } from '@/components/ui/AppLayout'
 import { Users, Plus, ChevronRight, CheckCircle, Search, X, UserCircle, Camera, Home, MessageCircle, Lightbulb, Ban, Loader2, User, Flame } from 'lucide-react'
+import { getDayRecord, todayStr } from '@/lib/storage'
 
 const T = {
   ink: 'var(--color-text-primary)',
@@ -128,9 +129,9 @@ const ALL_TAGS = ['전체', ...ROOM_TAGS]
 const MAX_MEMBERS = 20
 
 const MOCK_ROOMS = [
-  { id: 'r1', name: '아침 확언 클럽', desc: '매일 아침 확언으로 하루를 시작해요', tags: ['아침 확언'], members: 24, streakDays: 12 },
+  { id: 'r1', name: '아침 확언 클럽', desc: '매일 아침 확언으로 하루를 시작해요', tags: ['아침 확언'], members: 19, streakDays: 12 },
   { id: 'r2', name: '취업 성공 방', desc: '취업 목표를 가진 분들과 함께해요', tags: ['취업준비'], members: 18, streakDays: 7 },
-  { id: 'r3', name: '자존감 키우기', desc: '나를 사랑하는 연습', tags: ['자존감'], members: 31, streakDays: 20 },
+  { id: 'r3', name: '자존감 키우기', desc: '나를 사랑하는 연습', tags: ['자존감'], members: 20, streakDays: 20 },
   { id: 'r4', name: '다이어트 확언단', desc: '건강한 몸을 향한 긍정 확언 모임', tags: ['다이어트'], members: 15, streakDays: 5 },
 ]
 
@@ -178,6 +179,7 @@ export default function CommunityPage() {
   const [rankingPeriod, setRankingPeriod] = useState<RankingPeriod>('일')
   const [rankingType, setRankingType] = useState<'방' | '성공의 말'>('방')
   const [showCreateSheet, setShowCreateSheet] = useState(false)
+  const [checkedInToday, setCheckedInToday] = useState(false)
 
   // 프로필
   const [userProfile, setUserProfile] = useState<UserProfile>({ nickname: '', profileImage: null })
@@ -204,6 +206,12 @@ export default function CommunityPage() {
       const saved = localStorage.getItem('ealo-user-profile')
       if (saved) setUserProfile(JSON.parse(saved) as UserProfile)
     } catch {}
+  }, [])
+
+  // 오늘 확언을 완료했는지 여부
+  useEffect(() => {
+    const record = getDayRecord(todayStr())
+    setCheckedInToday((record?.completedCount ?? 0) > 0)
   }, [])
 
   // 내 방 목록 변경 시 localStorage 저장
@@ -522,14 +530,16 @@ export default function CommunityPage() {
                         </div>
                         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                           <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                            <Users size={13} color="#6B7280" /> {room.members}명
+                            <Users size={13} color="var(--color-text-muted)" /> {room.members}명
                           </span>
                           <span style={{ fontSize: '12px', color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 500 }}>
                             연속 {room.streakDays}일 <Flame size={13} color="#FF6F00" style={{ display: 'inline', verticalAlign: 'middle' }} />
                           </span>
-                          <span style={{ fontSize: '11px', color: 'var(--color-success-mid)', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                            <CheckCircle size={13} color="#43A047" /> 오늘 인증
-                          </span>
+                          {checkedInToday && (
+                            <span style={{ fontSize: '11px', color: 'var(--color-success-mid)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                              <CheckCircle size={13} color="#43A047" /> 오늘 인증
+                            </span>
+                          )}
                         </div>
                       </div>
                       <ChevronRight size={18} color="var(--color-text-muted)" style={{ flexShrink: 0 }} />
@@ -574,7 +584,7 @@ export default function CommunityPage() {
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                             <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <Users size={13} color="#6B7280" /> {room.members}/{MAX_MEMBERS}명
+                              <Users size={13} color="var(--color-text-muted)" /> {room.members}/{MAX_MEMBERS}명
                             </span>
                             <span style={{ fontSize: '12px', color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                               연속 {room.streakDays}일째 <Flame size={13} color="#FF6F00" style={{ display: 'inline', verticalAlign: 'middle' }} />
@@ -897,7 +907,7 @@ export default function CommunityPage() {
                         </div>
                         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                           <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                            <Users size={12} color="#6B7280" /> {room.members}명
+                            <Users size={12} color="var(--color-text-muted)" /> {room.members}명
                           </span>
                           <span style={{ fontSize: '11px', color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '1px 7px', borderRadius: '999px', fontWeight: 600 }}>
                             {entry.totalDays}일 외침
@@ -947,7 +957,7 @@ export default function CommunityPage() {
                             {entry.phrase}
                           </p>
                           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}><User size={12} color="#6B7280" /> {entry.userCount}명</span>
+                            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}><User size={12} color="var(--color-text-muted)" /> {entry.userCount}명</span>
                             <span style={{ fontSize: '11px', color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '1px 7px', borderRadius: '999px', fontWeight: 600 }}>
                               {entry.totalDays}일 외침
                             </span>

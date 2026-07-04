@@ -31,6 +31,17 @@ const PHRASES = [
   '진심으로 수고했어요!', '매 순간이 소중한 변화예요!',
 ]
 
+function getThemeConfettiColors() {
+  const style = getComputedStyle(document.documentElement)
+  const pick = (name: string, fallback: string) => style.getPropertyValue(name).trim() || fallback
+  return {
+    primary: pick('--color-accent-primary', '#BA7517'),
+    secondary: pick('--color-accent-secondary', '#EF9F27'),
+    light: pick('--color-accent-light', '#FAC775'),
+    onDark: pick('--color-text-onDark', '#FAEEDA'),
+  }
+}
+
 interface CelebrationScreenProps {
   completedCount: number
   totalCount: number
@@ -63,17 +74,18 @@ export function CelebrationScreen({
 
     if (typeof window !== 'undefined') {
       import('canvas-confetti').then(({ default: confetti }) => {
+        const { primary, secondary, light, onDark } = getThemeConfettiColors()
         if (variant === 'repeat_done') {
-          confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 }, colors: ['#BD821F', '#E8C878', '#F3E6C8', '#ffffff', '#FFD700'] })
-          setTimeout(() => confetti({ particleCount: 100, angle: 60, spread: 70, origin: { x: 0, y: 0.6 }, colors: ['#BD821F', '#FFA500', '#FFD700'] }), 200)
-          setTimeout(() => confetti({ particleCount: 100, angle: 120, spread: 70, origin: { x: 1, y: 0.6 }, colors: ['#BD821F', '#FFA500', '#FFD700'] }), 400)
+          confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 }, colors: [primary, light, onDark, '#ffffff', secondary] })
+          setTimeout(() => confetti({ particleCount: 100, angle: 60, spread: 70, origin: { x: 0, y: 0.6 }, colors: [primary, secondary, light] }), 200)
+          setTimeout(() => confetti({ particleCount: 100, angle: 120, spread: 70, origin: { x: 1, y: 0.6 }, colors: [primary, secondary, light] }), 400)
           setTimeout(() => confetti({ particleCount: 80, spread: 70, origin: { y: 0.4 }, colors: ['#FF69B4', '#7B68EE', '#00CED1'] }), 700)
         } else if (isBig) {
-          confetti({ particleCount: 120, spread: 80, origin: { y: 0.55 }, colors: ['#BD821F', '#E8C878', '#F3E6C8', '#ffffff', '#FFD700'] })
-          setTimeout(() => confetti({ particleCount: 80, angle: 60, spread: 60, origin: { x: 0, y: 0.6 }, colors: ['#BD821F', '#FFA500', '#FFD700'] }), 200)
-          setTimeout(() => confetti({ particleCount: 80, angle: 120, spread: 60, origin: { x: 1, y: 0.6 }, colors: ['#BD821F', '#FFA500', '#FFD700'] }), 400)
+          confetti({ particleCount: 120, spread: 80, origin: { y: 0.55 }, colors: [primary, light, onDark, '#ffffff', secondary] })
+          setTimeout(() => confetti({ particleCount: 80, angle: 60, spread: 60, origin: { x: 0, y: 0.6 }, colors: [primary, secondary, light] }), 200)
+          setTimeout(() => confetti({ particleCount: 80, angle: 120, spread: 60, origin: { x: 1, y: 0.6 }, colors: [primary, secondary, light] }), 400)
         } else {
-          confetti({ particleCount: 60, spread: 55, origin: { y: 0.65 }, colors: ['#BD821F', '#E8C878', '#ffffff'] })
+          confetti({ particleCount: 60, spread: 55, origin: { y: 0.65 }, colors: [primary, light, '#ffffff'] })
         }
       }).catch(() => {})
     }
