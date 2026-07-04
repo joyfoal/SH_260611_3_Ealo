@@ -1577,6 +1577,10 @@ export default function SettingsPage() {
             return elements
           })}
         </div>
+
+        <p style={{ marginTop: '28px', padding: '0 4px', fontSize: '11px', color: 'var(--color-text-muted)', textAlign: 'center', lineHeight: 1.5 }}>
+          '이뤄'는 목표 달성을 보장하지 않습니다. 목표를 더 자주 인식하고 기억하도록 돕는 습관 형성을 지향합니다.
+        </p>
       </div>
     </AppLayout>
   )
