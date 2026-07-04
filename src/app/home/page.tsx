@@ -56,7 +56,7 @@ function getGreeting(): ReactElement {
   const h = new Date().getHours()
   if (h < 12) return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>좋은 아침이에요 <Sun size={20} color={T.gold} /></span>
   if (h < 18) return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>좋은 오후예요 <CloudSun size={20} color={T.gold} /></span>
-  return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>좋은 저녁이에요 <Moon size={20} color="#8B5CF6" /></span>
+  return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>좋은 저녁이에요 <Moon size={20} color={T.gold} /></span>
 }
 
 // ── 문장 끝 1/3 어절을 골드로 강조 ───────────────────────────────────────────
@@ -347,7 +347,7 @@ function CalendarView() {
             { color: 'var(--color-accent-light)', label: '3개 이상 완료' },
           ].map((item) => (
             <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <div style={{ width: 9, height: 9, borderRadius: '50%', background: item.color, border: '1px solid rgba(0,0,0,0.06)' }} />
+              <div style={{ width: 9, height: 9, borderRadius: '50%', background: item.color, border: '1px solid color-mix(in srgb, var(--color-text-primary) 6%, transparent)' }} />
               <span style={{ fontSize: 10.5, color: T.muted }}>{item.label}</span>
             </div>
           ))}

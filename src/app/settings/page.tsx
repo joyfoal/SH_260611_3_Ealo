@@ -146,7 +146,7 @@ const T = {
 
 function Panel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ background: 'var(--color-bg-card)', borderRadius: '20px', padding: '20px', marginBottom: '16px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px rgba(65,36,2,0.05)' }}>
+    <div style={{ background: 'var(--color-bg-card)', borderRadius: '20px', padding: '20px', marginBottom: '16px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px color-mix(in srgb, var(--color-text-primary) 5%, transparent)' }}>
       {children}
     </div>
   )
@@ -177,7 +177,7 @@ function ThemePanel() {
                 <div style={{
                   position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%',
                   background: T.goldGrad, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 2px 6px rgba(65,36,2,0.25)',
+                  boxShadow: '0 2px 6px color-mix(in srgb, var(--color-accent-primary) 28%, transparent)',
                 }}>
                   <Check size={11} color="#fff" strokeWidth={3} />
                 </div>
@@ -282,7 +282,7 @@ function CustomSelect({ value, onChange, options, width }: {
         <ChevronDown size={16} color="var(--color-text-muted)" style={{ transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none', flexShrink: 0 }} />
       </button>
       {open && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 50, background: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '12px', maxHeight: '200px', overflowY: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,0.10)' }}>
+        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 50, background: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '12px', maxHeight: '200px', overflowY: 'auto', boxShadow: '0 8px 24px color-mix(in srgb, var(--color-text-primary) 10%, transparent)' }}>
           {options.map((opt) => (
             <div
               key={opt.value}

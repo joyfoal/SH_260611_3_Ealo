@@ -702,7 +702,7 @@ export default function CommunityPage() {
                           </button>
                           <button
                             onClick={() => { setRoomName(''); setRoomNameBanner(null) }}
-                            style={{ flex: 1, padding: '7px', background: 'transparent', border: '1px solid #ccc', borderRadius: '8px', fontSize: '13px', color: 'var(--color-warning)', cursor: 'pointer' }}
+                            style={{ flex: 1, padding: '7px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '13px', color: 'var(--color-warning)', cursor: 'pointer' }}
                           >
                             다시 쓰기
                           </button>
@@ -770,7 +770,7 @@ export default function CommunityPage() {
                           </button>
                           <button
                             onClick={() => { setRoomDesc(''); setRoomDescBanner(null) }}
-                            style={{ flex: 1, padding: '7px', background: 'transparent', border: '1px solid #ccc', borderRadius: '8px', fontSize: '13px', color: 'var(--color-warning)', cursor: 'pointer' }}
+                            style={{ flex: 1, padding: '7px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '13px', color: 'var(--color-warning)', cursor: 'pointer' }}
                           >
                             다시 쓰기
                           </button>
