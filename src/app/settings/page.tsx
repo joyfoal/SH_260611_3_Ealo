@@ -86,7 +86,7 @@ function CategoryDeleteModal({
       onClick={onCancel}
     >
       <div
-        style={{ width: '100%', background: 'var(--color-bg-card)', borderRadius: '20px 20px 0 0', padding: '24px 20px 32px', maxHeight: '80vh', overflowY: 'auto' }}
+        style={{ width: '100%', maxWidth: '430px', margin: '0 auto', background: 'var(--color-bg-card)', borderRadius: '20px 20px 0 0', padding: '24px 20px 32px', maxHeight: '80vh', overflowY: 'auto' }}
         onClick={(e) => e.stopPropagation()}
       >
         <p style={{ fontSize: '17px', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '8px' }}>
