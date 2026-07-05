@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Sprout, Briefcase, TrendingUp, Heart, Leaf, Flame, Moon, Sun, type LucideIcon } from 'lucide-react'
 import { CATEGORIES } from '@/lib/categories'
 import { saveAffirmation, setOnboarded, saveTodayAffirmationIds, saveDayRecord, todayStr, saveStreakData, saveCategories } from '@/lib/storage'
@@ -22,6 +23,13 @@ const T = {
   ink3: '#a08c68',
   onDark: '#f6efe0',
   onDark2: '#c7b48d',
+}
+
+/* ── Screens 0/1 (환영·카테고리) 전용 팔레트 — 인트로 시안과 통일.
+   T는 화면 2/3(카메라·완료)에서도 재사용되므로 여기서 건드리지 않는다. ── */
+const CAT_T = {
+  ink: '#241A0E', ink2: '#7A6A55', gold: '#B87514', goldLight: '#D9922A',
+  line: '#F0E7D6', bgSoft: '#F6EDDA', suggBg: '#F7F0E2', suggBorder: '#EDE3D0',
 }
 
 const CAT_ICONS: Record<string, LucideIcon> = {
@@ -76,6 +84,15 @@ const btnDisabled: React.CSSProperties = {
 }
 const btnText: React.CSSProperties = {
   ...btnBase, background: 'transparent', color: T.ink3, fontSize: 15, padding: '14px', fontWeight: 600,
+}
+
+/* ── 화면 0/1 전용 버튼 스타일 (공용 btnPrimary/btnDisabled는 화면 2/3과 공유하므로 미사용) ── */
+const catBtnPrimary: React.CSSProperties = {
+  ...btnBase, background: `linear-gradient(135deg, ${CAT_T.gold}, ${CAT_T.goldLight})`, color: '#fff',
+  boxShadow: '0 10px 26px rgba(184,117,20,0.34)',
+}
+const catBtnDisabled: React.CSSProperties = {
+  ...btnBase, background: '#EFE4CE', color: '#B4A588', cursor: 'not-allowed', boxShadow: 'none',
 }
 
 /* ── Icons ───────────────────────────────────────────────────── */
@@ -468,21 +485,30 @@ export default function OnboardingPage() {
     switch (idx) {
       /* ── 0: Welcome ───────────────────────────────────────────── */
       case 0: return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#FFFCF8' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#FDF9F1' }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 32px' }}>
-            <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: '-0.6px', color: '#2A1801', lineHeight: 1.28 }}>안녕하세요 :)</div>
-            <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: '-0.6px', color: '#BA7517', lineHeight: 1.28 }}>저는 '이뤄'예요.</div>
-            <div style={{ fontSize: 18, fontWeight: 500, color: '#8A7A62', lineHeight: 1.55, marginTop: 18 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 64 }}>
+              <Image
+                src="/splash-icon.png"
+                alt="이뤄"
+                width={132}
+                height={132}
+                style={{ borderRadius: 30, boxShadow: '0 20px 44px -12px rgba(65,36,2,0.4)', animation: 'floatY 5s ease-in-out infinite' }}
+              />
+            </div>
+            <div style={{ fontSize: 31, fontWeight: 800, letterSpacing: '-0.6px', color: '#241A0E', lineHeight: 1.28 }}>안녕하세요 :)</div>
+            <div style={{ fontSize: 31, fontWeight: 800, letterSpacing: '-0.6px', color: '#B87514', lineHeight: 1.28 }}>저는 '이뤄'예요.</div>
+            <div style={{ fontSize: 15.5, fontWeight: 500, color: '#8A7A62', lineHeight: 1.55, marginTop: 14 }}>
               성공의 말을 자주 하면 이루어진다.
             </div>
           </div>
-          <div style={{ padding: '12px 26px 44px' }}>
+          <div style={{ padding: '12px 26px 40px' }}>
             <button
               style={{
                 ...btnBase,
-                background: 'linear-gradient(135deg, #BA7517, #D98A1C)',
+                background: 'linear-gradient(135deg, #B87514, #D9922A)',
                 color: '#fff',
-                boxShadow: '0 10px 26px rgba(186,117,23,0.34)',
+                boxShadow: '0 10px 26px rgba(184,117,20,0.34)',
               }}
               onClick={() => goTo(1)}
             >
@@ -497,10 +523,12 @@ export default function OnboardingPage() {
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '0 26px', overflow: 'hidden' }}>
             <div style={{ paddingTop: 48, marginBottom: 10 }}>
-              <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.6px', color: T.ink, lineHeight: 1.28, marginBottom: 10 }}>
+              <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: '-0.6px', color: CAT_T.ink, lineHeight: 1.28, marginBottom: 10 }}>
                 어떤 성공을<br />이루고 싶으세요?
               </div>
-              <div style={{ fontSize: 16, fontWeight: 500, color: T.ink2, marginBottom: 20 }}>3개 이상 눌러주세요.</div>
+              <div style={{ fontSize: 18, fontWeight: 600, color: CAT_T.ink2, marginBottom: 20 }}>
+                3개 이상 눌러주세요. <span style={{ color: CAT_T.gold, fontWeight: 800 }}>{cats.length}개 선택됨</span>
+              </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {CATEGORIES.map((cat) => {
                   const on = cats.includes(cat)
@@ -509,9 +537,9 @@ export default function OnboardingPage() {
                       key={cat}
                       onClick={() => toggleCat(cat)}
                       style={{
-                        border: `1.5px solid ${on ? T.gold : T.line}`,
-                        background: on ? T.gold : T.bgSoft,
-                        color: on ? '#fff' : T.ink2,
+                        border: `1.5px solid ${on ? CAT_COLORS[cat] : CAT_T.line}`,
+                        background: on ? CAT_COLORS[cat] : CAT_T.bgSoft,
+                        color: on ? '#fff' : CAT_T.ink2,
                         borderRadius: 999, padding: '9px 15px',
                         fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer',
                         whiteSpace: 'nowrap',
@@ -528,20 +556,20 @@ export default function OnboardingPage() {
             {/* 선택한 카테고리별 추천 성공의 말 */}
             {cats.length > 0 && (
               <div style={{ marginTop: 24, flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: T.ink3, marginBottom: 2 }}>추천 성공의 말</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: CAT_T.ink2, marginBottom: 2 }}>추천 성공의 말</div>
                 {cats.map((cat) => {
                   const suggestion = SUGGESTIONS[cat]?.[0]
                   if (!suggestion) return null
                   return (
                     <div key={cat} style={{
-                      background: T.bgSoft,
-                      border: `1.5px solid ${T.line}`,
+                      background: CAT_T.suggBg,
+                      border: `1.5px solid ${CAT_T.suggBorder}`,
                       borderRadius: 16, padding: '14px 16px',
                     }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: T.gold, marginBottom: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: CAT_T.gold, marginBottom: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                         {(() => { const Icon = CAT_ICONS[cat]; return Icon && <Icon size={13} /> })()} {cat}
                       </div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: T.ink, lineHeight: 1.5 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: CAT_T.ink, lineHeight: 1.5 }}>
                         &ldquo;{suggestion}&rdquo;
                       </div>
                     </div>
@@ -552,7 +580,7 @@ export default function OnboardingPage() {
           </div>
           <div style={{ padding: '12px 26px 48px' }}>
             <button
-              style={cats.length >= 3 ? btnPrimary : btnDisabled}
+              style={cats.length >= 3 ? catBtnPrimary : catBtnDisabled}
               disabled={cats.length < 3}
               onClick={() => goTo(2)}
             >

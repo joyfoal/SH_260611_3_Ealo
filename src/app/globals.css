@@ -136,6 +136,11 @@ body {
   50% { height: 20px; }
 }
 
+@keyframes ring {
+  0%   { transform: scale(0.6); opacity: 0.7; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
 
 /* ── Onboarding screen transitions ────────────────────────────── */
 .onb-scr {
