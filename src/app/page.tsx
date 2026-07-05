@@ -30,7 +30,7 @@ export default function RootPage() {
     }
 
     if (!isOnboarded()) {
-      go('/onboarding')
+      go('/onboarding/intro')
       return
     }
 
