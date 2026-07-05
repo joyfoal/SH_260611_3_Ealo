@@ -288,10 +288,10 @@ export default function OnboardingPage() {
     const pool = onbAutoCompleteRef.current ? ALL_ENCOURAGEMENTS : MANUAL_ENCOURAGEMENTS
     setEncouragement(pool[Math.floor(Math.random() * pool.length)])
     setRec('done')
-    import('canvas-confetti').then(({ default: confetti }) => {
-      confetti({ particleCount: 80, spread: 60, origin: { y: 0.5 }, colors: ['#bd821f', '#e8c878', '#f3e6c8', '#ffffff'] })
-      setTimeout(() => confetti({ particleCount: 50, angle: 60, spread: 50, origin: { x: 0, y: 0.6 }, colors: ['#bd821f', '#FFD700'] }), 300)
-      setTimeout(() => confetti({ particleCount: 50, angle: 120, spread: 50, origin: { x: 1, y: 0.6 }, colors: ['#bd821f', '#FFD700'] }), 500)
+    import('@/lib/confetti').then(({ fireConfetti }) => {
+      fireConfetti({ particleCount: 80, spread: 60, origin: { y: 0.5 }, colors: ['#bd821f', '#e8c878', '#f3e6c8', '#ffffff'] })
+      setTimeout(() => fireConfetti({ particleCount: 50, angle: 60, spread: 50, origin: { x: 0, y: 0.6 }, colors: ['#bd821f', '#FFD700'] }), 300)
+      setTimeout(() => fireConfetti({ particleCount: 50, angle: 120, spread: 50, origin: { x: 1, y: 0.6 }, colors: ['#bd821f', '#FFD700'] }), 500)
     }).catch(() => {})
   }, [])
 

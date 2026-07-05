@@ -73,19 +73,19 @@ export function CelebrationScreen({
     setVisible(true)
 
     if (typeof window !== 'undefined') {
-      import('canvas-confetti').then(({ default: confetti }) => {
+      import('@/lib/confetti').then(({ fireConfetti }) => {
         const { primary, secondary, light, onDark } = getThemeConfettiColors()
         if (variant === 'repeat_done') {
-          confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 }, colors: [primary, light, onDark, '#ffffff', secondary] })
-          setTimeout(() => confetti({ particleCount: 100, angle: 60, spread: 70, origin: { x: 0, y: 0.6 }, colors: [primary, secondary, light] }), 200)
-          setTimeout(() => confetti({ particleCount: 100, angle: 120, spread: 70, origin: { x: 1, y: 0.6 }, colors: [primary, secondary, light] }), 400)
-          setTimeout(() => confetti({ particleCount: 80, spread: 70, origin: { y: 0.4 }, colors: ['#FF69B4', '#7B68EE', '#00CED1'] }), 700)
+          fireConfetti({ particleCount: 150, spread: 90, origin: { y: 0.5 }, colors: [primary, light, onDark, '#ffffff', secondary] })
+          setTimeout(() => fireConfetti({ particleCount: 100, angle: 60, spread: 70, origin: { x: 0, y: 0.6 }, colors: [primary, secondary, light] }), 200)
+          setTimeout(() => fireConfetti({ particleCount: 100, angle: 120, spread: 70, origin: { x: 1, y: 0.6 }, colors: [primary, secondary, light] }), 400)
+          setTimeout(() => fireConfetti({ particleCount: 80, spread: 70, origin: { y: 0.4 }, colors: ['#FF69B4', '#7B68EE', '#00CED1'] }), 700)
         } else if (isBig) {
-          confetti({ particleCount: 120, spread: 80, origin: { y: 0.55 }, colors: [primary, light, onDark, '#ffffff', secondary] })
-          setTimeout(() => confetti({ particleCount: 80, angle: 60, spread: 60, origin: { x: 0, y: 0.6 }, colors: [primary, secondary, light] }), 200)
-          setTimeout(() => confetti({ particleCount: 80, angle: 120, spread: 60, origin: { x: 1, y: 0.6 }, colors: [primary, secondary, light] }), 400)
+          fireConfetti({ particleCount: 120, spread: 80, origin: { y: 0.55 }, colors: [primary, light, onDark, '#ffffff', secondary] })
+          setTimeout(() => fireConfetti({ particleCount: 80, angle: 60, spread: 60, origin: { x: 0, y: 0.6 }, colors: [primary, secondary, light] }), 200)
+          setTimeout(() => fireConfetti({ particleCount: 80, angle: 120, spread: 60, origin: { x: 1, y: 0.6 }, colors: [primary, secondary, light] }), 400)
         } else {
-          confetti({ particleCount: 60, spread: 55, origin: { y: 0.65 }, colors: [primary, light, '#ffffff'] })
+          fireConfetti({ particleCount: 60, spread: 55, origin: { y: 0.65 }, colors: [primary, light, '#ffffff'] })
         }
       }).catch(() => {})
     }
@@ -112,7 +112,7 @@ export function CelebrationScreen({
   return (
     <div
       className="flex flex-col items-center justify-center"
-      style={{ minHeight: '100dvh', background: 'var(--color-bg-dark)', padding: '32px 24px' }}
+      style={{ position: 'relative', minHeight: '100dvh', background: 'var(--color-bg-dark)', padding: '32px 24px' }}
     >
       {isBig && (
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
