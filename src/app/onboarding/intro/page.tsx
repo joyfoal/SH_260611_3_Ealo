@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Mic, Camera, CalendarCheck } from 'lucide-react'
@@ -32,18 +32,13 @@ const skipLink: React.CSSProperties = {
   fontSize: 13.5, fontWeight: 600, color: 'rgba(122,106,85,0.85)', padding: 8,
 }
 
-type Person = 'man' | 'woman'
-type DemoPhase = 'idle' | 'playing' | 'celebrate'
+const MOCKUP = {
+  woman: { src: '/onboarding-intro/woman-mockup.png', w: 762, h: 1474 },
+  man: { src: '/onboarding-intro/man-mockup.png', w: 752, h: 1472 },
+} as const
 
-const WORDS = ['나는', '매일', '성장하고', '있다']
-const THRESHOLDS: Record<Person, number[]> = {
-  woman: [0.123, 0.374, 0.549, 0.681],
-  man: [0.553, 0.661, 0.770, 0.918],
-}
-const VIDEO_SRC: Record<Person, string> = {
-  woman: '/onboarding-intro/woman-speak.mp4',
-  man: '/onboarding-intro/man-speak.mp4',
-}
+const DEMO_WORDS = ['나는', '매일', '성장하고', '있다']
+const DEMO_THRESHOLDS = [0.123, 0.374, 0.549, 0.681]
 
 const QUOTES = [
   '왜 이렇게 열심히 살았지',
@@ -87,203 +82,56 @@ export default function OnboardingIntroPage() {
   )
 }
 
-/* ── Reusable: phone mockup video demo card ────────────────────── */
-function PhoneDemoCard({ loop, onAdvance }: { loop: boolean; onAdvance: () => void }) {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const personRef = useRef<Person>('woman')
-  const switchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [phase, setPhase] = useState<DemoPhase>('idle')
-  const [lit, setLit] = useState(0)
-
-  useEffect(() => () => {
-    if (switchTimerRef.current) clearTimeout(switchTimerRef.current)
-  }, [])
-
-  const handleTimeUpdate = useCallback(() => {
-    const v = videoRef.current
-    if (!v || !v.duration) return
-    const p = v.currentTime / v.duration
-    const thresholds = THRESHOLDS[personRef.current]
-    let next = 0
-    for (let i = 0; i < thresholds.length; i++) if (p >= thresholds[i]) next = i + 1
-    setLit((prevLit) => (prevLit === next ? prevLit : next))
-    if (next >= WORDS.length && p >= thresholds[thresholds.length - 1] + 0.02) {
-      setPhase((prevPhase) => (prevPhase === 'playing' ? 'celebrate' : prevPhase))
-    }
-  }, [])
-
-  const switchPerson = useCallback(() => {
-    switchTimerRef.current = setTimeout(() => {
-      const next: Person = personRef.current === 'woman' ? 'man' : 'woman'
-      personRef.current = next
-      setLit(0)
-      setPhase('playing')
-      const v = videoRef.current
-      if (v) {
-        v.src = VIDEO_SRC[next]
-        v.currentTime = 0
-        v.play().catch(() => {})
-      }
-    }, 1700)
-  }, [])
-
-  const handleEnded = useCallback(() => {
-    if (loop) switchPerson()
-  }, [loop, switchPerson])
-
-  const handlePlayTap = useCallback(() => {
-    if (phase === 'idle') {
-      setPhase('playing')
-      videoRef.current?.play().catch(() => {})
-      return
-    }
-    // playing 또는 celebrate 상태에서 다시 탭 → 다음 페이지로 진행
-    if (switchTimerRef.current) clearTimeout(switchTimerRef.current)
-    onAdvance()
-  }, [phase, onAdvance])
-
-  const words = WORDS.map((w, i) => ({ text: w, on: i < lit }))
-  const playLabel = phase === 'idle' ? '재생' : '완료'
-
+/* ── Reusable: static mockup screenshot, shown at its real width/ratio (no crop) ── */
+function MockupImage({ person }: { person: keyof typeof MOCKUP }) {
+  const m = MOCKUP[person]
   return (
-    <div style={{
-      position: 'relative', width: '100%', aspectRatio: '340 / 718',
-      borderRadius: 40, padding: 10,
-      background: 'linear-gradient(150deg,#2A1801,#1a0f04)',
-      boxShadow: '0 24px 56px -20px rgba(65,36,2,0.5)',
-    }}>
-      <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: 30, overflow: 'hidden', background: '#140D06' }}>
-        <video
-          ref={videoRef}
-          src="/onboarding-intro/woman-speak.mp4"
-          muted
-          playsInline
-          preload="auto"
-          onTimeUpdate={handleTimeUpdate}
-          onEnded={handleEnded}
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 20%' }}
-        />
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'linear-gradient(to bottom, rgba(20,13,6,0.5) 0%, rgba(20,13,6,0.12) 36%, rgba(20,13,6,0.72) 100%)',
-        }} />
-        <div style={{
-          position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
-          width: 90, height: 22, background: '#000', borderRadius: 12, zIndex: 20,
-        }} />
-
-        <div style={{ position: 'absolute', top: 44, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, zIndex: 12 }}>
-          <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 20, padding: '4px 12px', fontSize: 11, color: 'rgba(255,255,255,0.72)', fontWeight: 500 }}>1 / 3</div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(194,60,40,0.85)', borderRadius: 20, padding: '4px 10px', fontSize: 10.5, fontWeight: 700, color: '#fff' }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />
-            녹음 중
-          </div>
-        </div>
-
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20, zIndex: 12 }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, justifyContent: 'center', marginBottom: 20 }}>
-            {words.map((w, i) => (
-              <span key={i} style={{
-                fontSize: 19, fontWeight: 700, padding: '6px 12px', borderRadius: 10,
-                background: w.on ? 'linear-gradient(135deg,#F0D28E,#E9C877)' : 'rgba(255,255,255,0.12)',
-                color: w.on ? INK : 'rgba(255,255,255,0.92)',
-                boxShadow: w.on ? '0 0 20px rgba(233,200,119,0.45)' : 'none',
-                transition: 'all 0.35s ease',
-              }}>
-                {w.text}
-              </span>
-            ))}
-          </div>
-          {phase === 'playing' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'rgba(255,255,255,0.72)', fontSize: 12.5 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2.5, height: 16 }}>
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <span key={i} style={{
-                    width: 3, borderRadius: 2, background: '#E9C877', height: 5,
-                    animation: `waveBar 0.5s ease-in-out ${i * 0.08}s infinite`,
-                  }} />
-                ))}
-              </div>
-              인식 중...
-            </div>
-          )}
-        </div>
-
-        {phase === 'celebrate' && (
-          <div style={{
-            position: 'absolute', inset: 0, zIndex: 22, display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            background: 'radial-gradient(ellipse 80% 60% at 50% 45%, rgba(20,13,6,0.55), rgba(20,13,6,0.85))',
-          }}>
-            <div style={{ position: 'relative', width: 64, height: 64, marginBottom: 14 }}>
-              <div style={{
-                position: 'absolute', inset: 0, borderRadius: '50%',
-                background: 'linear-gradient(135deg,#E9C877,#BA7517)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 10px 30px rgba(186,117,23,0.5)',
-              }}>
-                <svg width={30} height={30} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
-              </div>
-            </div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: '#FFF4DC', letterSpacing: '-0.4px', marginBottom: 6 }}>잘하셨어요!</div>
-            <div style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,244,220,0.78)' }}>오늘의 성공의 말 완료</div>
-          </div>
-        )}
-
-        <div style={{ position: 'absolute', left: 12, right: 12, bottom: 12, zIndex: 14 }}>
-          <button
-            onClick={handlePlayTap}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              padding: '13px 16px', borderRadius: 16, border: 'none', cursor: 'pointer',
-              background: `linear-gradient(135deg, ${GOLD}, ${GOLD_LIGHT})`, color: '#fff',
-              fontSize: 14, fontWeight: 700, fontFamily: 'inherit',
-              boxShadow: '0 8px 20px rgba(186,117,23,0.4)',
-            }}
-          >
-            {phase === 'idle' ? (
-              <svg width={15} height={15} viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z" /></svg>
-            ) : (
-              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
-            )}
-            {playLabel}
-          </button>
-        </div>
-      </div>
-    </div>
+    <Image
+      src={m.src}
+      alt=""
+      width={m.w}
+      height={m.h}
+      sizes="100vw"
+      style={{ width: '100%', height: 'auto', display: 'block', borderRadius: 32, boxShadow: '0 24px 56px -20px rgba(65,36,2,0.5)' }}
+    />
   )
 }
 
-/* ── Step 0: Hero + phone mockup demo ──────────────────────────── */
+/* ── Step 0: Hero + 두 목업 이미지(남/여) — 스크롤 없이 한 화면에 ─── */
 function HeroStep({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
   return (
-    <div style={{ minHeight: '100dvh', overflowY: 'auto', paddingBottom: 24 }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <button style={skipLink} onClick={onSkip}>건너뛰기</button>
 
-      <div style={{ display: 'flex', alignItems: 'center', padding: '18px 22px 4px' }}>
-        <div style={{ position: 'relative', width: 44, height: 44, borderRadius: 12, overflow: 'hidden' }}>
-          <Image src="/splash-icon.png" alt="이뤄" width={44} height={44} style={{ borderRadius: 12 }} />
+      <div style={{ display: 'flex', alignItems: 'center', padding: '14px 20px 0' }}>
+        <div style={{ position: 'relative', width: 36, height: 36, borderRadius: 10, overflow: 'hidden' }}>
+          <Image src="/splash-icon.png" alt="이뤄" width={36} height={36} style={{ borderRadius: 10 }} />
         </div>
       </div>
 
-      <div style={{ padding: '12px 22px 20px' }}>
+      <div style={{ padding: '10px 20px 12px' }}>
         <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6, background: CREAM_SOFT,
-          padding: '6px 13px', borderRadius: 999, marginBottom: 16,
+          display: 'inline-flex', alignItems: 'center', gap: 5, background: CREAM_SOFT,
+          padding: '5px 11px', borderRadius: 999, marginBottom: 10,
         }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: GOLD }} />
-          <span style={{ fontSize: 12.5, fontWeight: 700, color: GOLD }}>성공의 말 습관 만들기</span>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: GOLD }} />
+          <span style={{ fontSize: 11, fontWeight: 700, color: GOLD }}>성공의 말 습관 만들기</span>
         </div>
-        <h1 style={{ fontSize: 32, fontWeight: 800, lineHeight: 1.26, letterSpacing: '-0.8px', margin: '0 0 14px', color: INK }}>
+        <h1 style={{ fontSize: 22, fontWeight: 800, lineHeight: 1.24, letterSpacing: '-0.6px', margin: '0 0 8px', color: INK }}>
           흔들리는 시기,<br /><span style={{ color: GOLD }}>다시 나를 세우는</span><br />한 문장
         </h1>
-        <p style={{ fontSize: 15, lineHeight: 1.6, color: INK2, margin: 0 }}>
+        <p style={{ fontSize: 12.5, lineHeight: 1.5, color: INK2, margin: 0 }}>
           AI가 모든 것을 바꾸는 시대, 미래가 불안한 요즘.<br />나를 마주 보고 오늘의 성공의 말을 소리 내어 말해요.
         </p>
       </div>
 
-      <div style={{ padding: '2px 20px 12px' }}>
-        <PhoneDemoCard loop onAdvance={onNext} />
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', gap: 10, padding: '0 20px' }}>
+        <div style={{ flex: 1, minWidth: 0 }}><MockupImage person="woman" /></div>
+        <div style={{ flex: 1, minWidth: 0 }}><MockupImage person="man" /></div>
+      </div>
+
+      <div style={{ padding: '10px 20px 24px' }}>
+        <button style={btnPrimary} onClick={onNext}>다음</button>
       </div>
     </div>
   )
@@ -327,14 +175,143 @@ function MidlifeStep({ onNext, onSkip }: { onNext: () => void; onSkip: () => voi
   )
 }
 
-/* ── Step 2: Standalone demo (no skip link) ────────────────────── */
+/* ── Step 2: Standalone video demo (no skip link) ──────────────── */
 function DemoStep({ onNext }: { onNext: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [phase, setPhase] = useState<'idle' | 'playing' | 'celebrate'>('idle')
+  const [lit, setLit] = useState(0)
+
+  const handleTimeUpdate = useCallback(() => {
+    const v = videoRef.current
+    if (!v || !v.duration) return
+    const p = v.currentTime / v.duration
+    let next = 0
+    for (let i = 0; i < DEMO_THRESHOLDS.length; i++) if (p >= DEMO_THRESHOLDS[i]) next = i + 1
+    setLit((prev) => (prev === next ? prev : next))
+    if (next >= DEMO_WORDS.length && p >= DEMO_THRESHOLDS[DEMO_THRESHOLDS.length - 1] + 0.02) {
+      setPhase((prev) => (prev === 'playing' ? 'celebrate' : prev))
+    }
+  }, [])
+
+  const handlePlayTap = useCallback(() => {
+    if (phase === 'idle') {
+      setPhase('playing')
+      videoRef.current?.play().catch(() => {})
+      return
+    }
+    onNext()
+  }, [phase, onNext])
+
+  const words = DEMO_WORDS.map((w, i) => ({ text: w, on: i < lit }))
+  const playLabel = phase === 'idle' ? '재생' : '완료'
+
   return (
-    <div style={{
-      minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center',
-      background: CREAM, padding: '32px 20px',
-    }}>
-      <PhoneDemoCard loop={false} onAdvance={onNext} />
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: CREAM, padding: '32px 20px' }}>
+      <div style={{
+        position: 'relative', width: '100%', aspectRatio: '340 / 718',
+        borderRadius: 40, padding: 10,
+        background: 'linear-gradient(150deg,#2A1801,#1a0f04)',
+        boxShadow: '0 24px 56px -20px rgba(65,36,2,0.5)',
+      }}>
+        <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: 30, overflow: 'hidden', background: '#140D06' }}>
+          <video
+            ref={videoRef}
+            src="/onboarding-intro/woman-speak.mp4"
+            muted
+            playsInline
+            preload="auto"
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={() => setPhase('celebrate')}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 20%' }}
+          />
+          <div style={{
+            position: 'absolute', inset: 0, pointerEvents: 'none',
+            background: 'linear-gradient(to bottom, rgba(20,13,6,0.5) 0%, rgba(20,13,6,0.12) 36%, rgba(20,13,6,0.72) 100%)',
+          }} />
+          <div style={{
+            position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
+            width: 90, height: 22, background: '#000', borderRadius: 12, zIndex: 20,
+          }} />
+
+          <div style={{ position: 'absolute', top: 44, left: 0, right: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, zIndex: 12 }}>
+            <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: 20, padding: '4px 12px', fontSize: 11, color: 'rgba(255,255,255,0.72)', fontWeight: 500 }}>1 / 3</div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(194,60,40,0.85)', borderRadius: 20, padding: '4px 10px', fontSize: 10.5, fontWeight: 700, color: '#fff' }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />
+              녹음 중
+            </div>
+          </div>
+
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20, zIndex: 12 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, justifyContent: 'center', marginBottom: 20 }}>
+              {words.map((w, i) => (
+                <span key={i} style={{
+                  fontSize: 19, fontWeight: 700, padding: '6px 12px', borderRadius: 10,
+                  background: w.on ? 'linear-gradient(135deg,#F0D28E,#E9C877)' : 'rgba(255,255,255,0.12)',
+                  color: w.on ? INK : 'rgba(255,255,255,0.92)',
+                  boxShadow: w.on ? '0 0 20px rgba(233,200,119,0.45)' : 'none',
+                  transition: 'all 0.35s ease',
+                }}>
+                  {w.text}
+                </span>
+              ))}
+            </div>
+            {phase === 'playing' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'rgba(255,255,255,0.72)', fontSize: 12.5 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2.5, height: 16 }}>
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <span key={i} style={{
+                      width: 3, borderRadius: 2, background: '#E9C877', height: 5,
+                      animation: `waveBar 0.5s ease-in-out ${i * 0.08}s infinite`,
+                    }} />
+                  ))}
+                </div>
+                인식 중...
+              </div>
+            )}
+          </div>
+
+          {phase === 'celebrate' && (
+            <div style={{
+              position: 'absolute', inset: 0, zIndex: 22, display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              background: 'radial-gradient(ellipse 80% 60% at 50% 45%, rgba(20,13,6,0.55), rgba(20,13,6,0.85))',
+            }}>
+              <div style={{ position: 'relative', width: 64, height: 64, marginBottom: 14 }}>
+                <div style={{
+                  position: 'absolute', inset: 0, borderRadius: '50%',
+                  background: 'linear-gradient(135deg,#E9C877,#BA7517)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 10px 30px rgba(186,117,23,0.5)',
+                }}>
+                  <svg width={30} height={30} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                </div>
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#FFF4DC', letterSpacing: '-0.4px', marginBottom: 6 }}>잘하셨어요!</div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,244,220,0.78)' }}>오늘의 성공의 말 완료</div>
+            </div>
+          )}
+
+          <div style={{ position: 'absolute', left: 12, right: 12, bottom: 12, zIndex: 14 }}>
+            <button
+              onClick={handlePlayTap}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                padding: '13px 16px', borderRadius: 16, border: 'none', cursor: 'pointer',
+                background: `linear-gradient(135deg, ${GOLD}, ${GOLD_LIGHT})`, color: '#fff',
+                fontSize: 14, fontWeight: 700, fontFamily: 'inherit',
+                boxShadow: '0 8px 20px rgba(186,117,23,0.4)',
+              }}
+            >
+              {phase === 'idle' ? (
+                <svg width={15} height={15} viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z" /></svg>
+              ) : (
+                <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+              )}
+              {playLabel}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
