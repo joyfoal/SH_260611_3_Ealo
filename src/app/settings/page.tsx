@@ -24,7 +24,7 @@ import {
 } from '@/lib/audioStorage'
 import { clearFaceStorage, getFaceProfileFromTrash, restoreFaceProfileFromTrash, type FaceProfile } from '@/lib/faceStorage'
 import { clearSuccessImages, getSuccessImageFromTrash, restoreSuccessImageFromTrash, type SuccessImageRecord } from '@/lib/successImageStorage'
-import { Pencil, Trash2, Check, X, Plus, Bell, Download, GripVertical, Palette, Power, BarChart3, Search, UploadCloud, RotateCcw, Folder, BookOpen, ChevronDown, Ban, Mic, User, ImageIcon, Star, AlertTriangle } from 'lucide-react'
+import { Pencil, Trash2, Check, X, Plus, Bell, Download, GripVertical, Palette, Power, BarChart3, Search, UploadCloud, RotateCcw, Folder, BookOpen, ChevronDown, Ban, Mic, User, ImageIcon, Star, AlertTriangle, ExternalLink } from 'lucide-react'
 import { WeeklyReportModal } from '@/components/ui/WeeklyReportModal'
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -1345,6 +1345,39 @@ function CategoryPanel() {
 
 // ─── 사용설명서 패널 ──────────────────────────────────────────────────────────
 function ManualPanel() {
+  const intro = {
+    tagline: '성공의 말 습관 만들기',
+    headline: '흔들리는 시기, 다시 나를 세우는 한 문장',
+    subcopy: 'AI가 모든 것을 바꾸는 시대, 미래가 불안한 요즘. 나를 마주 보고 오늘의 성공의 말을 소리 내어 말해요.',
+    hookTitle: '요즘, 이런 마음이 스치나요?',
+    quotes: [
+      '왜 이렇게 열심히 살았지',
+      '이렇게 해서 얻은 건 뭐지',
+      '내가 추구해 온 것들, 잘 해내고 있나',
+      '앞으로는 어떻게 살아야 하지',
+    ],
+    evidenceTitle: '보고, 말하면, 더 오래 기억됩니다',
+    evidence: [
+      { title: '소리 내어 말하기', desc: '소리 내어 말한 정보는 눈으로만 읽은 정보보다 더 잘 기억되는 경향이 연구로 보고되었습니다.' },
+      { title: '보면서 말하기', desc: '언어와 시각 정보를 함께 사용하면 기억 형성에 도움이 될 수 있다는 인지심리학 이론입니다.' },
+      { title: '나의 가치를 떠올리기', desc: '자신의 가치와 목표를 반복적으로 떠올리는 행동은 행동 변화와 심리적 안정에 도움을 줄 수 있습니다.' },
+      { title: '내 얼굴을 마주하기', desc: '사람은 자신의 얼굴과 관련된 정보를 더 빠르고 강하게 처리하는 경향이 있습니다.' },
+    ],
+    howTitle: '하루 30초면 충분해요',
+    steps: [
+      { num: '01', title: '오늘의 말을 골라요', desc: '카테고리별 확언 중 오늘 마주할 성공의 말을 만나요.' },
+      { num: '02', title: '카메라를 보며 말해요', desc: '소리 내어 말하면 인식된 단어가 하나씩 밝아져요.' },
+      { num: '03', title: '기록으로 이어져요', desc: '완료한 외침이 달력과 연속 기록으로 쌓여요.' },
+    ],
+    featuresTitle: '습관으로 이어지도록',
+    features: [
+      { title: '동적 텍스트 인트로', desc: '확언이 어절 단위로 밝아지며 마음을 준비시켜요.' },
+      { title: '연속 기록 & 달력', desc: '매일의 외침이 기록으로. 보호막으로 지켜요.' },
+      { title: '게임으로 익히기', desc: '벽돌 깨기·단어 정렬로 놀이처럼 익혀요.' },
+      { title: '함께 나누기', desc: '같은 마음의 사람들과 서로를 응원해요.' },
+    ],
+  }
+
   const sections = [
     {
       title: '홈',
@@ -1452,7 +1485,73 @@ function ManualPanel() {
 
   return (
     <Panel>
-      <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '16px' }}>사용설명서</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: '16px' }}>
+        <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)', margin: 0 }}>사용설명서</p>
+        <a
+          href="https://joyfoal.github.io/ealo-landing/mobile.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '4px', flexShrink: 0,
+            padding: '7px 12px', borderRadius: '10px',
+            background: 'var(--color-accent-primary)', color: 'white',
+            fontSize: '12.5px', fontWeight: 600, textDecoration: 'none',
+          }}
+        >
+          <ExternalLink size={13} /> 소개 웹페이지 보기
+        </a>
+      </div>
+
+      {/* 소개 — 랜딩페이지 핵심 메시지 요약 */}
+      <div style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid var(--color-border)' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'var(--color-accent-light)', padding: '4px 10px', borderRadius: '999px', marginBottom: '10px' }}>
+          <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--color-accent-primary)' }} />
+          <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-accent-primary)' }}>{intro.tagline}</span>
+        </div>
+        <p style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-primary)', lineHeight: 1.4, margin: '0 0 8px' }}>{intro.headline}</p>
+        <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.55, margin: '0 0 16px' }}>{intro.subcopy}</p>
+
+        <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-accent-primary)', marginBottom: '8px' }}>{intro.hookTitle}</p>
+        <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '6px', margin: '0 0 16px', padding: 0 }}>
+          {intro.quotes.map((q, i) => (
+            <li key={i} style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.5, paddingLeft: '12px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, color: 'var(--color-accent-primary)' }}>·</span>
+              {q}
+            </li>
+          ))}
+        </ul>
+
+        <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-accent-primary)', marginBottom: '8px' }}>{intro.evidenceTitle}</p>
+        <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '6px', margin: '0 0 16px', padding: 0 }}>
+          {intro.evidence.map((e) => (
+            <li key={e.title} style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.5, paddingLeft: '12px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, color: 'var(--color-accent-primary)' }}>·</span>
+              <strong style={{ color: 'var(--color-text-primary)' }}>{e.title}</strong> — {e.desc}
+            </li>
+          ))}
+        </ul>
+
+        <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-accent-primary)', marginBottom: '8px' }}>{intro.howTitle}</p>
+        <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '6px', margin: '0 0 16px', padding: 0 }}>
+          {intro.steps.map((s) => (
+            <li key={s.num} style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.5, paddingLeft: '12px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, color: 'var(--color-accent-primary)' }}>·</span>
+              <strong style={{ color: 'var(--color-text-primary)' }}>{s.title}</strong> — {s.desc}
+            </li>
+          ))}
+        </ul>
+
+        <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-accent-primary)', marginBottom: '8px' }}>{intro.featuresTitle}</p>
+        <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '6px', margin: 0, padding: 0 }}>
+          {intro.features.map((f) => (
+            <li key={f.title} style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.5, paddingLeft: '12px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, color: 'var(--color-accent-primary)' }}>·</span>
+              <strong style={{ color: 'var(--color-text-primary)' }}>{f.title}</strong> — {f.desc}
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {sections.map((sec) => (
           <div key={sec.title}>
