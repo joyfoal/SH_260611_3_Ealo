@@ -40,12 +40,12 @@
   --color-warning-bg: #FFF3CD;
   --color-warning-border: #FFE082;
 
-  --color-community-accent: #F59E0B;
-  --color-community-accent-dark: #D97706;
-  --color-community-accent-mid: #FCD34D;
-  --color-community-bg: #FEF3C7;
-  --color-community-bg-deep: #FFFBEB;
-  --color-community-text: #92400E;
+  --color-community-accent: var(--color-accent-primary);
+  --color-community-accent-dark: var(--color-accent-primary);
+  --color-community-accent-mid: var(--color-accent-light);
+  --color-community-bg: color-mix(in srgb, var(--color-accent-light) 45%, var(--color-bg-card));
+  --color-community-bg-deep: color-mix(in srgb, var(--color-accent-light) 25%, var(--color-bg-card));
+  --color-community-text: var(--color-accent-primary);
 }
 
 * {

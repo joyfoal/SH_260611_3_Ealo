@@ -420,7 +420,7 @@ export default function CommunityPage() {
             </div>
             <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', marginBottom: '12px', paddingBottom: '4px', scrollbarWidth: 'none' }}>
               {ALL_TAGS.map(tag => (
-                <button key={tag} onClick={() => setSelectedTag(tag)} style={{ flexShrink: 0, padding: '6px 14px', borderRadius: '999px', border: selectedTag === tag ? '1.5px solid #F59E0B' : '1.5px solid var(--color-border)', background: selectedTag === tag ? 'var(--color-community-bg)' : 'var(--color-bg-card)', color: selectedTag === tag ? 'var(--color-community-text)' : 'var(--color-text-muted)', fontSize: '13px', fontWeight: selectedTag === tag ? 600 : 400, cursor: 'pointer' }}>
+                <button key={tag} onClick={() => setSelectedTag(tag)} style={{ flexShrink: 0, padding: '6px 14px', borderRadius: '999px', border: selectedTag === tag ? '1.5px solid var(--color-community-accent)' : '1.5px solid var(--color-border)', background: selectedTag === tag ? 'var(--color-community-bg)' : 'var(--color-bg-card)', color: selectedTag === tag ? 'var(--color-community-text)' : 'var(--color-text-muted)', fontSize: '13px', fontWeight: selectedTag === tag ? 600 : 400, cursor: 'pointer' }}>
                   {tag}
                 </button>
               ))}
@@ -433,7 +433,7 @@ export default function CommunityPage() {
           <div style={{ padding: '12px 16px 0' }}>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
               {(['방', '성공의 말'] as const).map(t => (
-                <button key={t} onClick={() => setRankingType(t)} style={{ flex: 1, padding: '10px 0', borderRadius: '12px', border: rankingType === t ? '2px solid #F59E0B' : '1.5px solid var(--color-border)', background: rankingType === t ? 'var(--color-community-accent)' : 'var(--color-bg-card)', color: rankingType === t ? 'white' : 'var(--color-text-muted)', fontSize: '14px', fontWeight: rankingType === t ? 700 : 400, cursor: 'pointer' }}>
+                <button key={t} onClick={() => setRankingType(t)} style={{ flex: 1, padding: '10px 0', borderRadius: '12px', border: rankingType === t ? '2px solid var(--color-community-accent)' : '1.5px solid var(--color-border)', background: rankingType === t ? 'var(--color-community-accent)' : 'var(--color-bg-card)', color: rankingType === t ? 'white' : 'var(--color-text-muted)', fontSize: '14px', fontWeight: rankingType === t ? 700 : 400, cursor: 'pointer' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '5px', justifyContent: 'center' }}>
                     {t === '방' ? <><Home size={14} /> 방 랭킹</> : <><MessageCircle size={14} /> 성공의 말 랭킹</>}
                   </span>
@@ -442,7 +442,7 @@ export default function CommunityPage() {
             </div>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
               {(['전체', '연', '월', '일'] as RankingPeriod[]).map(p => (
-                <button key={p} onClick={() => setRankingPeriod(p)} style={{ flex: 1, padding: '8px 0', borderRadius: '10px', border: rankingPeriod === p ? '1.5px solid #F59E0B' : '1.5px solid var(--color-border)', background: rankingPeriod === p ? 'var(--color-community-bg)' : 'var(--color-bg-card)', color: rankingPeriod === p ? 'var(--color-community-text)' : 'var(--color-text-muted)', fontSize: '13px', fontWeight: rankingPeriod === p ? 700 : 400, cursor: 'pointer' }}>
+                <button key={p} onClick={() => setRankingPeriod(p)} style={{ flex: 1, padding: '8px 0', borderRadius: '10px', border: rankingPeriod === p ? '1.5px solid var(--color-community-accent)' : '1.5px solid var(--color-border)', background: rankingPeriod === p ? 'var(--color-community-bg)' : 'var(--color-bg-card)', color: rankingPeriod === p ? 'var(--color-community-text)' : 'var(--color-text-muted)', fontSize: '13px', fontWeight: rankingPeriod === p ? 700 : 400, cursor: 'pointer' }}>
                   {p}
                 </button>
               ))}
@@ -821,7 +821,7 @@ export default function CommunityPage() {
                         flexShrink: 0,
                         padding: '7px 14px',
                         borderRadius: '999px',
-                        border: roomTag === tag ? '1.5px solid #F59E0B' : '1.5px solid var(--color-border)',
+                        border: roomTag === tag ? '1.5px solid var(--color-community-accent)' : '1.5px solid var(--color-border)',
                         background: roomTag === tag ? 'var(--color-community-bg)' : 'var(--color-bg-card)',
                         color: roomTag === tag ? 'var(--color-community-text)' : 'var(--color-text-muted)',
                         fontSize: '13px',
@@ -891,7 +891,7 @@ export default function CommunityPage() {
                         gap: '12px',
                         padding: '14px 16px',
                         background: idx === 0 ? T.goldTint : 'var(--color-bg-card)',
-                        border: idx === 0 ? '1.5px solid #FCD34D' : '1px solid var(--color-border)',
+                        border: idx === 0 ? '1.5px solid var(--color-community-accent-mid)' : '1px solid var(--color-border)',
                         borderRadius: '14px',
                       }}
                     >
@@ -900,7 +900,7 @@ export default function CommunityPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                           <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-text-primary)' }}>{room.name}</span>
                           {isJoined && (
-                            <span style={{ fontSize: '10px', color: 'var(--color-community-accent)', background: 'var(--color-community-bg-deep)', border: '1px solid #F59E0B', padding: '1px 6px', borderRadius: '999px', fontWeight: 600, flexShrink: 0 }}>
+                            <span style={{ fontSize: '10px', color: 'var(--color-community-accent)', background: 'var(--color-community-bg-deep)', border: '1px solid var(--color-community-accent)', padding: '1px 6px', borderRadius: '999px', fontWeight: 600, flexShrink: 0 }}>
                               참여 중
                             </span>
                           )}
@@ -947,7 +947,7 @@ export default function CommunityPage() {
                           gap: '12px',
                           padding: '14px 16px',
                           background: idx === 0 ? T.goldTint : 'var(--color-bg-card)',
-                          border: idx === 0 ? '1.5px solid #FCD34D' : '1px solid var(--color-border)',
+                          border: idx === 0 ? '1.5px solid var(--color-community-accent-mid)' : '1px solid var(--color-border)',
                           borderRadius: '14px',
                         }}
                       >
@@ -993,9 +993,9 @@ export default function CommunityPage() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px' }}>
               <div onClick={() => photoInputRef.current?.click()} style={{ position: 'relative', cursor: 'pointer' }}>
                 {editImageData ? (
-                  <img src={editImageData} alt="프로필" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #F59E0B' }} />
+                  <img src={editImageData} alt="프로필" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--color-community-accent)' }} />
                 ) : (
-                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--color-community-bg)', border: '3px dashed #F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--color-community-bg)', border: '3px dashed var(--color-community-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <UserCircle size={40} color="var(--color-community-accent)" />
                   </div>
                 )}

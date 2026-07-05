@@ -130,7 +130,7 @@ function Avatar({ nickname, initial, profileImage, size = 36, isMe = false }: {
       <img
         src={profileImage}
         alt={nickname}
-        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: isMe ? '2px solid #F59E0B' : 'none' }}
+        style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: isMe ? '2px solid var(--color-community-accent)' : 'none' }}
       />
     )
   }
@@ -315,7 +315,7 @@ export default function RoomPage() {
     padding: '10px 0',
     background: 'none',
     border: 'none',
-    borderBottom: activeTab === tab ? '2px solid #F59E0B' : '2px solid transparent',
+    borderBottom: activeTab === tab ? '2px solid var(--color-community-accent)' : '2px solid transparent',
     color: activeTab === tab ? 'var(--color-community-text)' : 'var(--color-text-muted)',
     fontSize: '14px',
     fontWeight: activeTab === tab ? 700 : 400,
@@ -357,7 +357,7 @@ export default function RoomPage() {
               <img
                 src={userProfile.profileImage}
                 alt="내 프로필"
-                style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #F59E0B', flexShrink: 0 }}
+                style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-community-accent)', flexShrink: 0 }}
               />
             ) : (
               <UserCircle size={28} color={userProfile.nickname ? 'var(--color-community-accent)' : 'var(--color-text-muted)'} style={{ flexShrink: 0 }} />
@@ -415,7 +415,7 @@ export default function RoomPage() {
                       background: 'var(--color-bg-card)',
                       borderRadius: '16px',
                       padding: '16px',
-                      border: item.isMe ? '1.5px solid #F59E0B' : '1px solid var(--color-border)',
+                      border: item.isMe ? '1.5px solid var(--color-community-accent)' : '1px solid var(--color-border)',
                     }}
                   >
                     {/* 작성자 */}
@@ -450,7 +450,7 @@ export default function RoomPage() {
                       padding: '12px 14px',
                       background: 'var(--color-community-bg-deep)',
                       borderRadius: '10px',
-                      borderLeft: '3px solid #F59E0B',
+                      borderLeft: '3px solid var(--color-community-accent)',
                     }}>
                       {item.content}
                     </p>
@@ -575,7 +575,7 @@ export default function RoomPage() {
                           background: 'var(--color-bg-card)',
                           borderRadius: isExpanded ? '16px 16px 0 0' : '16px',
                           padding: '16px',
-                          border: isFirst ? '2px solid #F59E0B' : '1px solid var(--color-border)',
+                          border: isFirst ? '2px solid var(--color-community-accent)' : '1px solid var(--color-border)',
                           cursor: 'pointer',
                           textAlign: 'left',
                         }}
