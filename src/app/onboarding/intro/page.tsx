@@ -134,17 +134,18 @@ function HeroStep({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <button style={skipLink} onClick={onSkip}>건너뛰기</button>
+      <div style={{
+        position: 'absolute', top: 66, right: 20, zIndex: 21,
+        display: 'inline-flex', alignItems: 'center', gap: 6, background: BADGE_BG,
+        padding: '6px 13px', borderRadius: 999,
+      }}>
+        <svg width={13} height={13} viewBox="0 0 24 24" fill={BADGE_TEXT}><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z" /></svg>
+        <span style={{ fontSize: 11.5, fontWeight: 700, color: BADGE_TEXT }}>성공의 말 습관 만들기</span>
+      </div>
 
       <div style={{ padding: '34px 20px 0' }}>
         <div style={{ position: 'relative', width: 76, height: 76, borderRadius: 19, overflow: 'hidden', marginBottom: 16, boxShadow: '0 10px 24px -6px rgba(65,36,2,0.34)' }}>
           <Image src="/splash-icon.png" alt="이뤄" width={76} height={76} style={{ borderRadius: 19 }} />
-        </div>
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6, background: BADGE_BG,
-          padding: '6px 13px', borderRadius: 999, marginBottom: 18,
-        }}>
-          <svg width={13} height={13} viewBox="0 0 24 24" fill={BADGE_TEXT}><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z" /></svg>
-          <span style={{ fontSize: 11.5, fontWeight: 700, color: BADGE_TEXT }}>성공의 말 습관 만들기</span>
         </div>
         <h1 style={{ fontSize: 37, fontWeight: 800, lineHeight: 1.24, letterSpacing: '-1px', margin: '0 0 12px', color: INK }}>
           흔들리는 시기,<br /><span style={{ color: GOLD }}>다시 나를 세우는</span><br />한 문장
@@ -264,14 +265,15 @@ function DemoStep({ onNext }: { onNext: () => void }) {
   const playLabel = phase === 'idle' ? '재생' : '완료'
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: INK }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '36px 20px 0' }}>
-        <div style={{ textAlign: 'center', marginBottom: 18 }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: INK }}>
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px 20px 0' }}>
+        <div style={{ textAlign: 'center', marginBottom: 14, flexShrink: 0 }}>
           <div style={{ fontSize: 11.5, fontWeight: 700, color: '#E6C07A', letterSpacing: 1, marginBottom: 8 }}>이렇게 말해요</div>
           <h2 style={{ fontSize: 20, fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.4px' }}>나를 보며 성공의 말을 해요</h2>
         </div>
         <div style={{
-          position: 'relative', width: '100%', aspectRatio: '340 / 718',
+          position: 'relative', height: 'min(52dvh, 420px)', width: 'auto', maxWidth: '100%',
+          aspectRatio: '340 / 718', margin: '0 auto',
           borderRadius: 40, padding: 10,
           background: 'linear-gradient(150deg,#2A1E0E,#1a0f04)',
           boxShadow: '0 24px 56px -20px rgba(65,36,2,0.5)',
