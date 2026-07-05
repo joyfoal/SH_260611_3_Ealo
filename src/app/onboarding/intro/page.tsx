@@ -224,20 +224,28 @@ function DemoStep({ onNext }: { onNext: () => void }) {
   }, [])
 
   const handlePlayTap = useCallback(() => {
-    if (phase === 'idle') {
+    const v = videoRef.current
+    if (!v) return
+    if (v.paused) {
+      v.play().catch(() => {})
       setPhase('playing')
-      videoRef.current?.play().catch(() => {})
-      return
+    } else {
+      v.pause()
+      setPhase('idle')
     }
+  }, [])
+
+  const handleAdvance = useCallback(() => {
     if (switchTimerRef.current) clearTimeout(switchTimerRef.current)
     onNext()
-  }, [phase, onNext])
+  }, [onNext])
 
   const words = DEMO_WORDS.map((w, i) => ({ text: w, on: i < lit }))
   const playLabel = phase === 'idle' ? '재생' : '완료'
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: CREAM, padding: '32px 20px' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '24px 20px 0' }}>
       <div style={{
         position: 'relative', width: '100%', aspectRatio: '340 / 718',
         borderRadius: 40, padding: 10,
@@ -335,12 +343,16 @@ function DemoStep({ onNext }: { onNext: () => void }) {
               {phase === 'idle' ? (
                 <svg width={15} height={15} viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z" /></svg>
               ) : (
-                <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                <svg width={14} height={14} viewBox="0 0 16 16" fill="#fff"><rect x="3" y="2" width="4" height="12" rx="1.5" /><rect x="9" y="2" width="4" height="12" rx="1.5" /></svg>
               )}
               {playLabel}
             </button>
           </div>
         </div>
+      </div>
+      </div>
+      <div style={{ padding: '12px 22px 40px' }}>
+        <button style={btnPrimary} onClick={handleAdvance}>다음</button>
       </div>
     </div>
   )
