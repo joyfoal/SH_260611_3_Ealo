@@ -248,7 +248,6 @@ function DemoStep({ onNext }: { onNext: () => void }) {
           <video
             ref={videoRef}
             src="/onboarding-intro/woman-speak.mp4"
-            muted
             playsInline
             preload="auto"
             onTimeUpdate={handleTimeUpdate}
