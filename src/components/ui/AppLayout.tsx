@@ -8,6 +8,7 @@ interface AppLayoutProps {
   activeTab: string
   hideTabBar?: boolean
   decorativeIcons?: [number, number]
+  footerNote?: React.ReactNode
 }
 
 function SpriteIcon({ index, size }: { index: number; size: number }) {
@@ -28,13 +29,14 @@ function SpriteIcon({ index, size }: { index: number; size: number }) {
   )
 }
 
-export function AppLayout({ children, activeTab, hideTabBar, decorativeIcons }: AppLayoutProps) {
+export function AppLayout({ children, activeTab, hideTabBar, decorativeIcons, footerNote }: AppLayoutProps) {
   return (
     <div
       className="flex flex-col"
       style={{ height: '100dvh', background: 'var(--color-bg-primary)', position: 'relative' }}
     >
       <main className="flex-1 min-h-0 overflow-y-auto">{children}</main>
+      {footerNote}
       {!hideTabBar && <TabBar activeTab={activeTab} />}
       <GlobalToast />
       {decorativeIcons && (

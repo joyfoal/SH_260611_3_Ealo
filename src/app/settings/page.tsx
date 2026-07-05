@@ -1517,7 +1517,16 @@ export default function SettingsPage() {
   for (let i = 0; i < BUTTONS.length; i += 2) rows.push(BUTTONS.slice(i, i + 2))
 
   return (
-    <AppLayout activeTab="설정">
+    <AppLayout
+      activeTab="설정"
+      footerNote={
+        <p style={{ margin: 0, padding: '10px 4px', fontSize: '11px', color: 'var(--color-text-muted)', textAlign: 'center', lineHeight: 1.5, background: 'var(--color-bg-primary)' }}>
+          '이뤄'는 목표 달성을 보장하지 않습니다.
+          <br />
+          목표를 더 자주 인식하고 기억하도록 돕는 습관 형성을 지향합니다.
+        </p>
+      }
+    >
       <div style={{ padding: '20px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '20px' }}>
           <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-text-primary)' }}>설정</h1>
@@ -1577,10 +1586,6 @@ export default function SettingsPage() {
             return elements
           })}
         </div>
-
-        <p style={{ marginTop: '28px', padding: '0 4px', fontSize: '11px', color: 'var(--color-text-muted)', textAlign: 'center', lineHeight: 1.5 }}>
-          '이뤄'는 목표 달성을 보장하지 않습니다. 목표를 더 자주 인식하고 기억하도록 돕는 습관 형성을 지향합니다.
-        </p>
       </div>
     </AppLayout>
   )
