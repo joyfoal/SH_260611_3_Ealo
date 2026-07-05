@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Mic, Camera, CalendarCheck } from 'lucide-react'
@@ -38,7 +38,15 @@ const MOCKUP = {
 } as const
 
 const DEMO_WORDS = ['나는', '매일', '성장하고', '있다']
-const DEMO_THRESHOLDS = [0.123, 0.374, 0.549, 0.681]
+type Person = 'man' | 'woman'
+const DEMO_THRESHOLDS: Record<Person, number[]> = {
+  woman: [0.123, 0.374, 0.549, 0.681],
+  man: [0.553, 0.661, 0.770, 0.918],
+}
+const DEMO_VIDEO_SRC: Record<Person, string> = {
+  woman: '/onboarding-intro/woman-speak.mp4',
+  man: '/onboarding-intro/man-speak.mp4',
+}
 
 const QUOTES = [
   '왜 이렇게 열심히 살았지',
@@ -175,22 +183,44 @@ function MidlifeStep({ onNext, onSkip }: { onNext: () => void; onSkip: () => voi
   )
 }
 
-/* ── Step 2: Standalone video demo (no skip link) ──────────────── */
+/* ── Step 2: Standalone video demo — 남녀 번갈아 재생 (no skip link) ── */
 function DemoStep({ onNext }: { onNext: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const personRef = useRef<Person>('woman')
+  const switchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [phase, setPhase] = useState<'idle' | 'playing' | 'celebrate'>('idle')
   const [lit, setLit] = useState(0)
+
+  useEffect(() => () => {
+    if (switchTimerRef.current) clearTimeout(switchTimerRef.current)
+  }, [])
 
   const handleTimeUpdate = useCallback(() => {
     const v = videoRef.current
     if (!v || !v.duration) return
     const p = v.currentTime / v.duration
+    const thresholds = DEMO_THRESHOLDS[personRef.current]
     let next = 0
-    for (let i = 0; i < DEMO_THRESHOLDS.length; i++) if (p >= DEMO_THRESHOLDS[i]) next = i + 1
+    for (let i = 0; i < thresholds.length; i++) if (p >= thresholds[i]) next = i + 1
     setLit((prev) => (prev === next ? prev : next))
-    if (next >= DEMO_WORDS.length && p >= DEMO_THRESHOLDS[DEMO_THRESHOLDS.length - 1] + 0.02) {
+    if (next >= DEMO_WORDS.length && p >= thresholds[thresholds.length - 1] + 0.02) {
       setPhase((prev) => (prev === 'playing' ? 'celebrate' : prev))
     }
+  }, [])
+
+  const switchPerson = useCallback(() => {
+    switchTimerRef.current = setTimeout(() => {
+      const next: Person = personRef.current === 'woman' ? 'man' : 'woman'
+      personRef.current = next
+      setLit(0)
+      setPhase('playing')
+      const v = videoRef.current
+      if (v) {
+        v.src = DEMO_VIDEO_SRC[next]
+        v.currentTime = 0
+        v.play().catch(() => {})
+      }
+    }, 1700)
   }, [])
 
   const handlePlayTap = useCallback(() => {
@@ -199,6 +229,7 @@ function DemoStep({ onNext }: { onNext: () => void }) {
       videoRef.current?.play().catch(() => {})
       return
     }
+    if (switchTimerRef.current) clearTimeout(switchTimerRef.current)
     onNext()
   }, [phase, onNext])
 
@@ -221,7 +252,7 @@ function DemoStep({ onNext }: { onNext: () => void }) {
             playsInline
             preload="auto"
             onTimeUpdate={handleTimeUpdate}
-            onEnded={() => setPhase('celebrate')}
+            onEnded={switchPerson}
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: '50% 20%' }}
           />
           <div style={{
