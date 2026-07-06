@@ -1579,8 +1579,23 @@ function ManualPanel() {
 function DevPanel() {
   const [aiStatus, setAiStatus] = useState<'checking' | 'available' | 'unavailable'>('checking')
   const [msg, setMsg] = useState('')
+  const [featureFlags, setFeatureFlags] = useState(() => getHomeDisplaySettings())
 
   const showMsg = (text: string) => { setMsg(text); setTimeout(() => setMsg(''), 3000) }
+
+  const toggleFeature = (key: 'showToggleMenu' | 'showGame' | 'showSuccessImageMaker' | 'showRecentRec') => {
+    const val = !featureFlags[key]
+    setHomeDisplaySetting(key, val)
+    setFeatureFlags((p) => ({ ...p, [key]: val }))
+    window.dispatchEvent(new Event('ealo-display-settings-changed'))
+  }
+
+  const featureItems = [
+    { key: 'showToggleMenu' as const, label: '켜기 / 끄기 메뉴 표시' },
+    { key: 'showGame' as const, label: '게임하기 버튼 표시' },
+    { key: 'showSuccessImageMaker' as const, label: '성공 이미지 만들기 버튼 표시' },
+    { key: 'showRecentRec' as const, label: '최근 녹음 표시' },
+  ]
 
   useEffect(() => {
     fetch('/api/dev/ai-status')
@@ -1650,6 +1665,25 @@ function DevPanel() {
         {aiStatus === 'checking' ? '확인 중...' : aiStatus === 'available' ? '사용 가능 ✅' : '사용 불가 (API 키 없음) ⚠️'}
       </div>
 
+      <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-primary)', margin: '18px 0 8px' }}>기능 노출 설정 (일반 모드에만 적용)</p>
+      <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '10px' }}>
+        {featureItems.map(({ key, label }) => (
+          <div
+            key={key}
+            className="flex items-center justify-between"
+            style={{ padding: '10px 0', borderBottom: `1px solid ${T.divider}` }}
+          >
+            <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-text-primary)' }}>{label}</p>
+            <button
+              onClick={() => toggleFeature(key)}
+              style={{ width: '46px', height: '27px', borderRadius: '14px', background: featureFlags[key] ? T.goldGrad : 'var(--color-border)', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}
+            >
+              <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'white', position: 'absolute', top: '2.5px', left: featureFlags[key] ? '21px' : '3px', transition: 'left 0.2s' }} />
+            </button>
+          </div>
+        ))}
+      </div>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <button onClick={handleResetOnboarding} style={btnStyle('var(--color-text-primary)', 'var(--color-bg-primary)', '1px solid var(--color-border)')}>
           온보딩 다시 보기
@@ -1704,16 +1738,23 @@ export default function SettingsPage() {
   const [active, setActive] = useState<string | null>(null)
   const [motto, setMotto] = useState('')
   const [devModeEnabled, setDevModeEnabled] = useState(() => isDevModeEnabled())
+  const [showToggleMenu, setShowToggleMenu] = useState(() => getHomeDisplaySettings().showToggleMenu)
   useEffect(() => { setMotto(MOTTOS[Math.floor(Math.random() * MOTTOS.length)]) }, [])
   useEffect(() => {
     const onDevModeChange = () => setDevModeEnabled(isDevModeEnabled())
     window.addEventListener('ealo-dev-mode-changed', onDevModeChange)
     return () => window.removeEventListener('ealo-dev-mode-changed', onDevModeChange)
   }, [])
+  useEffect(() => {
+    const onDisplaySettingsChange = () => setShowToggleMenu(getHomeDisplaySettings().showToggleMenu)
+    window.addEventListener('ealo-display-settings-changed', onDisplaySettingsChange)
+    return () => window.removeEventListener('ealo-display-settings-changed', onDisplaySettingsChange)
+  }, [])
   const toggle = (id: string) => setActive((prev) => prev === id ? null : id)
 
   const chipBg = 'color-mix(in srgb, var(--color-accent-light) 28%, var(--color-bg-card))'
-  const buttons = devModeEnabled ? [...BUTTONS, { id: 'dev', icon: Wrench, label: '개발자 모드' }] : BUTTONS
+  const withDev = devModeEnabled ? [...BUTTONS, { id: 'dev', icon: Wrench, label: '개발자 모드' }] : BUTTONS
+  const buttons = withDev.filter((b) => b.id !== 'toggle' || showToggleMenu || devModeEnabled)
   const rows: typeof BUTTONS[] = []
   for (let i = 0; i < buttons.length; i += 2) rows.push(buttons.slice(i, i + 2))
 

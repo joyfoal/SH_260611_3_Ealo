@@ -69,6 +69,9 @@ const KEYS = {
   SHOW_RECENT_REC: 'ealo-show-recent-rec',
   SHOW_SUCCESS_IMG: 'ealo-show-success-img',
   SHOW_CALENDAR: 'ealo-show-calendar',
+  SHOW_GAME: 'ealo-show-game',
+  SHOW_SUCCESS_IMAGE_MAKER: 'ealo-show-success-image-maker',
+  SHOW_TOGGLE_MENU: 'ealo-show-toggle-menu',
   CAMERA_NOTICE_SHOWN_AT: 'ealo-camera-notice-shown-at',
 } as const
 
@@ -396,19 +399,35 @@ export function setTodayRepeatDone(): void {
 }
 
 // Home display settings
-export function getHomeDisplaySettings(): { showRecentRec: boolean; showSuccessImg: boolean; showCalendar: boolean } {
+export function getHomeDisplaySettings(): {
+  showRecentRec: boolean
+  showSuccessImg: boolean
+  showCalendar: boolean
+  showGame: boolean
+  showSuccessImageMaker: boolean
+  showToggleMenu: boolean
+} {
   return {
     showRecentRec: safeGet<boolean>(KEYS.SHOW_RECENT_REC, true),
     showSuccessImg: safeGet<boolean>(KEYS.SHOW_SUCCESS_IMG, true),
     showCalendar: safeGet<boolean>(KEYS.SHOW_CALENDAR, true),
+    showGame: safeGet<boolean>(KEYS.SHOW_GAME, true),
+    showSuccessImageMaker: safeGet<boolean>(KEYS.SHOW_SUCCESS_IMAGE_MAKER, true),
+    showToggleMenu: safeGet<boolean>(KEYS.SHOW_TOGGLE_MENU, true),
   }
 }
 
-export function setHomeDisplaySetting(key: 'showRecentRec' | 'showSuccessImg' | 'showCalendar', val: boolean): void {
+export function setHomeDisplaySetting(
+  key: 'showRecentRec' | 'showSuccessImg' | 'showCalendar' | 'showGame' | 'showSuccessImageMaker' | 'showToggleMenu',
+  val: boolean
+): void {
   const map: Record<string, string> = {
     showRecentRec: KEYS.SHOW_RECENT_REC,
     showSuccessImg: KEYS.SHOW_SUCCESS_IMG,
     showCalendar: KEYS.SHOW_CALENDAR,
+    showGame: KEYS.SHOW_GAME,
+    showSuccessImageMaker: KEYS.SHOW_SUCCESS_IMAGE_MAKER,
+    showToggleMenu: KEYS.SHOW_TOGGLE_MENU,
   }
   safeSet(map[key], val)
 }
