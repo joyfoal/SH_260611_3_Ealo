@@ -27,7 +27,7 @@ interface FeedItem {
   content: string
   daysCount: number
   reactions: Reactions
-  createdAt: string
+  createdAtMs: number
   isMe?: boolean
 }
 
@@ -45,8 +45,8 @@ interface Challenge {
 
 type JoinedEntry = { content: string; participant: Participant }
 
-type FeedSort = '외침 많음' | '외침 적음' | '칭찬 많음' | '칭찬 적음' | '이름'
-const FEED_SORTS: FeedSort[] = ['외침 많음', '외침 적음', '칭찬 많음', '칭찬 적음', '이름']
+type FeedSort = '외침 많음' | '외침 적음' | '칭찬 많음' | '칭찬 적음' | '이름' | '날짜(최신)'
+const FEED_SORTS: FeedSort[] = ['외침 많음', '외침 적음', '칭찬 많음', '칭찬 적음', '이름', '날짜(최신)']
 
 interface UserProfile {
   nickname: string
@@ -57,9 +57,9 @@ interface UserProfile {
 const ZERO_REACTIONS: Reactions = { '😍': 0, '👏': 0, '🔥': 0, '💪': 0, '✨': 0, '🌟': 0, '💛': 0, '🙌': 0, '💯': 0, '💫': 0, '🌿': 0, '🌈': 0 }
 
 const MOCK_FEED: FeedItem[] = [
-  { id: 'f1', nickname: '햇살이', initial: '햇', emailId: 'sunshine_haet', content: '나는 오늘도 최선을 다하고 있다', daysCount: 23, reactions: { ...ZERO_REACTIONS, '😍': 4, '👏': 2, '🔥': 1, '🙌': 3 }, createdAt: '2시간 전' },
-  { id: 'f2', nickname: '별빛나', initial: '별', emailId: 'starlight_byeol', content: '나는 매일 성장하고 있다', daysCount: 11, reactions: { ...ZERO_REACTIONS, '😍': 1, '👏': 3, '💛': 2, '✨': 1 }, createdAt: '5시간 전' },
-  { id: 'f3', nickname: '파란봄', initial: '파', emailId: 'blue_spring_pa', content: '나는 나를 믿는다', daysCount: 8, reactions: { ...ZERO_REACTIONS, '💪': 1, '🌈': 2 }, createdAt: '어제' },
+  { id: 'f1', nickname: '햇살이', initial: '햇', emailId: 'sunshine_haet', content: '나는 오늘도 최선을 다하고 있다', daysCount: 23, reactions: { ...ZERO_REACTIONS, '😍': 4, '👏': 2, '🔥': 1, '🙌': 3 }, createdAtMs: Date.now() - 2 * 60 * 60 * 1000 },
+  { id: 'f2', nickname: '별빛나', initial: '별', emailId: 'starlight_byeol', content: '나는 매일 성장하고 있다', daysCount: 11, reactions: { ...ZERO_REACTIONS, '😍': 1, '👏': 3, '💛': 2, '✨': 1 }, createdAtMs: Date.now() - 5 * 60 * 60 * 1000 },
+  { id: 'f3', nickname: '파란봄', initial: '파', emailId: 'blue_spring_pa', content: '나는 나를 믿는다', daysCount: 8, reactions: { ...ZERO_REACTIONS, '💪': 1, '🌈': 2 }, createdAtMs: Date.now() - 26 * 60 * 60 * 1000 },
 ]
 
 const MOCK_CHALLENGE: Challenge[] = [
@@ -286,7 +286,7 @@ export default function RoomPage() {
       content: aff.text,
       daysCount: aff.completedDates.length,
       reactions: { ...ZERO_REACTIONS },
-      createdAt: '방금',
+      createdAtMs: Date.now(),
       isMe: true,
     }
     setFeed(prev => {
@@ -387,6 +387,7 @@ export default function RoomPage() {
       case '칭찬 많음': return totalReactions(b.reactions) - totalReactions(a.reactions)
       case '칭찬 적음': return totalReactions(a.reactions) - totalReactions(b.reactions)
       case '이름': return a.nickname.localeCompare(b.nickname, 'ko')
+      case '날짜(최신)': return b.createdAtMs - a.createdAtMs
     }
   })
 
@@ -568,9 +569,6 @@ export default function RoomPage() {
                           <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-primary)' }}>
                             {item.nickname}{item.isMe && ' (나)'}
                           </span>
-                          {item.emailId && (
-                            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{item.emailId}</span>
-                          )}
                           <span style={{
                             fontSize: '11px', fontWeight: 600, whiteSpace: 'nowrap',
                             color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '2px 9px', borderRadius: '999px',
@@ -578,7 +576,9 @@ export default function RoomPage() {
                             {item.daysCount}일 외침
                           </span>
                         </div>
-                        <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px' }}>{item.createdAt}</div>
+                        {item.emailId && (
+                          <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px' }}>{item.emailId}</div>
+                        )}
                       </div>
                       {!item.isMe && (
                         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>

@@ -508,31 +508,40 @@ export default function CommunityPage() {
         {/* sticky: 방 둘러보기 검색 + 카테고리 */}
         {activeTab === '방 둘러보기' && (
           <div style={{ padding: '12px 16px 0' }}>
-            <div style={{ position: 'relative', marginBottom: '12px' }}>
-              <Search size={15} color="var(--color-text-muted)" style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-              <input
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="방 이름 또는 소개로 검색"
-                style={{ width: '100%', padding: '11px 36px', background: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '12px', fontSize: '14px', color: 'var(--color-text-primary)', outline: 'none', boxSizing: 'border-box' }}
-              />
-              {searchQuery && (
-                <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                  <X size={15} color="var(--color-text-muted)" />
-                </button>
-              )}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+              <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+                <Search size={15} color="var(--color-text-muted)" style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                <input
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="방 이름 또는 소개로 검색"
+                  style={{ width: '100%', padding: '11px 36px', background: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '12px', fontSize: '14px', color: 'var(--color-text-primary)', outline: 'none', boxSizing: 'border-box' }}
+                />
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                    <X size={15} color="var(--color-text-muted)" />
+                  </button>
+                )}
+              </div>
+              <select
+                value={roomSortBy}
+                onChange={e => setRoomSortBy(e.target.value as RoomSort)}
+                style={{
+                  flexShrink: 0, padding: '0 10px', background: 'var(--color-bg-card)',
+                  border: '1px solid var(--color-border)', borderRadius: '12px',
+                  fontSize: '13px', fontWeight: 500, color: 'var(--color-text-secondary)',
+                  outline: 'none', cursor: 'pointer',
+                }}
+              >
+                {ROOM_SORTS.map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
             </div>
             <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', marginBottom: '12px', paddingBottom: '4px', scrollbarWidth: 'none' }}>
               {ALL_TAGS.map(tag => (
                 <button key={tag} onClick={() => setSelectedTag(tag)} style={{ flexShrink: 0, padding: '6px 14px', borderRadius: '999px', border: selectedTag === tag ? '1.5px solid var(--color-community-accent)' : '1.5px solid var(--color-border)', background: selectedTag === tag ? 'var(--color-community-bg)' : 'var(--color-bg-card)', color: selectedTag === tag ? 'var(--color-community-text)' : 'var(--color-text-muted)', fontSize: '13px', fontWeight: selectedTag === tag ? 600 : 400, cursor: 'pointer' }}>
                   {tag}
-                </button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', marginBottom: '12px', paddingBottom: '4px', scrollbarWidth: 'none' }}>
-              {ROOM_SORTS.map(s => (
-                <button key={s} onClick={() => setRoomSortBy(s)} style={{ flexShrink: 0, padding: '6px 12px', borderRadius: '999px', border: roomSortBy === s ? '1.5px solid var(--color-community-accent)' : '1px solid var(--color-border)', background: roomSortBy === s ? 'var(--color-community-bg)' : 'var(--color-bg-card)', color: roomSortBy === s ? 'var(--color-community-text)' : 'var(--color-text-muted)', fontSize: '12px', fontWeight: roomSortBy === s ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                  {s}
                 </button>
               ))}
             </div>
