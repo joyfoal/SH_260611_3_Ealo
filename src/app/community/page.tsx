@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppLayout } from '@/components/ui/AppLayout'
-import { Users, Plus, ChevronRight, CheckCircle, Search, X, UserCircle, Camera, Home, MessageCircle, Lightbulb, Ban, Loader2, User, Flame } from 'lucide-react'
-import { getDayRecord, todayStr } from '@/lib/storage'
+import { Users, Plus, ChevronRight, CheckCircle, Search, X, UserCircle, Camera, Home, MessageCircle, Lightbulb, Ban, Loader2, User, Flame, BookmarkPlus, Check, Heart } from 'lucide-react'
+import { getDayRecord, todayStr, getAffirmations, saveAffirmation } from '@/lib/storage'
 
 const T = {
   ink: 'var(--color-text-primary)',
@@ -129,15 +129,18 @@ const ALL_TAGS = ['전체', ...ROOM_TAGS]
 const MAX_MEMBERS = 20
 
 const MOCK_ROOMS = [
-  { id: 'r1', name: '아침 확언 클럽', desc: '매일 아침 확언으로 하루를 시작해요', tags: ['아침 확언'], members: 19, streakDays: 12 },
-  { id: 'r2', name: '취업 성공 방', desc: '취업 목표를 가진 분들과 함께해요', tags: ['취업준비'], members: 18, streakDays: 7 },
-  { id: 'r3', name: '자존감 키우기', desc: '나를 사랑하는 연습', tags: ['자존감'], members: 20, streakDays: 20 },
-  { id: 'r4', name: '다이어트 확언단', desc: '건강한 몸을 향한 긍정 확언 모임', tags: ['다이어트'], members: 15, streakDays: 5 },
+  { id: 'r1', name: '아침 확언 클럽', desc: '매일 아침 확언으로 하루를 시작해요', tags: ['아침 확언'], members: 19, streakDays: 12, praiseCount: 84 },
+  { id: 'r2', name: '취업 성공 방', desc: '취업 목표를 가진 분들과 함께해요', tags: ['취업준비'], members: 18, streakDays: 7, praiseCount: 41 },
+  { id: 'r3', name: '자존감 키우기', desc: '나를 사랑하는 연습', tags: ['자존감'], members: 20, streakDays: 20, praiseCount: 132 },
+  { id: 'r4', name: '다이어트 확언단', desc: '건강한 몸을 향한 긍정 확언 모임', tags: ['다이어트'], members: 15, streakDays: 5, praiseCount: 23 },
 ]
 
 type Room = typeof MOCK_ROOMS[number]
 const CUSTOM_ROOMS_KEY = 'ealo-custom-rooms'
 const DEFAULT_MY_ROOMS = ['r1', 'r3']
+
+type RoomSort = '일이 많은 순' | '일이 적은 순' | '칭찬이 많은 순' | '칭찬이 적은 순' | '이름 순'
+const ROOM_SORTS: RoomSort[] = ['일이 많은 순', '일이 적은 순', '칭찬이 많은 순', '칭찬이 적은 순', '이름 순']
 
 async function checkField(
   text: string,
@@ -168,6 +171,7 @@ export default function CommunityPage() {
   })
   const [selectedTag, setSelectedTag] = useState('전체')
   const [searchQuery, setSearchQuery] = useState('')
+  const [roomSortBy, setRoomSortBy] = useState<RoomSort>('일이 많은 순')
   const [myRooms, setMyRooms] = useState<string[]>(DEFAULT_MY_ROOMS)
   const [customRooms, setCustomRooms] = useState<Room[]>([])
   const [roomName, setRoomName] = useState('')
@@ -180,6 +184,8 @@ export default function CommunityPage() {
   const [rankingType, setRankingType] = useState<'방' | '성공의 말'>('방')
   const [showCreateSheet, setShowCreateSheet] = useState(false)
   const [checkedInToday, setCheckedInToday] = useState(false)
+  const [importedPhrases, setImportedPhrases] = useState<Set<string>>(new Set())
+  const [toast, setToast] = useState('')
 
   // 프로필
   const [userProfile, setUserProfile] = useState<UserProfile>({ nickname: '', profileImage: null })
@@ -219,6 +225,27 @@ export default function CommunityPage() {
     try { localStorage.setItem('ealo-my-rooms', JSON.stringify(myRooms)) } catch {}
   }, [myRooms])
 
+  useEffect(() => {
+    if (toast) {
+      const t = setTimeout(() => setToast(''), 2000)
+      return () => clearTimeout(t)
+    }
+  }, [toast])
+
+  const showToast = (msg: string) => setToast(msg)
+
+  const handleImportPhrase = (phrase: string) => {
+    const existing = getAffirmations()
+    if (existing.some(a => a.text === phrase)) {
+      showToast('이미 내 성공의 말에 있어요')
+      return
+    }
+    const now = new Date().toISOString()
+    saveAffirmation({ id: `imported-${Date.now()}`, text: phrase, category: '나 자신', createdAt: now, completedDates: [] })
+    setImportedPhrases(prev => new Set(prev).add(phrase))
+    showToast('내 성공의 말에 추가됐어요')
+  }
+
   const handleOpenProfile = () => {
     setEditNickname(userProfile.nickname)
     setEditImageData(userProfile.profileImage)
@@ -257,6 +284,15 @@ export default function CommunityPage() {
       const q = searchQuery.trim().toLowerCase()
       if (!q) return true
       return r.name.toLowerCase().includes(q) || r.desc.toLowerCase().includes(q)
+    })
+    .sort((a, b) => {
+      switch (roomSortBy) {
+        case '일이 많은 순': return b.streakDays - a.streakDays
+        case '일이 적은 순': return a.streakDays - b.streakDays
+        case '칭찬이 많은 순': return b.praiseCount - a.praiseCount
+        case '칭찬이 적은 순': return a.praiseCount - b.praiseCount
+        case '이름 순': return a.name.localeCompare(b.name, 'ko')
+      }
     })
 
   const myRoomData = allRooms.filter(r => myRooms.includes(r.id))
@@ -312,6 +348,7 @@ export default function CommunityPage() {
       tags: roomTag ? [roomTag] : [],
       members: 1,
       streakDays: 0,
+      praiseCount: 0,
     }
     const updatedCustom = [...customRooms, newRoom]
     setCustomRooms(updatedCustom)
@@ -422,6 +459,13 @@ export default function CommunityPage() {
               {ALL_TAGS.map(tag => (
                 <button key={tag} onClick={() => setSelectedTag(tag)} style={{ flexShrink: 0, padding: '6px 14px', borderRadius: '999px', border: selectedTag === tag ? '1.5px solid var(--color-community-accent)' : '1.5px solid var(--color-border)', background: selectedTag === tag ? 'var(--color-community-bg)' : 'var(--color-bg-card)', color: selectedTag === tag ? 'var(--color-community-text)' : 'var(--color-text-muted)', fontSize: '13px', fontWeight: selectedTag === tag ? 600 : 400, cursor: 'pointer' }}>
                   {tag}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', marginBottom: '12px', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+              {ROOM_SORTS.map(s => (
+                <button key={s} onClick={() => setRoomSortBy(s)} style={{ flexShrink: 0, padding: '6px 12px', borderRadius: '999px', border: roomSortBy === s ? '1.5px solid var(--color-community-accent)' : '1px solid var(--color-border)', background: roomSortBy === s ? 'var(--color-community-bg)' : 'var(--color-bg-card)', color: roomSortBy === s ? 'var(--color-community-text)' : 'var(--color-text-muted)', fontSize: '12px', fontWeight: roomSortBy === s ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  {s}
                 </button>
               ))}
             </div>
@@ -588,6 +632,9 @@ export default function CommunityPage() {
                             </span>
                             <span style={{ fontSize: '12px', color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                               연속 {room.streakDays}일째 <Flame size={13} color="#FF6F00" style={{ display: 'inline', verticalAlign: 'middle' }} />
+                            </span>
+                            <span style={{ fontSize: '12px', color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                              칭찬 {room.praiseCount} <Heart size={12} color="#E53935" style={{ display: 'inline', verticalAlign: 'middle' }} />
                             </span>
                             {isFull && (
                               <span style={{ fontSize: '12px', color: 'var(--color-danger)', background: 'var(--color-danger-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 600 }}>
@@ -963,6 +1010,30 @@ export default function CommunityPage() {
                             </span>
                           </div>
                         </div>
+                        <button
+                          onClick={() => handleImportPhrase(entry.phrase)}
+                          disabled={importedPhrases.has(entry.phrase)}
+                          title="내 성공의 말로 가져오기"
+                          style={{
+                            padding: '6px 13px',
+                            background: importedPhrases.has(entry.phrase) ? 'var(--color-success-bg-mint)' : 'var(--color-bg-card)',
+                            color: importedPhrases.has(entry.phrase) ? 'var(--color-success-mid)' : 'var(--color-community-accent)',
+                            border: `1px solid ${importedPhrases.has(entry.phrase) ? '#6EE7B7' : 'var(--color-community-accent)'}`,
+                            borderRadius: '9px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            cursor: importedPhrases.has(entry.phrase) ? 'default' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            flexShrink: 0,
+                          }}
+                        >
+                          {importedPhrases.has(entry.phrase)
+                            ? <><Check size={13} /> 가져옴</>
+                            : <><BookmarkPlus size={13} /> 가져오기</>
+                          }
+                        </button>
                       </div>
                     )
                   })}
@@ -1037,6 +1108,20 @@ export default function CommunityPage() {
             <input type="file" accept="image/*" ref={photoInputRef} style={{ display: 'none' }} onChange={handleProfileImageChange} />
           </div>
         </>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: '80px', left: '50%', transform: 'translateX(-50%)',
+          background: 'var(--color-text-primary)', color: 'white',
+          padding: '11px 20px', borderRadius: '999px',
+          fontSize: '13px', fontWeight: 600,
+          zIndex: 100, whiteSpace: 'nowrap',
+          pointerEvents: 'none',
+        }}>
+          {toast}
+        </div>
       )}
 
       <style>{`
