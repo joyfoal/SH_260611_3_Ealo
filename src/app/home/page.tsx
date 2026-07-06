@@ -809,34 +809,33 @@ export default function HomePage() {
 
         {/* Shortcuts */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', padding: '0 16px 16px' }}>
-          {(displaySettings.showGame || isDevModeEnabled()) && (
-            <button
-              onClick={() => router.push('/games')}
-              style={{
-                padding: '12px 6px',
-                background: 'linear-gradient(160deg, var(--color-bg-primary), var(--color-bg-card))',
-                border: `1px solid ${T.cardBorder}`,
-                borderRadius: '14px',
-                color: T.gold,
-                fontSize: '12px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                wordBreak: 'keep-all',
-                lineHeight: 1.4,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                textAlign: 'center',
-                minHeight: '64px',
-                fontFamily: 'inherit',
-              }}
-            >
-              <PuzzlePieceIcon style={{ width: 40, height: 40, color: T.gold }} />
-              게임하기
-            </button>
-          )}
+          <button
+            onClick={() => router.push('/games')}
+            style={{
+              padding: '12px 6px',
+              background: 'linear-gradient(160deg, var(--color-bg-primary), var(--color-bg-card))',
+              border: `1px solid ${T.cardBorder}`,
+              borderRadius: '14px',
+              color: T.gold,
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              wordBreak: 'keep-all',
+              lineHeight: 1.4,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              textAlign: 'center',
+              minHeight: '64px',
+              fontFamily: 'inherit',
+              visibility: (displaySettings.showGame || isDevModeEnabled()) ? 'visible' : 'hidden',
+            }}
+          >
+            <PuzzlePieceIcon style={{ width: 40, height: 40, color: T.gold }} />
+            게임하기
+          </button>
           <button
             onClick={() => router.push('/create')}
             style={{
@@ -863,38 +862,39 @@ export default function HomePage() {
             <PlusCircleIcon style={{ width: 40, height: 40, color: T.gold }} />
             성공의 말 만들기
           </button>
-          {(displaySettings.showSuccessImageMaker || isDevModeEnabled()) && (
-            <button
-              onClick={() => router.push('/home/success-image')}
-              style={{
-                padding: '12px 6px',
-                background: 'linear-gradient(160deg, var(--color-bg-primary), var(--color-bg-card))',
-                border: `1px solid ${T.cardBorder}`,
-                borderRadius: '14px',
-                color: T.gold,
-                fontSize: '12px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                wordBreak: 'keep-all',
-                lineHeight: 1.4,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                textAlign: 'center',
-                minHeight: '64px',
-                fontFamily: 'inherit',
-              }}
-            >
-              <PhotoIcon style={{ width: 40, height: 40, color: T.gold }} />
-              성공 이미지 만들기
-            </button>
-          )}
+          <button
+            onClick={() => router.push('/home/success-image')}
+            style={{
+              padding: '12px 6px',
+              background: 'linear-gradient(160deg, var(--color-bg-primary), var(--color-bg-card))',
+              border: `1px solid ${T.cardBorder}`,
+              borderRadius: '14px',
+              color: T.gold,
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              wordBreak: 'keep-all',
+              lineHeight: 1.4,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              textAlign: 'center',
+              minHeight: '64px',
+              fontFamily: 'inherit',
+              visibility: (displaySettings.showSuccessImageMaker || isDevModeEnabled()) ? 'visible' : 'hidden',
+            }}
+          >
+            <PhotoIcon style={{ width: 40, height: 40, color: T.gold }} />
+            성공 이미지 만들기
+          </button>
         </div>
 
         {/* Recent recording player */}
-        {(displaySettings.showRecentRec || isDevModeEnabled()) && <RecentRecordingPlayer />}
+        <div style={{ visibility: (displaySettings.showRecentRec || isDevModeEnabled()) ? 'visible' : 'hidden' }}>
+          <RecentRecordingPlayer />
+        </div>
 
         {/* 저장된 성공 이미지 */}
         {displaySettings.showSuccessImg && <SavedSuccessImage onTap={() => router.push('/home/success-image')} />}

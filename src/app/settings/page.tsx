@@ -1738,7 +1738,8 @@ export default function SettingsPage() {
   const [active, setActive] = useState<string | null>(null)
   const [motto, setMotto] = useState('')
   const [devModeEnabled, setDevModeEnabled] = useState(() => isDevModeEnabled())
-  const [showToggleMenu, setShowToggleMenu] = useState(() => getHomeDisplaySettings().showToggleMenu)
+  const [showToggleMenu, setShowToggleMenu] = useState(true)
+  useEffect(() => { setShowToggleMenu(getHomeDisplaySettings().showToggleMenu) }, [])
   useEffect(() => { setMotto(MOTTOS[Math.floor(Math.random() * MOTTOS.length)]) }, [])
   useEffect(() => {
     const onDevModeChange = () => setDevModeEnabled(isDevModeEnabled())
@@ -1753,8 +1754,7 @@ export default function SettingsPage() {
   const toggle = (id: string) => setActive((prev) => prev === id ? null : id)
 
   const chipBg = 'color-mix(in srgb, var(--color-accent-light) 28%, var(--color-bg-card))'
-  const withDev = devModeEnabled ? [...BUTTONS, { id: 'dev', icon: Wrench, label: '개발자 모드' }] : BUTTONS
-  const buttons = withDev.filter((b) => b.id !== 'toggle' || showToggleMenu || devModeEnabled)
+  const buttons = devModeEnabled ? [...BUTTONS, { id: 'dev', icon: Wrench, label: '개발자 모드' }] : BUTTONS
   const rows: typeof BUTTONS[] = []
   for (let i = 0; i < buttons.length; i += 2) rows.push(buttons.slice(i, i + 2))
 
@@ -1790,6 +1790,7 @@ export default function SettingsPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
                   {row.map((btn) => {
                     const isActive = active === btn.id
+                    const hidden = btn.id === 'toggle' && !showToggleMenu && !devModeEnabled
                     return (
                       <button
                         key={btn.id}
@@ -1805,6 +1806,7 @@ export default function SettingsPage() {
                           gap: '14px',
                           textAlign: 'left',
                           transition: 'border-color 0.15s, border-radius 0.15s',
+                          visibility: hidden ? 'hidden' : 'visible',
                         }}
                       >
                         <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: chipBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
