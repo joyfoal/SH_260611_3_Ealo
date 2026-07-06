@@ -268,7 +268,7 @@ function DemoStep({ onNext }: { onNext: () => void }) {
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: INK }}>
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px 20px 0' }}>
         <div style={{ textAlign: 'center', marginBottom: 14, flexShrink: 0 }}>
-          <div style={{ fontSize: 11.5, fontWeight: 700, color: '#E6C07A', letterSpacing: 1, marginBottom: 8 }}>이렇게 말해요</div>
+          <div style={{ fontSize: 11.5, fontWeight: 700, color: '#E6C07A', letterSpacing: 1, marginBottom: 8 }}>이렇게 말해요(재생 눌러 확인)</div>
           <h2 style={{ fontSize: 20, fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.4px' }}>나를 보며 성공의 말을 해요</h2>
         </div>
         <div style={{

@@ -486,7 +486,7 @@ export default function OnboardingPage() {
       /* ── 0: Welcome ───────────────────────────────────────────── */
       case 0: return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#FDF9F1' }}>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 32px' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '0 32px' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 64 }}>
               <Image
                 src="/splash-icon.png"
