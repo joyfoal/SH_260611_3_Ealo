@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { AppLayout } from '@/components/ui/AppLayout'
-import { ChevronLeft, Trophy, BookmarkPlus, Share2, X, Check, UserCircle, LogOut, Heart, ThumbsUp, Flame, Dumbbell, Sparkles, Star, HeartHandshake, PartyPopper, CheckCircle2, Zap, Leaf, Rainbow, MessageCircle, Trash2, type LucideIcon } from 'lucide-react'
+import { ChevronLeft, Trophy, BookmarkPlus, Share2, X, Check, LogOut, Heart, ThumbsUp, Flame, Dumbbell, Sparkles, Star, HeartHandshake, PartyPopper, CheckCircle2, Zap, Leaf, Rainbow, MessageCircle, Trash2, Info, type LucideIcon } from 'lucide-react'
 import { getAffirmations, saveAffirmation, type Affirmation } from '@/lib/storage'
 
 type RoomTab = '성공의 말 나누기' | '함께 도전'
@@ -312,13 +312,14 @@ export default function RoomPage() {
 
   const tabStyle = (tab: RoomTab) => ({
     flex: 1,
-    padding: '10px 0',
-    background: 'none',
+    padding: '9px 0',
+    background: activeTab === tab ? 'var(--color-bg-card)' : 'transparent',
     border: 'none',
-    borderBottom: activeTab === tab ? '2px solid var(--color-community-accent)' : '2px solid transparent',
-    color: activeTab === tab ? 'var(--color-community-text)' : 'var(--color-text-muted)',
-    fontSize: '14px',
-    fontWeight: activeTab === tab ? 700 : 400,
+    borderRadius: '11px',
+    color: activeTab === tab ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+    fontSize: '13.5px',
+    fontWeight: activeTab === tab ? 700 : 500,
+    boxShadow: activeTab === tab ? '0 2px 6px rgba(65,36,2,0.1)' : 'none',
     cursor: 'pointer',
   })
 
@@ -326,52 +327,81 @@ export default function RoomPage() {
     <AppLayout activeTab="함께">
       <div style={{ paddingBottom: '32px' }}>
         {/* 헤더 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '16px 16px 0' }}>
-          <button
-            onClick={() => router.back()}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
-          >
-            <ChevronLeft size={22} color="var(--color-text-primary)" />
-          </button>
-          <h1 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--color-text-primary)', flex: 1 }}>
-            {room.name}
-          </h1>
-
-          {/* 닉네임 + 구글아이디 + 프로필 이미지 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {(userProfile.nickname || userProfile.googleEmail) && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                {userProfile.nickname && (
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
-                    {userProfile.nickname}
-                  </span>
-                )}
-                {userProfile.googleEmail && (
-                  <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 400, lineHeight: 1.2 }}>
-                    {userProfile.googleEmail}
-                  </span>
-                )}
-              </div>
-            )}
-            {userProfile.profileImage ? (
-              <img
-                src={userProfile.profileImage}
-                alt="내 프로필"
-                style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-community-accent)', flexShrink: 0 }}
-              />
-            ) : (
-              <UserCircle size={28} color={userProfile.nickname ? 'var(--color-community-accent)' : 'var(--color-text-muted)'} style={{ flexShrink: 0 }} />
-            )}
-          </div>
-        </div>
-
-        {/* 내부 탭 */}
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)', margin: '16px 0 0' }}>
-          {(['성공의 말 나누기', '함께 도전'] as RoomTab[]).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} style={tabStyle(tab)}>
-              {tab}
+        <div style={{
+          position: 'sticky', top: 0, zIndex: 40,
+          background: 'rgba(255,252,248,0.92)', backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid var(--color-border)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '20px 16px 12px' }}>
+            <button
+              onClick={() => router.back()}
+              style={{
+                width: '36px', height: '36px', borderRadius: '11px',
+                border: '1px solid var(--color-border)', background: 'var(--color-bg-card)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', padding: 0, flexShrink: 0,
+              }}
+            >
+              <ChevronLeft size={20} color="var(--color-text-primary)" />
             </button>
-          ))}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {isMember && (
+                <span style={{
+                  fontSize: '11px', fontWeight: 700, color: 'var(--color-community-text)',
+                  background: 'var(--color-community-bg)', padding: '2px 8px', borderRadius: '999px',
+                }}>
+                  내 방
+                </span>
+              )}
+              <h1 style={{ fontSize: '19px', fontWeight: 800, color: 'var(--color-text-primary)', margin: '3px 0 0', letterSpacing: '-0.4px' }}>
+                {room.name}
+              </h1>
+            </div>
+
+            {/* 닉네임 + 구글아이디 + 프로필 아바타 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+              {(userProfile.nickname || userProfile.googleEmail) && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1.25 }}>
+                  {userProfile.nickname && (
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                      {userProfile.nickname}
+                    </span>
+                  )}
+                  {userProfile.googleEmail && (
+                    <span style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>
+                      {userProfile.googleEmail}
+                    </span>
+                  )}
+                </div>
+              )}
+              {userProfile.profileImage ? (
+                <img
+                  src={userProfile.profileImage}
+                  alt="내 프로필"
+                  style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-community-accent)', flexShrink: 0 }}
+                />
+              ) : (
+                <div style={{
+                  width: '34px', height: '34px', borderRadius: '50%',
+                  background: 'linear-gradient(135deg, var(--color-community-accent-mid), var(--color-community-accent))',
+                  border: '2px solid var(--color-community-accent-mid)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'white', fontSize: '15px', fontWeight: 700, flexShrink: 0,
+                }}>
+                  {userProfile.nickname ? userProfile.nickname[0] : '?'}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 세그먼트 탭 */}
+          <div style={{ margin: '0 16px 14px', display: 'flex', gap: '4px', background: '#F1E7D6', borderRadius: '14px', padding: '4px' }}>
+            {(['성공의 말 나누기', '함께 도전'] as RoomTab[]).map(tab => (
+              <button key={tab} onClick={() => setActiveTab(tab)} style={tabStyle(tab)}>
+                {tab}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div style={{ padding: '16px' }}>
@@ -403,9 +433,10 @@ export default function RoomPage() {
                 {!isMember ? '방에 참여하면 공유할 수 있어요' : sharedIds.length >= 3 ? '최대 3개까지 공유할 수 있어요' : '성공의 말 공유하기'}
               </button>
 
-              <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', textAlign: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+                <Info size={13} />
                 자유 댓글 없이 정해진 응원만 보낼 수 있어요
-              </p>
+              </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '14px' }}>
                 {feed.map(item => (
@@ -413,9 +444,10 @@ export default function RoomPage() {
                     key={item.id}
                     style={{
                       background: 'var(--color-bg-card)',
-                      borderRadius: '16px',
-                      padding: '16px',
+                      borderRadius: '20px',
+                      padding: '17px',
                       border: item.isMe ? '1.5px solid var(--color-community-accent)' : '1px solid var(--color-border)',
+                      boxShadow: '0 4px 16px rgba(65,36,2,0.05)',
                     }}
                   >
                     {/* 작성자 */}
@@ -444,13 +476,13 @@ export default function RoomPage() {
                     {/* 성공의 말 문구 */}
                     <p style={{
                       fontSize: '16px',
+                      fontWeight: 600,
                       color: 'var(--color-text-primary)',
-                      lineHeight: 1.6,
+                      lineHeight: 1.55,
                       marginBottom: '14px',
-                      padding: '12px 14px',
+                      padding: '14px 16px',
                       background: 'var(--color-community-bg-deep)',
-                      borderRadius: '10px',
-                      borderLeft: '3px solid var(--color-community-accent)',
+                      borderRadius: '12px',
                     }}>
                       {item.content}
                     </p>
@@ -535,8 +567,8 @@ export default function RoomPage() {
                   width: '100%',
                   padding: '13px',
                   background: 'none',
-                  border: '1px solid #FECACA',
-                  borderRadius: '12px',
+                  border: '1px solid #F3C9C4',
+                  borderRadius: '13px',
                   fontSize: '14px',
                   color: 'var(--color-danger)',
                   cursor: 'pointer',
@@ -545,6 +577,7 @@ export default function RoomPage() {
                   justifyContent: 'center',
                   gap: '7px',
                   marginTop: '8px',
+                  fontWeight: 600,
                 }}
               >
                 <LogOut size={15} />
@@ -573,34 +606,44 @@ export default function RoomPage() {
                         style={{
                           width: '100%',
                           background: 'var(--color-bg-card)',
-                          borderRadius: isExpanded ? '16px 16px 0 0' : '16px',
-                          padding: '16px',
+                          borderRadius: isExpanded ? '18px 18px 0 0' : '18px',
+                          padding: '17px',
                           border: isFirst ? '2px solid var(--color-community-accent)' : '1px solid var(--color-border)',
+                          boxShadow: '0 4px 16px rgba(65,36,2,0.05)',
                           cursor: 'pointer',
                           textAlign: 'left',
                         }}
                       >
                         {isFirst && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                            <Trophy size={14} color="var(--color-community-accent)" />
-                            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-community-accent)' }}>1위</span>
+                          <div style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '11px',
+                            background: 'linear-gradient(135deg,#FBE6BE,#F4C876)', padding: '4px 11px', borderRadius: '999px',
+                          }}>
+                            <Trophy size={13} color="#8A5A0C" />
+                            <span style={{ fontSize: '11.5px', fontWeight: 800, color: '#8A5A0C' }}>1위</span>
                           </div>
                         )}
                         <p style={{
-                          fontSize: '15px',
+                          fontSize: '15.5px',
                           color: 'var(--color-text-primary)',
-                          fontWeight: 600,
+                          fontWeight: 700,
                           marginBottom: '12px',
                           lineHeight: 1.5,
                         }}>
                           {challenge.content}
                         </p>
-                        <div style={{ display: 'flex', gap: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                           <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
                             참여 {challenge.participants.length}명
                           </span>
-                          <span style={{ fontSize: '12px', color: 'var(--color-community-text)', fontWeight: 600 }}>
+                          <span style={{ fontSize: '12px', color: 'var(--color-community-text)', fontWeight: 700 }}>
                             총 {days}일 외침
+                          </span>
+                          <span style={{
+                            marginLeft: 'auto', fontSize: '16px', color: '#C9B99A',
+                            transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s',
+                          }}>
+                            ⌄
                           </span>
                         </div>
                       </button>
@@ -608,7 +651,7 @@ export default function RoomPage() {
                       {isExpanded && (
                         <div style={{
                           background: 'var(--color-bg-card)',
-                          borderRadius: '0 0 16px 16px',
+                          borderRadius: '0 0 18px 18px',
                           padding: '12px 16px 16px',
                           border: '1px solid var(--color-border)',
                           borderTop: 'none',
@@ -697,13 +740,14 @@ export default function RoomPage() {
           <div style={{
             position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', zIndex: 50,
             background: 'var(--color-bg-primary)',
-            borderRadius: '20px 20px 0 0',
+            borderRadius: '24px 24px 0 0',
             padding: '20px 16px 40px',
             maxHeight: '70vh',
             overflowY: 'auto',
           }}>
+            <div style={{ width: '40px', height: '4px', borderRadius: '2px', background: 'var(--color-border)', margin: '0 auto 16px' }} />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-primary)' }}>
                 내 성공의 말 공유하기
               </h3>
               <button onClick={() => setShowShareSheet(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}>
@@ -788,12 +832,17 @@ export default function RoomPage() {
           <div style={{
             position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', zIndex: 50,
             background: 'var(--color-bg-primary)',
-            borderRadius: '20px 20px 0 0',
-            padding: '28px 16px 40px',
+            borderRadius: '24px 24px 0 0',
+            padding: '28px 16px 30px',
           }}>
-            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <Trash2 size={40} color="var(--color-danger)" style={{ marginBottom: '12px' }} />
-              <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '8px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '22px' }}>
+              <div style={{
+                width: '56px', height: '56px', borderRadius: '50%', background: '#FBEAE8',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px',
+              }}>
+                <Trash2 size={26} color="var(--color-danger)" />
+              </div>
+              <h3 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--color-text-primary)', marginBottom: '8px' }}>
                 방을 지울까요?
               </h3>
               <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
@@ -836,9 +885,9 @@ export default function RoomPage() {
       {toast && (
         <div style={{
           position: 'fixed', bottom: '80px', left: '50%', transform: 'translateX(-50%)',
-          background: 'var(--color-accent-primary)', color: 'white',
-          padding: '10px 20px', borderRadius: '999px',
-          fontSize: '13px', fontWeight: 500,
+          background: 'var(--color-text-primary)', color: 'white',
+          padding: '11px 20px', borderRadius: '999px',
+          fontSize: '13px', fontWeight: 600,
           zIndex: 100, whiteSpace: 'nowrap',
           pointerEvents: 'none',
         }}>
