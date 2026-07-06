@@ -136,18 +136,18 @@ const MAX_MEMBERS = 20
 
 const MOCK_ROOMS = [
   // totalDays는 랭킹 탭 '방 랭킹 · 전체' 기간의 총 외침일수와 동일한 값을 사용(같은 방이면 어디서든 같은 숫자)
-  { id: 'r1', name: '아침 확언 클럽', desc: '매일 아침 확언으로 하루를 시작해요', tags: ['아침 확언'], members: 19, totalDays: 876, praiseCount: 84, todayCount: 8 },
-  { id: 'r2', name: '취업 성공 방', desc: '취업 목표를 가진 분들과 함께해요', tags: ['취업준비'], members: 18, totalDays: 532, praiseCount: 41, todayCount: 5 },
-  { id: 'r3', name: '자존감 키우기', desc: '나를 사랑하는 연습', tags: ['자존감'], members: 20, totalDays: 1240, praiseCount: 132, todayCount: 11 },
-  { id: 'r4', name: '다이어트 확언단', desc: '건강한 몸을 향한 긍정 확언 모임', tags: ['다이어트'], members: 15, totalDays: 245, praiseCount: 23, todayCount: 3 },
+  { id: 'r1', name: '아침 확언 클럽', desc: '매일 아침 확언으로 하루를 시작해요', tags: ['아침 확언'], members: 19, totalDays: 876, praiseCount: 84, todayCount: 8, createdAtMs: Date.now() - 20 * 24 * 60 * 60 * 1000 },
+  { id: 'r2', name: '취업 성공 방', desc: '취업 목표를 가진 분들과 함께해요', tags: ['취업준비'], members: 18, totalDays: 532, praiseCount: 41, todayCount: 5, createdAtMs: Date.now() - 60 * 24 * 60 * 60 * 1000 },
+  { id: 'r3', name: '자존감 키우기', desc: '나를 사랑하는 연습', tags: ['자존감'], members: 20, totalDays: 1240, praiseCount: 132, todayCount: 11, createdAtMs: Date.now() - 5 * 24 * 60 * 60 * 1000 },
+  { id: 'r4', name: '다이어트 확언단', desc: '건강한 몸을 향한 긍정 확언 모임', tags: ['다이어트'], members: 15, totalDays: 245, praiseCount: 23, todayCount: 3, createdAtMs: Date.now() - 90 * 24 * 60 * 60 * 1000 },
 ]
 
 type Room = typeof MOCK_ROOMS[number]
 const CUSTOM_ROOMS_KEY = 'ealo-custom-rooms'
 const DEFAULT_MY_ROOMS = ['r1', 'r3']
 
-type RoomSort = '외침 많음' | '외침 적음' | '칭찬 많음' | '칭찬 적음' | '이름'
-const ROOM_SORTS: RoomSort[] = ['외침 많음', '외침 적음', '칭찬 많음', '칭찬 적음', '이름']
+type RoomSort = '외침 많음' | '외침 적음' | '칭찬 많음' | '칭찬 적음' | '이름' | '날짜(최신)'
+const ROOM_SORTS: RoomSort[] = ['외침 많음', '외침 적음', '칭찬 많음', '칭찬 적음', '이름', '날짜(최신)']
 
 async function checkField(
   text: string,
@@ -356,6 +356,7 @@ export default function CommunityPage() {
         case '칭찬 많음': return b.praiseCount - a.praiseCount
         case '칭찬 적음': return a.praiseCount - b.praiseCount
         case '이름': return a.name.localeCompare(b.name, 'ko')
+        case '날짜(최신)': return b.createdAtMs - a.createdAtMs
       }
     })
 
@@ -414,6 +415,7 @@ export default function CommunityPage() {
       totalDays: 0,
       praiseCount: 0,
       todayCount: 0,
+      createdAtMs: Date.now(),
     }
     const updatedCustom = [...customRooms, newRoom]
     setCustomRooms(updatedCustom)
@@ -680,8 +682,13 @@ export default function CommunityPage() {
                       }}
                     >
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '4px' }}>
-                          {room.name}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+                            {room.name}
+                          </span>
+                          <span style={{ fontSize: '11px', color: 'var(--color-success-mid)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <CheckCircle size={13} color="#43A047" /> 오늘 전체 {room.todayCount}개
+                          </span>
                         </div>
                         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '4px' }}>
                           <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '3px' }}>
@@ -690,9 +697,12 @@ export default function CommunityPage() {
                           <span style={{ fontSize: '12px', color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 500 }}>
                             총 {room.totalDays}일 외침 <Flame size={13} color="#FF6F00" style={{ display: 'inline', verticalAlign: 'middle' }} />
                           </span>
+                          <span style={{ fontSize: '12px', color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            칭찬 {room.praiseCount} <Heart size={12} color="#E53935" style={{ display: 'inline', verticalAlign: 'middle' }} />
+                          </span>
                         </div>
-                        <div style={{ fontSize: '11px', color: 'var(--color-success-mid)', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                          <CheckCircle size={13} color="#43A047" /> 오늘 전체 {room.todayCount}개, 나는 {myTodayCount}개 인증
+                        <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                          나는 {myTodayCount}개 인증
                         </div>
                       </div>
                       <ChevronRight size={18} color="var(--color-text-muted)" style={{ flexShrink: 0 }} />
@@ -734,59 +744,61 @@ export default function CommunityPage() {
                             </div>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'nowrap', overflowX: 'auto', marginBottom: '12px' }}>
-                          <span style={{ flexShrink: 0, fontSize: '12px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <Users size={13} color="var(--color-text-muted)" /> {room.members}/{MAX_MEMBERS}명
-                          </span>
-                          <span style={{ flexShrink: 0, fontSize: '12px', color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                            총 {room.totalDays}일 외침 <Flame size={13} color="#FF6F00" style={{ display: 'inline', verticalAlign: 'middle' }} />
-                          </span>
-                          <span style={{ flexShrink: 0, fontSize: '12px', color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                            칭찬 {room.praiseCount} <Heart size={12} color="#E53935" style={{ display: 'inline', verticalAlign: 'middle' }} />
-                          </span>
-                          {isFull && (
-                            <span style={{ flexShrink: 0, fontSize: '12px', color: 'var(--color-danger)', background: 'var(--color-danger-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 600 }}>
-                              마감
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ flex: 1, minWidth: 0, display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'nowrap', overflowX: 'auto' }}>
+                            <span style={{ flexShrink: 0, fontSize: '12px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Users size={13} color="var(--color-text-muted)" /> {room.members}/{MAX_MEMBERS}명
                             </span>
-                          )}
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {/* 둘러보기 — 항상 표시 */}
-                          <button
-                            onClick={() => goToRoom(room.id)}
-                            style={{
-                              width: '100%',
-                              padding: '9px 13px',
-                              background: 'var(--color-bg-card)',
-                              color: 'var(--color-text-secondary)',
-                              border: '1px solid var(--color-border)',
-                              borderRadius: '10px',
-                              fontSize: '13px',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                            }}
-                          >
-                            둘러보기
-                          </button>
-                          {/* 참여하기 — 마감이 아닐 때만 */}
-                          {!isFull && (
+                            <span style={{ flexShrink: 0, fontSize: '12px', color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                              총 {room.totalDays}일 외침 <Flame size={13} color="#FF6F00" style={{ display: 'inline', verticalAlign: 'middle' }} />
+                            </span>
+                            <span style={{ flexShrink: 0, fontSize: '12px', color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                              칭찬 {room.praiseCount} <Heart size={12} color="#E53935" style={{ display: 'inline', verticalAlign: 'middle' }} />
+                            </span>
+                            {isFull && (
+                              <span style={{ flexShrink: 0, fontSize: '12px', color: 'var(--color-danger)', background: 'var(--color-danger-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 600 }}>
+                                마감
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
+                            {/* 둘러보기 — 항상 표시 */}
                             <button
-                              onClick={() => handleJoin(room.id)}
+                              onClick={() => goToRoom(room.id)}
                               style={{
-                                width: '100%',
-                                padding: '9px 13px',
-                                background: 'var(--color-community-accent)',
-                                color: 'white',
-                                border: 'none',
+                                padding: '7px 13px',
+                                background: 'var(--color-bg-card)',
+                                color: 'var(--color-text-secondary)',
+                                border: '1px solid var(--color-border)',
                                 borderRadius: '10px',
                                 fontSize: '13px',
                                 fontWeight: 600,
                                 cursor: 'pointer',
+                                whiteSpace: 'nowrap',
                               }}
                             >
-                              참여하기
+                              둘러보기
                             </button>
-                          )}
+                            {/* 참여하기 — 마감이 아닐 때만 */}
+                            {!isFull && (
+                              <button
+                                onClick={() => handleJoin(room.id)}
+                                style={{
+                                  padding: '7px 13px',
+                                  background: 'var(--color-community-accent)',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '10px',
+                                  fontSize: '13px',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                참여하기
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )
