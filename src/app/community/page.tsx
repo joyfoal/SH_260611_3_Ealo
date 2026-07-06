@@ -6,6 +6,7 @@ import { AppLayout } from '@/components/ui/AppLayout'
 import { Users, Plus, ChevronRight, CheckCircle, Search, X, UserCircle, Camera, Home, MessageCircle, Lightbulb, Ban, Loader2, User, Flame, BookmarkPlus, Check, Heart, Lock, LogIn } from 'lucide-react'
 import { getDayRecord, todayStr, getAffirmations, saveAffirmation } from '@/lib/storage'
 import { generateFallbackNickname } from '@/lib/nicknameWords'
+import { isDevModeEnabled } from '@/lib/devMode'
 
 const T = {
   ink: 'var(--color-text-primary)',
@@ -210,7 +211,7 @@ export default function CommunityPage() {
   const [suggestingNickname, setSuggestingNickname] = useState(false)
 
   // 로그인 (시뮬레이션)
-  const isLoggedIn = !!userProfile.googleEmail
+  const isLoggedIn = !!userProfile.googleEmail || isDevModeEnabled()
   const [showLoginSheet, setShowLoginSheet] = useState(false)
   const [loginEmail, setLoginEmail] = useState('')
   const [loginError, setLoginError] = useState('')
@@ -687,7 +688,7 @@ export default function CommunityPage() {
                             {room.name}
                           </span>
                           <span style={{ fontSize: '11px', color: 'var(--color-success-mid)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                            <CheckCircle size={13} color="#43A047" /> 오늘 전체 {room.todayCount}개
+                            <CheckCircle size={13} color="#43A047" /> 오늘 전체 {room.todayCount}개, 나는 {myTodayCount}개 인증
                           </span>
                         </div>
                         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '4px' }}>
@@ -700,9 +701,6 @@ export default function CommunityPage() {
                           <span style={{ fontSize: '12px', color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                             칭찬 {room.praiseCount} <Heart size={12} color="#E53935" style={{ display: 'inline', verticalAlign: 'middle' }} />
                           </span>
-                        </div>
-                        <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                          나는 {myTodayCount}개 인증
                         </div>
                       </div>
                       <ChevronRight size={18} color="var(--color-text-muted)" style={{ flexShrink: 0 }} />
@@ -734,7 +732,7 @@ export default function CommunityPage() {
                           border: '1px solid var(--color-border)',
                         }}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', gap: '8px' }}>
                           <div style={{ minWidth: 0, flex: 1 }}>
                             <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '4px' }}>
                               {room.name}
@@ -743,30 +741,12 @@ export default function CommunityPage() {
                               {room.desc}
                             </div>
                           </div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <div style={{ flex: 1, minWidth: 0, display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'nowrap', overflowX: 'auto' }}>
-                            <span style={{ flexShrink: 0, fontSize: '12px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <Users size={13} color="var(--color-text-muted)" /> {room.members}/{MAX_MEMBERS}명
-                            </span>
-                            <span style={{ flexShrink: 0, fontSize: '12px', color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                              총 {room.totalDays}일 외침 <Flame size={13} color="#FF6F00" style={{ display: 'inline', verticalAlign: 'middle' }} />
-                            </span>
-                            <span style={{ flexShrink: 0, fontSize: '12px', color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                              칭찬 {room.praiseCount} <Heart size={12} color="#E53935" style={{ display: 'inline', verticalAlign: 'middle' }} />
-                            </span>
-                            {isFull && (
-                              <span style={{ flexShrink: 0, fontSize: '12px', color: 'var(--color-danger)', background: 'var(--color-danger-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 600 }}>
-                                마감
-                              </span>
-                            )}
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
                             {/* 둘러보기 — 항상 표시 */}
                             <button
                               onClick={() => goToRoom(room.id)}
                               style={{
-                                padding: '7px 13px',
+                                padding: '5px 12px',
                                 background: 'var(--color-bg-card)',
                                 color: 'var(--color-text-secondary)',
                                 border: '1px solid var(--color-border)',
@@ -784,7 +764,7 @@ export default function CommunityPage() {
                               <button
                                 onClick={() => handleJoin(room.id)}
                                 style={{
-                                  padding: '7px 13px',
+                                  padding: '5px 12px',
                                   background: 'var(--color-community-accent)',
                                   color: 'white',
                                   border: 'none',
@@ -799,6 +779,22 @@ export default function CommunityPage() {
                               </button>
                             )}
                           </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'nowrap', overflowX: 'auto' }}>
+                          <span style={{ flexShrink: 0, fontSize: '12px', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <Users size={13} color="var(--color-text-muted)" /> {room.members}/{MAX_MEMBERS}명
+                          </span>
+                          <span style={{ flexShrink: 0, fontSize: '12px', color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            총 {room.totalDays}일 외침 <Flame size={13} color="#FF6F00" style={{ display: 'inline', verticalAlign: 'middle' }} />
+                          </span>
+                          <span style={{ flexShrink: 0, fontSize: '12px', color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            칭찬 {room.praiseCount} <Heart size={12} color="#E53935" style={{ display: 'inline', verticalAlign: 'middle' }} />
+                          </span>
+                          {isFull && (
+                            <span style={{ flexShrink: 0, fontSize: '12px', color: 'var(--color-danger)', background: 'var(--color-danger-bg)', padding: '2px 8px', borderRadius: '999px', fontWeight: 600 }}>
+                              마감
+                            </span>
+                          )}
                         </div>
                       </div>
                     )

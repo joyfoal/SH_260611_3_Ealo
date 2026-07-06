@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { AppLayout } from '@/components/ui/AppLayout'
 import { ChevronLeft, Trophy, BookmarkPlus, Share2, X, Check, LogOut, Heart, ThumbsUp, Flame, Dumbbell, Sparkles, Star, HeartHandshake, PartyPopper, CheckCircle2, Zap, Leaf, Rainbow, MessageCircle, Trash2, Info, type LucideIcon } from 'lucide-react'
 import { getAffirmations, saveAffirmation, type Affirmation } from '@/lib/storage'
+import { isDevModeEnabled } from '@/lib/devMode'
 
 type RoomTab = '성공의 말 나누기' | '함께 도전'
 
@@ -207,7 +208,7 @@ export default function RoomPage() {
     } catch {}
     return { nickname: '', profileImage: null }
   })
-  const isLoggedIn = !!userProfile.googleEmail
+  const isLoggedIn = !!userProfile.googleEmail || isDevModeEnabled()
 
   // 공유하기
   const [showShareSheet, setShowShareSheet] = useState(false)

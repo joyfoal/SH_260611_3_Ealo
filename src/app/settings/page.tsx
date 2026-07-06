@@ -24,7 +24,8 @@ import {
 } from '@/lib/audioStorage'
 import { clearFaceStorage, getFaceProfileFromTrash, restoreFaceProfileFromTrash, type FaceProfile } from '@/lib/faceStorage'
 import { clearSuccessImages, getSuccessImageFromTrash, restoreSuccessImageFromTrash, type SuccessImageRecord } from '@/lib/successImageStorage'
-import { Pencil, Trash2, Check, X, Plus, Bell, Download, GripVertical, Palette, Power, BarChart3, Search, UploadCloud, RotateCcw, Folder, BookOpen, ChevronDown, Ban, Mic, User, ImageIcon, Star, AlertTriangle, ExternalLink } from 'lucide-react'
+import { isDevModeEnabled, disableDevMode } from '@/lib/devMode'
+import { Pencil, Trash2, Check, X, Plus, Bell, Download, GripVertical, Palette, Power, BarChart3, Search, UploadCloud, RotateCcw, Folder, BookOpen, ChevronDown, Ban, Mic, User, ImageIcon, Star, AlertTriangle, ExternalLink, Wrench } from 'lucide-react'
 import { WeeklyReportModal } from '@/components/ui/WeeklyReportModal'
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -1574,6 +1575,99 @@ function ManualPanel() {
   )
 }
 
+// ─── 개발자 모드 패널 ────────────────────────────────────────────────────────────
+function DevPanel() {
+  const [aiStatus, setAiStatus] = useState<'checking' | 'available' | 'unavailable'>('checking')
+  const [msg, setMsg] = useState('')
+
+  const showMsg = (text: string) => { setMsg(text); setTimeout(() => setMsg(''), 3000) }
+
+  useEffect(() => {
+    fetch('/api/dev/ai-status')
+      .then((r) => r.json() as Promise<{ available: boolean }>)
+      .then((d) => setAiStatus(d.available ? 'available' : 'unavailable'))
+      .catch(() => setAiStatus('unavailable'))
+  }, [])
+
+  const handleResetOnboarding = () => {
+    if (!confirm('온보딩을 다시 볼까요? (온보딩 완료 기록만 초기화돼요)')) return
+    try { localStorage.removeItem('ealo-onboarded') } catch {}
+    window.location.href = '/'
+  }
+
+  const handleResetCommunityLogin = () => {
+    if (!confirm('함께 로그인 상태를 초기화할까요?')) return
+    try {
+      const saved = localStorage.getItem('ealo-user-profile')
+      if (saved) {
+        const profile = JSON.parse(saved) as Record<string, unknown>
+        delete profile.googleEmail
+        localStorage.setItem('ealo-user-profile', JSON.stringify(profile))
+      }
+    } catch {}
+    showMsg('함께 로그인 상태가 초기화됐어요.')
+  }
+
+  const handleResetEverything = async () => {
+    if (!confirm('앱의 모든 데이터(커뮤니티 포함)를 초기화할까요?\n이 작업은 되돌릴 수 없습니다.')) return
+    clearAllData()
+    try {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith('ealo-room-') || ['ealo-user-profile', 'ealo-my-rooms', 'ealo-custom-rooms'].includes(k))
+        .forEach((k) => localStorage.removeItem(k))
+    } catch {}
+    await Promise.all([
+      clearAllAudioRecords().catch(() => {}),
+      clearFaceStorage().catch(() => {}),
+      clearSuccessImages().catch(() => {}),
+    ])
+    window.location.href = '/'
+  }
+
+  const handleDisableDevMode = () => {
+    disableDevMode()
+    window.dispatchEvent(new Event('ealo-dev-mode-changed'))
+    window.location.reload()
+  }
+
+  const btnStyle = (color: string, bg: string, border?: string): React.CSSProperties => ({
+    width: '100%', padding: '14px', background: bg, color, border: border ?? 'none',
+    borderRadius: '12px', fontSize: '14px', fontWeight: 500, cursor: 'pointer', textAlign: 'left',
+  })
+
+  return (
+    <Panel>
+      <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '16px' }}>개발자 모드</p>
+
+      {msg && (
+        <div style={{ padding: '10px 14px', background: 'var(--color-success-bg)', borderRadius: '10px', marginBottom: '14px', fontSize: '13px', color: 'var(--color-success)' }}>
+          {msg}
+        </div>
+      )}
+
+      <div style={{ padding: '14px', background: 'var(--color-bg-primary)', borderRadius: '12px', border: '1px solid var(--color-border)', marginBottom: '10px', fontSize: '13px', color: 'var(--color-text-secondary)' }}>
+        AI 연동:{' '}
+        {aiStatus === 'checking' ? '확인 중...' : aiStatus === 'available' ? '사용 가능 ✅' : '사용 불가 (API 키 없음) ⚠️'}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <button onClick={handleResetOnboarding} style={btnStyle('var(--color-text-primary)', 'var(--color-bg-primary)', '1px solid var(--color-border)')}>
+          온보딩 다시 보기
+        </button>
+        <button onClick={handleResetCommunityLogin} style={btnStyle('var(--color-text-primary)', 'var(--color-bg-primary)', '1px solid var(--color-border)')}>
+          함께 로그인 초기화
+        </button>
+        <button onClick={handleResetEverything} style={btnStyle('var(--color-danger)', 'var(--color-danger-bg)')}>
+          전체 데이터 초기화 (커뮤니티 포함)
+        </button>
+        <button onClick={handleDisableDevMode} style={btnStyle('var(--color-text-muted)', 'var(--color-bg-primary)', '1px solid var(--color-border)')}>
+          개발자 모드 끄기
+        </button>
+      </div>
+    </Panel>
+  )
+}
+
 // ─── Main Settings Page ────────────────────────────────────────────────────────
 type LucideIcon = React.ComponentType<{ size?: number; strokeWidth?: number; color?: string }>
 const BUTTONS: { id: string; icon: LucideIcon; label: string; danger?: boolean }[] = [
@@ -1601,6 +1695,7 @@ function renderPanel(id: string) {
     case 'trash':    return <TrashPanel />
     case 'category': return <CategoryPanel />
     case 'manual':   return <ManualPanel />
+    case 'dev':      return <DevPanel />
     default:         return null
   }
 }
@@ -1608,12 +1703,19 @@ function renderPanel(id: string) {
 export default function SettingsPage() {
   const [active, setActive] = useState<string | null>(null)
   const [motto, setMotto] = useState('')
+  const [devModeEnabled, setDevModeEnabled] = useState(() => isDevModeEnabled())
   useEffect(() => { setMotto(MOTTOS[Math.floor(Math.random() * MOTTOS.length)]) }, [])
+  useEffect(() => {
+    const onDevModeChange = () => setDevModeEnabled(isDevModeEnabled())
+    window.addEventListener('ealo-dev-mode-changed', onDevModeChange)
+    return () => window.removeEventListener('ealo-dev-mode-changed', onDevModeChange)
+  }, [])
   const toggle = (id: string) => setActive((prev) => prev === id ? null : id)
 
   const chipBg = 'color-mix(in srgb, var(--color-accent-light) 28%, var(--color-bg-card))'
+  const buttons = devModeEnabled ? [...BUTTONS, { id: 'dev', icon: Wrench, label: '개발자 모드' }] : BUTTONS
   const rows: typeof BUTTONS[] = []
-  for (let i = 0; i < BUTTONS.length; i += 2) rows.push(BUTTONS.slice(i, i + 2))
+  for (let i = 0; i < buttons.length; i += 2) rows.push(buttons.slice(i, i + 2))
 
   return (
     <AppLayout
