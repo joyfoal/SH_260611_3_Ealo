@@ -146,8 +146,8 @@ type Room = typeof MOCK_ROOMS[number]
 const CUSTOM_ROOMS_KEY = 'ealo-custom-rooms'
 const DEFAULT_MY_ROOMS = ['r1', 'r3']
 
-type RoomSort = '일이 많은 순' | '일이 적은 순' | '칭찬이 많은 순' | '칭찬이 적은 순' | '이름 순'
-const ROOM_SORTS: RoomSort[] = ['일이 많은 순', '일이 적은 순', '칭찬이 많은 순', '칭찬이 적은 순', '이름 순']
+type RoomSort = '외침 많음' | '외침 적음' | '칭찬 많음' | '칭찬 적음' | '이름'
+const ROOM_SORTS: RoomSort[] = ['외침 많음', '외침 적음', '칭찬 많음', '칭찬 적음', '이름']
 
 async function checkField(
   text: string,
@@ -178,7 +178,7 @@ export default function CommunityPage() {
   })
   const [selectedTag, setSelectedTag] = useState('전체')
   const [searchQuery, setSearchQuery] = useState('')
-  const [roomSortBy, setRoomSortBy] = useState<RoomSort>('일이 많은 순')
+  const [roomSortBy, setRoomSortBy] = useState<RoomSort>('외침 많음')
   const [myRooms, setMyRooms] = useState<string[]>(DEFAULT_MY_ROOMS)
   const [customRooms, setCustomRooms] = useState<Room[]>([])
   const [roomName, setRoomName] = useState('')
@@ -351,11 +351,11 @@ export default function CommunityPage() {
     })
     .sort((a, b) => {
       switch (roomSortBy) {
-        case '일이 많은 순': return b.totalDays - a.totalDays
-        case '일이 적은 순': return a.totalDays - b.totalDays
-        case '칭찬이 많은 순': return b.praiseCount - a.praiseCount
-        case '칭찬이 적은 순': return a.praiseCount - b.praiseCount
-        case '이름 순': return a.name.localeCompare(b.name, 'ko')
+        case '외침 많음': return b.totalDays - a.totalDays
+        case '외침 적음': return a.totalDays - b.totalDays
+        case '칭찬 많음': return b.praiseCount - a.praiseCount
+        case '칭찬 적음': return a.praiseCount - b.praiseCount
+        case '이름': return a.name.localeCompare(b.name, 'ko')
       }
     })
 
