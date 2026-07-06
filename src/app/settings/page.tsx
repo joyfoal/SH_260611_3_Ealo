@@ -1579,22 +1579,35 @@ function ManualPanel() {
 function DevPanel() {
   const [aiStatus, setAiStatus] = useState<'checking' | 'available' | 'unavailable'>('checking')
   const [msg, setMsg] = useState('')
-  const [featureFlags, setFeatureFlags] = useState(() => getHomeDisplaySettings())
+  const [featureFlags, setFeatureFlags] = useState({ showToggleMenu: true, showGame: true, showSuccessImageMaker: true, showRecentRecGlobal: true })
+  const [flagError, setFlagError] = useState('')
 
   const showMsg = (text: string) => { setMsg(text); setTimeout(() => setMsg(''), 3000) }
 
-  const toggleFeature = (key: 'showToggleMenu' | 'showGame' | 'showSuccessImageMaker' | 'showRecentRec') => {
+  const toggleFeature = async (key: 'showToggleMenu' | 'showGame' | 'showSuccessImageMaker' | 'showRecentRecGlobal') => {
     const val = !featureFlags[key]
-    setHomeDisplaySetting(key, val)
     setFeatureFlags((p) => ({ ...p, [key]: val }))
-    window.dispatchEvent(new Event('ealo-display-settings-changed'))
+    setFlagError('')
+    try {
+      const res = await fetch('/api/dev/feature-flags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value: val }),
+      })
+      const data = await res.json() as { ok: boolean; message?: string }
+      if (!data.ok) throw new Error(data.message || '저장 실패')
+      window.dispatchEvent(new Event('ealo-display-settings-changed'))
+    } catch (err) {
+      setFeatureFlags((p) => ({ ...p, [key]: !val }))
+      setFlagError(err instanceof Error ? err.message : '저장 실패')
+    }
   }
 
   const featureItems = [
     { key: 'showToggleMenu' as const, label: '켜기 / 끄기 메뉴 표시' },
     { key: 'showGame' as const, label: '게임하기 버튼 표시' },
     { key: 'showSuccessImageMaker' as const, label: '성공 이미지 만들기 버튼 표시' },
-    { key: 'showRecentRec' as const, label: '최근 녹음 표시' },
+    { key: 'showRecentRecGlobal' as const, label: '최근 녹음 표시 (전역)' },
   ]
 
   useEffect(() => {
@@ -1602,6 +1615,13 @@ function DevPanel() {
       .then((r) => r.json() as Promise<{ available: boolean }>)
       .then((d) => setAiStatus(d.available ? 'available' : 'unavailable'))
       .catch(() => setAiStatus('unavailable'))
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/dev/feature-flags')
+      .then((r) => r.json())
+      .then(setFeatureFlags)
+      .catch(() => {})
   }, [])
 
   const handleResetOnboarding = () => {
@@ -1665,7 +1685,12 @@ function DevPanel() {
         {aiStatus === 'checking' ? '확인 중...' : aiStatus === 'available' ? '사용 가능 ✅' : '사용 불가 (API 키 없음) ⚠️'}
       </div>
 
-      <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-primary)', margin: '18px 0 8px' }}>기능 노출 설정 (일반 모드에만 적용)</p>
+      <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-primary)', margin: '18px 0 8px' }}>기능 노출 설정 (일반 모드에만 적용, 모든 기기에 전역 반영)</p>
+      {flagError && (
+        <div style={{ padding: '10px 14px', background: 'var(--color-danger-bg)', borderRadius: '10px', marginBottom: '10px', fontSize: '12px', color: 'var(--color-danger-dark)' }}>
+          {flagError}
+        </div>
+      )}
       <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '10px' }}>
         {featureItems.map(({ key, label }) => (
           <div
@@ -1739,7 +1764,13 @@ export default function SettingsPage() {
   const [motto, setMotto] = useState('')
   const [devModeEnabled, setDevModeEnabled] = useState(() => isDevModeEnabled())
   const [showToggleMenu, setShowToggleMenu] = useState(true)
-  useEffect(() => { setShowToggleMenu(getHomeDisplaySettings().showToggleMenu) }, [])
+  const fetchShowToggleMenu = () => {
+    fetch('/api/dev/feature-flags')
+      .then((r) => r.json() as Promise<{ showToggleMenu: boolean }>)
+      .then((d) => setShowToggleMenu(d.showToggleMenu))
+      .catch(() => {})
+  }
+  useEffect(fetchShowToggleMenu, [])
   useEffect(() => { setMotto(MOTTOS[Math.floor(Math.random() * MOTTOS.length)]) }, [])
   useEffect(() => {
     const onDevModeChange = () => setDevModeEnabled(isDevModeEnabled())
@@ -1747,9 +1778,8 @@ export default function SettingsPage() {
     return () => window.removeEventListener('ealo-dev-mode-changed', onDevModeChange)
   }, [])
   useEffect(() => {
-    const onDisplaySettingsChange = () => setShowToggleMenu(getHomeDisplaySettings().showToggleMenu)
-    window.addEventListener('ealo-display-settings-changed', onDisplaySettingsChange)
-    return () => window.removeEventListener('ealo-display-settings-changed', onDisplaySettingsChange)
+    window.addEventListener('ealo-display-settings-changed', fetchShowToggleMenu)
+    return () => window.removeEventListener('ealo-display-settings-changed', fetchShowToggleMenu)
   }, [])
   const toggle = (id: string) => setActive((prev) => prev === id ? null : id)
 

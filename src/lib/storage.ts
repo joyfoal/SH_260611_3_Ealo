@@ -69,9 +69,6 @@ const KEYS = {
   SHOW_RECENT_REC: 'ealo-show-recent-rec',
   SHOW_SUCCESS_IMG: 'ealo-show-success-img',
   SHOW_CALENDAR: 'ealo-show-calendar',
-  SHOW_GAME: 'ealo-show-game',
-  SHOW_SUCCESS_IMAGE_MAKER: 'ealo-show-success-image-maker',
-  SHOW_TOGGLE_MENU: 'ealo-show-toggle-menu',
   CAMERA_NOTICE_SHOWN_AT: 'ealo-camera-notice-shown-at',
 } as const
 
@@ -403,31 +400,22 @@ export function getHomeDisplaySettings(): {
   showRecentRec: boolean
   showSuccessImg: boolean
   showCalendar: boolean
-  showGame: boolean
-  showSuccessImageMaker: boolean
-  showToggleMenu: boolean
 } {
   return {
     showRecentRec: safeGet<boolean>(KEYS.SHOW_RECENT_REC, true),
     showSuccessImg: safeGet<boolean>(KEYS.SHOW_SUCCESS_IMG, true),
     showCalendar: safeGet<boolean>(KEYS.SHOW_CALENDAR, true),
-    showGame: safeGet<boolean>(KEYS.SHOW_GAME, true),
-    showSuccessImageMaker: safeGet<boolean>(KEYS.SHOW_SUCCESS_IMAGE_MAKER, true),
-    showToggleMenu: safeGet<boolean>(KEYS.SHOW_TOGGLE_MENU, true),
   }
 }
 
 export function setHomeDisplaySetting(
-  key: 'showRecentRec' | 'showSuccessImg' | 'showCalendar' | 'showGame' | 'showSuccessImageMaker' | 'showToggleMenu',
+  key: 'showRecentRec' | 'showSuccessImg' | 'showCalendar',
   val: boolean
 ): void {
   const map: Record<string, string> = {
     showRecentRec: KEYS.SHOW_RECENT_REC,
     showSuccessImg: KEYS.SHOW_SUCCESS_IMG,
     showCalendar: KEYS.SHOW_CALENDAR,
-    showGame: KEYS.SHOW_GAME,
-    showSuccessImageMaker: KEYS.SHOW_SUCCESS_IMAGE_MAKER,
-    showToggleMenu: KEYS.SHOW_TOGGLE_MENU,
   }
   safeSet(map[key], val)
 }
@@ -444,20 +432,10 @@ export function deleteDayRecord(date: string): void {
 }
 
 // Clear all data
-// 개발자 모드 기능 노출 플래그는 개발자만 제어하는 값이라 전체 초기화 대상에서 제외한다.
-const KEYS_PRESERVED_ON_RESET = new Set<string>([
-  KEYS.SHOW_GAME,
-  KEYS.SHOW_SUCCESS_IMAGE_MAKER,
-  KEYS.SHOW_RECENT_REC,
-  KEYS.SHOW_TOGGLE_MENU,
-])
-
 export function clearAllData(): void {
   if (typeof window === 'undefined') return
   try {
-    Object.values(KEYS).forEach((k) => {
-      if (!KEYS_PRESERVED_ON_RESET.has(k)) localStorage.removeItem(k)
-    })
+    Object.values(KEYS).forEach((k) => localStorage.removeItem(k))
   } catch {
     // ignore
   }

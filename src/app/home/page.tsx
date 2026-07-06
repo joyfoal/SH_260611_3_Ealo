@@ -491,7 +491,8 @@ export default function HomePage() {
   const [greeting, setGreeting] = useState<ReactElement | null>(null)
   const [tomorrowFallback, setTomorrowFallback] = useState('오늘도 잘 할 수 있어!')
   const [showWeeklyReport, setShowWeeklyReport] = useState(false)
-  const [displaySettings, setDisplaySettings] = useState({ showRecentRec: true, showSuccessImg: true, showCalendar: true, showGame: true, showSuccessImageMaker: true })
+  const [displaySettings, setDisplaySettings] = useState({ showRecentRec: true, showSuccessImg: true, showCalendar: true })
+  const [remoteFlags, setRemoteFlags] = useState({ showGame: true, showSuccessImageMaker: true, showRecentRecGlobal: true, showToggleMenu: true })
 
   useEffect(() => {
     setGreeting(getGreeting())
@@ -570,6 +571,7 @@ export default function HomePage() {
     loadData()
     deleteExpiredAudioRecords().catch(() => {})
     setDisplaySettings(getHomeDisplaySettings())
+    fetch('/api/dev/feature-flags').then((r) => r.json()).then(setRemoteFlags).catch(() => {})
     const onVisible = () => { if (document.visibilityState === 'visible') loadData() }
     document.addEventListener('visibilitychange', onVisible)
     return () => document.removeEventListener('visibilitychange', onVisible)
@@ -830,7 +832,7 @@ export default function HomePage() {
               textAlign: 'center',
               minHeight: '64px',
               fontFamily: 'inherit',
-              visibility: (displaySettings.showGame || isDevModeEnabled()) ? 'visible' : 'hidden',
+              visibility: (remoteFlags.showGame || isDevModeEnabled()) ? 'visible' : 'hidden',
             }}
           >
             <PuzzlePieceIcon style={{ width: 40, height: 40, color: T.gold }} />
@@ -883,7 +885,7 @@ export default function HomePage() {
               textAlign: 'center',
               minHeight: '64px',
               fontFamily: 'inherit',
-              visibility: (displaySettings.showSuccessImageMaker || isDevModeEnabled()) ? 'visible' : 'hidden',
+              visibility: (remoteFlags.showSuccessImageMaker || isDevModeEnabled()) ? 'visible' : 'hidden',
             }}
           >
             <PhotoIcon style={{ width: 40, height: 40, color: T.gold }} />
@@ -892,7 +894,7 @@ export default function HomePage() {
         </div>
 
         {/* Recent recording player */}
-        <div style={{ visibility: (displaySettings.showRecentRec || isDevModeEnabled()) ? 'visible' : 'hidden' }}>
+        <div style={{ visibility: ((displaySettings.showRecentRec && remoteFlags.showRecentRecGlobal) || isDevModeEnabled()) ? 'visible' : 'hidden' }}>
           <RecentRecordingPlayer />
         </div>
 
