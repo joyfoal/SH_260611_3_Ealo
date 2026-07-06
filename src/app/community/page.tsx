@@ -57,6 +57,11 @@ function resizeImageToBase64(file: File, maxPx = 200): Promise<string> {
   })
 }
 
+// 이메일 전체 대신 @ 앞 아이디만 표시
+function emailId(email: string): string {
+  return email.split('@')[0] || email
+}
+
 type CommunityTab = '내 방' | '방 둘러보기' | '랭킹'
 type RankingPeriod = '전체' | '연' | '월' | '일'
 
@@ -465,7 +470,7 @@ export default function CommunityPage() {
                     )}
                     {userProfile.googleEmail && (
                       <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 400, lineHeight: 1.2 }}>
-                        {userProfile.googleEmail}
+                        {emailId(userProfile.googleEmail)}
                       </span>
                     )}
                   </div>
@@ -1193,7 +1198,7 @@ export default function CommunityPage() {
               />
               {userProfile.googleEmail && (
                 <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '6px' }}>
-                  Google 계정: <span style={{ color: 'var(--color-text-primary)' }}>{userProfile.googleEmail}</span>
+                  Google 계정: <span style={{ color: 'var(--color-text-primary)' }}>{emailId(userProfile.googleEmail)}</span>
                 </p>
               )}
               {nicknameBanner && (

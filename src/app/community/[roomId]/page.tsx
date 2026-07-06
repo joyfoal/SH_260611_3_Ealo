@@ -22,6 +22,7 @@ interface FeedItem {
   id: string
   nickname: string
   initial: string
+  emailId: string
   profileImage?: string | null
   content: string
   daysCount: number
@@ -44,8 +45,8 @@ interface Challenge {
 
 type JoinedEntry = { content: string; participant: Participant }
 
-type FeedSort = '일이 많은 순' | '일이 적은 순' | '칭찬이 많은 순' | '칭찬이 적은 순' | '이름 순'
-const FEED_SORTS: FeedSort[] = ['일이 많은 순', '일이 적은 순', '칭찬이 많은 순', '칭찬이 적은 순', '이름 순']
+type FeedSort = '외침 많음' | '외침 적음' | '칭찬 많음' | '칭찬 적음' | '이름'
+const FEED_SORTS: FeedSort[] = ['외침 많음', '외침 적음', '칭찬 많음', '칭찬 적음', '이름']
 
 interface UserProfile {
   nickname: string
@@ -56,9 +57,9 @@ interface UserProfile {
 const ZERO_REACTIONS: Reactions = { '😍': 0, '👏': 0, '🔥': 0, '💪': 0, '✨': 0, '🌟': 0, '💛': 0, '🙌': 0, '💯': 0, '💫': 0, '🌿': 0, '🌈': 0 }
 
 const MOCK_FEED: FeedItem[] = [
-  { id: 'f1', nickname: '햇살이', initial: '햇', content: '나는 오늘도 최선을 다하고 있다', daysCount: 23, reactions: { ...ZERO_REACTIONS, '😍': 4, '👏': 2, '🔥': 1, '🙌': 3 }, createdAt: '2시간 전' },
-  { id: 'f2', nickname: '별빛나', initial: '별', content: '나는 매일 성장하고 있다', daysCount: 11, reactions: { ...ZERO_REACTIONS, '😍': 1, '👏': 3, '💛': 2, '✨': 1 }, createdAt: '5시간 전' },
-  { id: 'f3', nickname: '파란봄', initial: '파', content: '나는 나를 믿는다', daysCount: 8, reactions: { ...ZERO_REACTIONS, '💪': 1, '🌈': 2 }, createdAt: '어제' },
+  { id: 'f1', nickname: '햇살이', initial: '햇', emailId: 'sunshine_haet', content: '나는 오늘도 최선을 다하고 있다', daysCount: 23, reactions: { ...ZERO_REACTIONS, '😍': 4, '👏': 2, '🔥': 1, '🙌': 3 }, createdAt: '2시간 전' },
+  { id: 'f2', nickname: '별빛나', initial: '별', emailId: 'starlight_byeol', content: '나는 매일 성장하고 있다', daysCount: 11, reactions: { ...ZERO_REACTIONS, '😍': 1, '👏': 3, '💛': 2, '✨': 1 }, createdAt: '5시간 전' },
+  { id: 'f3', nickname: '파란봄', initial: '파', emailId: 'blue_spring_pa', content: '나는 나를 믿는다', daysCount: 8, reactions: { ...ZERO_REACTIONS, '💪': 1, '🌈': 2 }, createdAt: '어제' },
 ]
 
 const MOCK_CHALLENGE: Challenge[] = [
@@ -126,6 +127,11 @@ function totalDays(challenge: Challenge) {
   return challenge.participants.reduce((s, p) => s + p.daysCount, 0)
 }
 
+// 이메일 전체 대신 @ 앞 아이디만 표시
+function emailId(email: string): string {
+  return email.split('@')[0] || email
+}
+
 
 function Avatar({ nickname, initial, profileImage, size = 36, isMe = false }: {
   nickname: string; initial: string; profileImage?: string | null; size?: number; isMe?: boolean
@@ -168,7 +174,7 @@ export default function RoomPage() {
       return [...myItems, ...MOCK_FEED.filter(i => !myIds.has(i.id))]
     } catch { return MOCK_FEED }
   })
-  const [feedSortBy, setFeedSortBy] = useState<FeedSort>('일이 많은 순')
+  const [feedSortBy, setFeedSortBy] = useState<FeedSort>('외침 많음')
   const [challenges, setChallenges] = useState<Challenge[]>(() => {
     try {
       const saved = localStorage.getItem(`ealo-room-joined-${roomId}`)
@@ -275,6 +281,7 @@ export default function RoomPage() {
       id: `my-${aff.id}`,
       nickname: displayName,
       initial: displayName[0],
+      emailId: userProfile.googleEmail ? emailId(userProfile.googleEmail) : '',
       profileImage: userProfile.profileImage,
       content: aff.text,
       daysCount: aff.completedDates.length,
@@ -375,11 +382,11 @@ export default function RoomPage() {
 
   const sortedFeed = [...feed].sort((a, b) => {
     switch (feedSortBy) {
-      case '일이 많은 순': return b.daysCount - a.daysCount
-      case '일이 적은 순': return a.daysCount - b.daysCount
-      case '칭찬이 많은 순': return totalReactions(b.reactions) - totalReactions(a.reactions)
-      case '칭찬이 적은 순': return totalReactions(a.reactions) - totalReactions(b.reactions)
-      case '이름 순': return a.nickname.localeCompare(b.nickname, 'ko')
+      case '외침 많음': return b.daysCount - a.daysCount
+      case '외침 적음': return a.daysCount - b.daysCount
+      case '칭찬 많음': return totalReactions(b.reactions) - totalReactions(a.reactions)
+      case '칭찬 적음': return totalReactions(a.reactions) - totalReactions(b.reactions)
+      case '이름': return a.nickname.localeCompare(b.nickname, 'ko')
     }
   })
 
@@ -444,7 +451,7 @@ export default function RoomPage() {
                   )}
                   {userProfile.googleEmail && (
                     <span style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>
-                      {userProfile.googleEmail}
+                      {emailId(userProfile.googleEmail)}
                     </span>
                   )}
                 </div>
@@ -508,33 +515,31 @@ export default function RoomPage() {
                 {!isMember ? '방에 참여하면 공유할 수 있어요' : sharedIds.length >= 3 ? '최대 3개까지 공유할 수 있어요' : '나의 성공의 말 공유하기'}
               </button>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
-                <Info size={13} />
-                자유 댓글 없이 정해진 응원만 보낼 수 있어요
-              </div>
-
-              {/* 정렬 */}
-              <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', marginBottom: '14px', scrollbarWidth: 'none' }}>
-                {FEED_SORTS.map(s => (
-                  <button
-                    key={s}
-                    onClick={() => setFeedSortBy(s)}
-                    style={{
-                      flexShrink: 0,
-                      padding: '6px 12px',
-                      borderRadius: '999px',
-                      border: feedSortBy === s ? '1.5px solid var(--color-community-accent)' : '1px solid var(--color-border)',
-                      background: feedSortBy === s ? 'var(--color-community-bg)' : 'var(--color-bg-card)',
-                      color: feedSortBy === s ? 'var(--color-community-text)' : 'var(--color-text-muted)',
-                      fontSize: '12px',
-                      fontWeight: feedSortBy === s ? 600 : 400,
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {s}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--color-text-muted)', minWidth: 0 }}>
+                  <Info size={13} style={{ flexShrink: 0 }} />
+                  <span>자유 댓글 없이 정해진 응원만 보낼 수 있어요</span>
+                </div>
+                <select
+                  value={feedSortBy}
+                  onChange={e => setFeedSortBy(e.target.value as FeedSort)}
+                  style={{
+                    flexShrink: 0,
+                    padding: '5px 8px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--color-border)',
+                    background: 'var(--color-bg-card)',
+                    color: 'var(--color-text-secondary)',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    outline: 'none',
+                  }}
+                >
+                  {FEED_SORTS.map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '14px' }}>
@@ -550,7 +555,7 @@ export default function RoomPage() {
                     }}
                   >
                     {/* 작성자 */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '12px', flexWrap: 'wrap', rowGap: '8px' }}>
                       <Avatar
                         nickname={item.nickname}
                         initial={item.initial}
@@ -559,53 +564,58 @@ export default function RoomPage() {
                         isMe={item.isMe}
                       />
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                          {item.nickname}{item.isMe && ' (나)'}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                            {item.nickname}{item.isMe && ' (나)'}
+                          </span>
+                          {item.emailId && (
+                            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{item.emailId}</span>
+                          )}
+                          <span style={{
+                            fontSize: '11px', fontWeight: 600, whiteSpace: 'nowrap',
+                            color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '2px 9px', borderRadius: '999px',
+                          }}>
+                            {item.daysCount}일 외침
+                          </span>
                         </div>
-                        <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{item.createdAt}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px' }}>{item.createdAt}</div>
                       </div>
-                      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                        <span style={{
-                          fontSize: '11px', fontWeight: 600, whiteSpace: 'nowrap',
-                          color: 'var(--color-community-text)', background: 'var(--color-community-bg)', padding: '3px 10px', borderRadius: '999px',
-                        }}>
-                          {item.daysCount}일 외침
-                        </span>
-                        {!item.isMe && (
-                          <>
-                            <button
-                              onClick={() => handleImport(item.content)}
-                              disabled={importedContents.has(item.content)}
-                              title="내 성공의 말로 가져오기"
-                              style={{
-                                width: '26px', height: '26px', borderRadius: '50%', flexShrink: 0,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                background: importedContents.has(item.content) ? 'var(--color-success-bg-mint)' : 'var(--color-bg-card)',
-                                border: importedContents.has(item.content) ? '1px solid #6EE7B7' : '1px solid var(--color-border)',
-                                color: importedContents.has(item.content) ? 'var(--color-success-mid)' : 'var(--color-text-muted)',
-                                cursor: importedContents.has(item.content) ? 'default' : 'pointer',
-                              }}
-                            >
-                              {importedContents.has(item.content) ? <Check size={13} /> : <BookmarkPlus size={13} />}
-                            </button>
-                            <button
-                              onClick={() => handleJoinChallenge(item.content)}
-                              disabled={joinedChallenges.has(item.content)}
-                              title="함께 도전 참여하기"
-                              style={{
-                                width: '26px', height: '26px', borderRadius: '50%', flexShrink: 0,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                background: joinedChallenges.has(item.content) ? 'var(--color-community-accent)' : 'var(--color-community-bg)',
-                                border: `1px solid ${joinedChallenges.has(item.content) ? 'var(--color-community-accent-dark)' : 'var(--color-community-accent-mid)'}`,
-                                color: joinedChallenges.has(item.content) ? 'white' : 'var(--color-community-text)',
-                                cursor: joinedChallenges.has(item.content) ? 'default' : 'pointer',
-                              }}
-                            >
-                              {joinedChallenges.has(item.content) ? <Check size={13} /> : <Trophy size={13} />}
-                            </button>
-                          </>
-                        )}
-                      </div>
+                      {!item.isMe && (
+                        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                          <button
+                            onClick={() => handleImport(item.content)}
+                            disabled={importedContents.has(item.content)}
+                            style={{
+                              flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px',
+                              padding: '6px 10px', borderRadius: '10px',
+                              background: importedContents.has(item.content) ? 'var(--color-success-bg-mint)' : 'var(--color-bg-card)',
+                              border: importedContents.has(item.content) ? '1px solid #6EE7B7' : '1px solid var(--color-border)',
+                              color: importedContents.has(item.content) ? 'var(--color-success-mid)' : 'var(--color-text-muted)',
+                              fontSize: '12px', fontWeight: 500,
+                              cursor: importedContents.has(item.content) ? 'default' : 'pointer',
+                            }}
+                          >
+                            {importedContents.has(item.content) ? <Check size={13} /> : <BookmarkPlus size={13} />}
+                            {importedContents.has(item.content) ? '가져옴' : '가져오기'}
+                          </button>
+                          <button
+                            onClick={() => handleJoinChallenge(item.content)}
+                            disabled={joinedChallenges.has(item.content)}
+                            style={{
+                              flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px',
+                              padding: '6px 10px', borderRadius: '10px',
+                              background: joinedChallenges.has(item.content) ? 'var(--color-community-accent)' : 'var(--color-community-bg)',
+                              border: `1px solid ${joinedChallenges.has(item.content) ? 'var(--color-community-accent-dark)' : 'var(--color-community-accent-mid)'}`,
+                              color: joinedChallenges.has(item.content) ? 'white' : 'var(--color-community-text)',
+                              fontSize: '12px', fontWeight: 500,
+                              cursor: joinedChallenges.has(item.content) ? 'default' : 'pointer',
+                            }}
+                          >
+                            {joinedChallenges.has(item.content) ? <Check size={13} /> : <Trophy size={13} />}
+                            {joinedChallenges.has(item.content) ? '참여 중' : '함께 도전'}
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {/* 성공의 말 문구 */}
