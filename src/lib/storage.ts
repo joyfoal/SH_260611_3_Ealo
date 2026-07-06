@@ -444,10 +444,20 @@ export function deleteDayRecord(date: string): void {
 }
 
 // Clear all data
+// 개발자 모드 기능 노출 플래그는 개발자만 제어하는 값이라 전체 초기화 대상에서 제외한다.
+const KEYS_PRESERVED_ON_RESET = new Set<string>([
+  KEYS.SHOW_GAME,
+  KEYS.SHOW_SUCCESS_IMAGE_MAKER,
+  KEYS.SHOW_RECENT_REC,
+  KEYS.SHOW_TOGGLE_MENU,
+])
+
 export function clearAllData(): void {
   if (typeof window === 'undefined') return
   try {
-    Object.values(KEYS).forEach((k) => localStorage.removeItem(k))
+    Object.values(KEYS).forEach((k) => {
+      if (!KEYS_PRESERVED_ON_RESET.has(k)) localStorage.removeItem(k)
+    })
   } catch {
     // ignore
   }
