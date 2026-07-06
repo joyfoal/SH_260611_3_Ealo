@@ -193,8 +193,15 @@ export default function RoomPage() {
   })
   const [expandedChallenge, setExpandedChallenge] = useState<string | null>(null)
 
-  // 사용자 프로필
-  const [userProfile, setUserProfile] = useState<UserProfile>({ nickname: '', profileImage: null })
+  // 사용자 프로필 — 로그인 여부(구글 아이디 존재) 판단이 첫 렌더부터 필요해 지연 초기화 사용
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
+    try {
+      const saved = localStorage.getItem('ealo-user-profile')
+      if (saved) return JSON.parse(saved) as UserProfile
+    } catch {}
+    return { nickname: '', profileImage: null }
+  })
+  const isLoggedIn = !!userProfile.googleEmail
 
   // 공유하기
   const [showShareSheet, setShowShareSheet] = useState(false)
@@ -220,13 +227,10 @@ export default function RoomPage() {
   // 이 방의 참여 여부
   const [isMember, setIsMember] = useState(false)
 
-  // localStorage에서 프로필 불러오기
+  // 로그인 안 됐으면 목록 화면(로그인 게이트)으로
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('ealo-user-profile')
-      if (saved) setUserProfile(JSON.parse(saved) as UserProfile)
-    } catch {}
-  }, [])
+    if (!isLoggedIn) router.replace('/community')
+  }, [isLoggedIn, router])
 
   // 참여 여부 확인
   useEffect(() => {
@@ -391,6 +395,8 @@ export default function RoomPage() {
     boxShadow: activeTab === tab ? '0 2px 6px rgba(65,36,2,0.1)' : 'none',
     cursor: 'pointer',
   })
+
+  if (!isLoggedIn) return null
 
   return (
     <AppLayout activeTab="함께">

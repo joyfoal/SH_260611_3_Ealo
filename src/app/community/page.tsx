@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppLayout } from '@/components/ui/AppLayout'
-import { Users, Plus, ChevronRight, CheckCircle, Search, X, UserCircle, Camera, Home, MessageCircle, Lightbulb, Ban, Loader2, User, Flame, BookmarkPlus, Check, Heart } from 'lucide-react'
+import { Users, Plus, ChevronRight, CheckCircle, Search, X, UserCircle, Camera, Home, MessageCircle, Lightbulb, Ban, Loader2, User, Flame, BookmarkPlus, Check, Heart, Lock, LogIn } from 'lucide-react'
 import { getDayRecord, todayStr, getAffirmations, saveAffirmation } from '@/lib/storage'
+import { generateFallbackNickname } from '@/lib/nicknameWords'
 
 const T = {
   ink: 'var(--color-text-primary)',
@@ -145,7 +146,7 @@ const ROOM_SORTS: RoomSort[] = ['일이 많은 순', '일이 적은 순', '칭�
 async function checkField(
   text: string,
   setter: (v: NegBanner) => void,
-  context?: 'roomName' | 'general',
+  context?: 'roomName' | 'general' | 'nickname',
 ) {
   if (!text.trim()) return
   try {
@@ -187,12 +188,26 @@ export default function CommunityPage() {
   const [importedPhrases, setImportedPhrases] = useState<Set<string>>(new Set())
   const [toast, setToast] = useState('')
 
-  // 프로필
-  const [userProfile, setUserProfile] = useState<UserProfile>({ nickname: '', profileImage: null })
+  // 프로필 — 로그인 여부(구글 아이디 존재)를 첫 렌더부터 알아야 게이트가 깜빡이지 않아 지연 초기화 사용
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
+    try {
+      const saved = localStorage.getItem('ealo-user-profile')
+      if (saved) return JSON.parse(saved) as UserProfile
+    } catch {}
+    return { nickname: '', profileImage: null }
+  })
   const [showProfileSheet, setShowProfileSheet] = useState(false)
   const [editNickname, setEditNickname] = useState('')
   const [editImageData, setEditImageData] = useState<string | null>(null)
   const [profileSaving, setProfileSaving] = useState(false)
+  const [nicknameBanner, setNicknameBanner] = useState<NegBanner>(null)
+  const [suggestingNickname, setSuggestingNickname] = useState(false)
+
+  // 로그인 (시뮬레이션)
+  const isLoggedIn = !!userProfile.googleEmail
+  const [showLoginSheet, setShowLoginSheet] = useState(false)
+  const [loginEmail, setLoginEmail] = useState('')
+  const [loginError, setLoginError] = useState('')
 
   // localStorage에서 내 방 목록 + 커스텀 방 불러오기
   useEffect(() => {
@@ -203,14 +218,6 @@ export default function CommunityPage() {
     try {
       const saved = localStorage.getItem(CUSTOM_ROOMS_KEY)
       if (saved) setCustomRooms(JSON.parse(saved) as Room[])
-    } catch {}
-  }, [])
-
-  // localStorage에서 프로필 불러오기
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('ealo-user-profile')
-      if (saved) setUserProfile(JSON.parse(saved) as UserProfile)
     } catch {}
   }, [])
 
@@ -249,6 +256,7 @@ export default function CommunityPage() {
   const handleOpenProfile = () => {
     setEditNickname(userProfile.nickname)
     setEditImageData(userProfile.profileImage)
+    setNicknameBanner(null)
     setShowProfileSheet(true)
   }
 
@@ -262,17 +270,67 @@ export default function CommunityPage() {
     } catch {}
   }
 
-  const handleSaveProfile = () => {
+  const handleSuggestNickname = async () => {
+    setSuggestingNickname(true)
+    setNicknameBanner(null)
+    try {
+      const res = await fetch('/api/suggest-nickname', { method: 'POST' })
+      const data = await res.json() as { nickname: string }
+      setEditNickname(data.nickname || generateFallbackNickname())
+    } catch {
+      setEditNickname(generateFallbackNickname())
+    } finally {
+      setSuggestingNickname(false)
+    }
+  }
+
+  const handleSaveProfile = async () => {
+    if (profileSaving) return
     setProfileSaving(true)
+    setNicknameBanner(null)
+    const nickname = editNickname.trim() || generateFallbackNickname()
+
+    try {
+      const res = await fetch('/api/detect-negative', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: nickname, context: 'nickname' }),
+      })
+      const result = await res.json() as NegResult
+      if (result.isNegative) {
+        setNicknameBanner(result)
+        setProfileSaving(false)
+        return
+      }
+    } catch {}
+
     const profile: UserProfile = {
       ...userProfile,
-      nickname: editNickname.trim() || '나',
+      nickname,
       profileImage: editImageData,
     }
     try { localStorage.setItem('ealo-user-profile', JSON.stringify(profile)) } catch {}
     setUserProfile(profile)
     setProfileSaving(false)
     setShowProfileSheet(false)
+  }
+
+  const handleConfirmLogin = () => {
+    const email = loginEmail.trim()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setLoginError('올바른 이메일 형식으로 입력해주세요')
+      return
+    }
+    const profile: UserProfile = {
+      ...userProfile,
+      googleEmail: email,
+      nickname: userProfile.nickname || generateFallbackNickname(),
+    }
+    try { localStorage.setItem('ealo-user-profile', JSON.stringify(profile)) } catch {}
+    setUserProfile(profile)
+    setLoginEmail('')
+    setLoginError('')
+    setShowLoginSheet(false)
   }
 
   const allRooms = useMemo(() => [...MOCK_ROOMS, ...customRooms], [customRooms])
@@ -393,42 +451,46 @@ export default function CommunityPage() {
               함께
             </h1>
             {/* 프로필 버튼 */}
-            <button
-              onClick={handleOpenProfile}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '4px' }}
-            >
-              {(userProfile.nickname || userProfile.googleEmail) && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                  {userProfile.nickname && (
-                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
-                      {userProfile.nickname}
-                    </span>
-                  )}
-                  {userProfile.googleEmail && (
-                    <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 400, lineHeight: 1.2 }}>
-                      {userProfile.googleEmail}
-                    </span>
-                  )}
-                </div>
-              )}
-              {userProfile.profileImage ? (
-                <div style={{ padding: '2px', borderRadius: '50%', background: T.goldGrad, flexShrink: 0 }}>
-                  <img
-                    src={userProfile.profileImage}
-                    alt="프로필"
-                    style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', display: 'block' }}
-                  />
-                </div>
-              ) : (
-                <UserCircle size={30} color={userProfile.nickname ? 'var(--color-community-accent)' : 'var(--color-text-muted)'} style={{ flexShrink: 0 }} />
-              )}
-            </button>
+            {isLoggedIn && (
+              <button
+                onClick={handleOpenProfile}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '4px' }}
+              >
+                {(userProfile.nickname || userProfile.googleEmail) && (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                    {userProfile.nickname && (
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
+                        {userProfile.nickname}
+                      </span>
+                    )}
+                    {userProfile.googleEmail && (
+                      <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 400, lineHeight: 1.2 }}>
+                        {userProfile.googleEmail}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {userProfile.profileImage ? (
+                  <div style={{ padding: '2px', borderRadius: '50%', background: T.goldGrad, flexShrink: 0 }}>
+                    <img
+                      src={userProfile.profileImage}
+                      alt="프로필"
+                      style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', display: 'block' }}
+                    />
+                  </div>
+                ) : (
+                  <UserCircle size={30} color={userProfile.nickname ? 'var(--color-community-accent)' : 'var(--color-text-muted)'} style={{ flexShrink: 0 }} />
+                )}
+              </button>
+            )}
           </div>
           <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
             같은 목표를 가진 사람들과 성공의 말을 나눠요
           </p>
         </div>
 
+        {isLoggedIn && (
+          <>
         {/* 상단 탭: 내 방 → 방 둘러보기 → 랭킹 (세그먼트 컨트롤) */}
         <div style={{ margin: '0 16px 12px', display: 'flex', background: T.segTrack, borderRadius: 14, padding: 4, gap: 4 }}>
           {(['내 방', '방 둘러보기', '랭킹'] as CommunityTab[]).map(tab => (
@@ -493,8 +555,35 @@ export default function CommunityPage() {
             </div>
           </div>
         )}
+          </>
+        )}
         </div>{/* /sticky */}
 
+        {!isLoggedIn && (
+          <div style={{ textAlign: 'center', padding: '90px 24px' }}>
+            <Lock size={40} color="var(--color-text-muted)" style={{ marginBottom: '16px' }} />
+            <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '8px' }}>
+              로그인이 필요해요
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '24px', lineHeight: 1.6 }}>
+              함께 기능은 로그인 후 이용할 수 있어요.<br />구글 계정으로 간편하게 시작해보세요.
+            </div>
+            <button
+              onClick={() => setShowLoginSheet(true)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '8px',
+                padding: '12px 22px', background: 'var(--color-community-accent)', color: 'white',
+                border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 700, cursor: 'pointer',
+                boxShadow: '0 6px 16px color-mix(in srgb, var(--color-accent-primary) 28%, transparent)',
+              }}
+            >
+              <LogIn size={16} />
+              Google 계정으로 계속하기
+            </button>
+          </div>
+        )}
+
+        {isLoggedIn && (
         <div style={{ padding: '16px 16px 32px' }}>
           {/* 내 방 */}
           {activeTab === '내 방' && (
@@ -1041,6 +1130,7 @@ export default function CommunityPage() {
             </div>
           )}
         </div>
+        )}
       </div>
 
       {/* ── 프로필 설정 바텀시트 ── */}
@@ -1079,21 +1169,72 @@ export default function CommunityPage() {
 
             {/* 닉네임 */}
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block', marginBottom: '8px' }}>닉네임</label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)' }}>닉네임</label>
+                <button
+                  onClick={handleSuggestNickname}
+                  disabled={suggestingNickname}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '4px',
+                    background: 'none', border: 'none', cursor: suggestingNickname ? 'default' : 'pointer',
+                    fontSize: '12px', fontWeight: 600, color: 'var(--color-community-accent)', padding: '2px',
+                  }}
+                >
+                  {suggestingNickname ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <Lightbulb size={13} />}
+                  AI로 추천받기
+                </button>
+              </div>
               <input
                 value={editNickname}
-                onChange={e => setEditNickname(e.target.value)}
+                onChange={e => { setEditNickname(e.target.value); setNicknameBanner(null) }}
                 placeholder="방에서 사용할 이름"
                 maxLength={12}
-                style={{ width: '100%', padding: '13px 14px', background: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '12px', fontSize: '15px', color: 'var(--color-text-primary)', outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '13px 14px', background: 'var(--color-bg-card)', border: nicknameBanner?.isNegative ? '1.5px solid #EF5350' : '1px solid var(--color-border)', borderRadius: '12px', fontSize: '15px', color: 'var(--color-text-primary)', outline: 'none', boxSizing: 'border-box' }}
               />
               {userProfile.googleEmail && (
                 <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '6px' }}>
                   Google 계정: <span style={{ color: 'var(--color-text-primary)' }}>{userProfile.googleEmail}</span>
                 </p>
               )}
-              {!userProfile.googleEmail && (
-                <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>구글 로그인 후 이름이 자동으로 연결돼요</p>
+              {nicknameBanner && (
+                <div style={{
+                  marginTop: '8px', padding: '12px 14px', borderRadius: '10px',
+                  background: nicknameBanner.alternative ? 'var(--color-warning-bg)' : 'var(--color-danger-bg)',
+                  fontSize: '13px', color: nicknameBanner.alternative ? 'var(--color-warning)' : 'var(--color-danger-dark)',
+                }}>
+                  {nicknameBanner.alternative ? (
+                    <>
+                      <div style={{ marginBottom: '8px' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}><Lightbulb size={13} /> 이런 닉네임은 어때요?</span><br />
+                        <strong>&quot;{nicknameBanner.alternative}&quot;</strong>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => { setEditNickname(nicknameBanner.alternative!); setNicknameBanner(null) }}
+                          style={{ flex: 1, padding: '7px', background: 'var(--color-community-accent)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                        >
+                          바꿔서 쓰기
+                        </button>
+                        <button
+                          onClick={() => { setEditNickname(''); setNicknameBanner(null) }}
+                          style={{ flex: 1, padding: '7px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '13px', color: 'var(--color-warning)', cursor: 'pointer' }}
+                        >
+                          다시 쓰기
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}><Ban size={13} /> 사용할 수 없는 표현이 포함되어 있어요. 긍정적인 닉네임으로 바꿔주세요.</div>
+                      <button
+                        onClick={() => { setEditNickname(''); setNicknameBanner(null) }}
+                        style={{ padding: '7px 14px', background: 'transparent', border: '1px solid #EF9A9A', borderRadius: '8px', fontSize: '13px', color: 'var(--color-danger-dark)', cursor: 'pointer' }}
+                      >
+                        다시 쓰기
+                      </button>
+                    </>
+                  )}
+                </div>
               )}
             </div>
 
@@ -1106,6 +1247,51 @@ export default function CommunityPage() {
             </button>
 
             <input type="file" accept="image/*" ref={photoInputRef} style={{ display: 'none' }} onChange={handleProfileImageChange} />
+          </div>
+        </>
+      )}
+
+      {/* ── 로그인(시뮬레이션) 바텀시트 ── */}
+      {showLoginSheet && (
+        <>
+          <div onClick={() => setShowLoginSheet(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 40 }} />
+          <div style={{
+            position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '430px', zIndex: 50,
+            background: 'var(--color-bg-primary)',
+            borderRadius: '20px 20px 0 0',
+            padding: '20px 16px 40px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text-primary)' }}>Google 계정으로 로그인</h3>
+              <button onClick={() => setShowLoginSheet(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}>
+                <X size={20} color="var(--color-text-muted)" />
+              </button>
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '16px', lineHeight: 1.5 }}>
+              (시뮬레이션) 실제 구글 인증 없이, 입력하신 이메일로 로그인 상태를 표시해요.
+            </p>
+            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block', marginBottom: '8px' }}>구글 이메일</label>
+            <input
+              value={loginEmail}
+              onChange={e => { setLoginEmail(e.target.value); setLoginError('') }}
+              onKeyDown={e => { if (e.key === 'Enter') handleConfirmLogin() }}
+              placeholder="you@gmail.com"
+              style={{
+                width: '100%', padding: '13px 14px', background: 'var(--color-bg-card)',
+                border: loginError ? '1.5px solid #EF5350' : '1px solid var(--color-border)',
+                borderRadius: '12px', fontSize: '15px', color: 'var(--color-text-primary)', outline: 'none', boxSizing: 'border-box',
+                marginBottom: loginError ? '6px' : '20px',
+              }}
+            />
+            {loginError && (
+              <p style={{ fontSize: '12px', color: 'var(--color-danger-dark)', marginBottom: '20px' }}>{loginError}</p>
+            )}
+            <button
+              onClick={handleConfirmLogin}
+              style={{ width: '100%', padding: '14px', background: 'var(--color-community-accent)', color: 'white', border: 'none', borderRadius: '14px', fontSize: '15px', fontWeight: 700, cursor: 'pointer' }}
+            >
+              로그인
+            </button>
           </div>
         </>
       )}

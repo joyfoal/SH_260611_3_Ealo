@@ -5,7 +5,7 @@ import { clientNegativeCheck } from '@/lib/clientNegativeCheck'
 export async function POST(req: NextRequest) {
   let text = ''
   try {
-    const body = await req.json() as { text: string; category?: string; context?: 'roomName' | 'general' }
+    const body = await req.json() as { text: string; category?: string; context?: 'roomName' | 'general' | 'nickname' }
     const { category, context } = body
     text = body.text ?? ''
 
@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
     }
 
     const isRoomName = context === 'roomName'
+    const isNickname = context === 'nickname'
     const AFFIRMATION_CATEGORIES = ['나 자신', '일과 커리어', '돈과 풍요', '관계와 사랑', '건강과 몸', '용기와 도전', '마음과 평온', '오늘 하루']
 
     const systemPrompt = isRoomName
@@ -26,6 +27,14 @@ export async function POST(req: NextRequest) {
    - suggestedDesc: alternative 방 이름에 어울리는 한 문장 소개 (20자 내외, "~해요" 또는 "~모임이에요" 형식)
    - 두 필드 모두 원문의 주제나 감정 맥락을 긍정적으로 반영할 것
 3. 정상적인 문장 → {"isNegative": false, "alternative": null, "suggestedDesc": null}`
+      : isNickname
+      ? `한국어 커뮤니티 닉네임 텍스트를 분석하고 JSON만 응답하세요.
+
+규칙:
+1. 욕설·비속어·혐오표현이 포함된 경우 → {"isNegative": true, "alternative": null, "suggestedDesc": null}
+2. 부정적이거나 우울한 어감의 단어(못, 슬픈, 우울, 힘든, 미운, 나쁜 등)가 포함된 경우 → {"isNegative": true, "alternative": "닉네임", "suggestedDesc": null}
+   - alternative: 반드시 12자 이내의 밝고 긍정적인 한국어 닉네임 하나
+3. 정상적인 닉네임 → {"isNegative": false, "alternative": null, "suggestedDesc": null}`
       : `한국어 텍스트를 분석하고 JSON만 응답하세요.
 카테고리 목록: ${AFFIRMATION_CATEGORIES.join(', ')}
 
