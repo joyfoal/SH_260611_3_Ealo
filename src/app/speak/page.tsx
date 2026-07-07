@@ -67,6 +67,7 @@ function SpeakPageInner() {
   const [isRecording, setIsRecording] = useState(false)
   const [showCameraNotice, setShowCameraNotice] = useState(false)
   const cameraNoticeCheckedRef = useRef(false)
+  const [sttDebug, setSttDebug] = useState<string | null>(null)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const recognitionRef = useRef<{ stop: () => void } | null>(null)
@@ -196,7 +197,7 @@ function SpeakPageInner() {
   const startSTT = useCallback(() => {
     if (typeof window === 'undefined') return
     const SpeechRec = window.SpeechRecognition ?? window.webkitSpeechRecognition
-    if (!SpeechRec) return
+    if (!SpeechRec) { setSttDebug('unsupported'); return }
 
     if (recognitionRef.current) {
       try { recognitionRef.current.stop() } catch { }
@@ -211,6 +212,7 @@ function SpeakPageInner() {
     recognitionRef.current = recognition
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
+      setSttDebug('ok:result')
       const transcript = Array.from(event.results).map((r) => r[0].transcript).join(' ').toLowerCase()
       setIsSpeaking(true)
       if (speakTimerRef.current) clearTimeout(speakTimerRef.current)
@@ -232,19 +234,23 @@ function SpeakPageInner() {
     }
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      setSttDebug(`error:${event.error}`)
       if (!shouldListenRef.current) return
       if (event.error === 'not-allowed') { setIsListening(false); return }
       setTimeout(() => { if (shouldListenRef.current) startSTT() }, 200)
     }
 
     recognition.onend = () => {
+      setSttDebug((prev) => prev === 'ok:result' ? prev : 'ended')
       setTimeout(() => { if (shouldListenRef.current) startSTT() }, 100)
     }
 
     try {
       recognition.start()
       setIsListening(true)
-    } catch {
+      setSttDebug((prev) => prev ?? 'started')
+    } catch (e) {
+      setSttDebug(`start-throw:${e instanceof Error ? e.message : 'unknown'}`)
       setTimeout(() => { if (shouldListenRef.current) startSTT() }, 300)
     }
   }, [affirmation])
@@ -654,6 +660,14 @@ function SpeakPageInner() {
               animation: 'onbRecBlink 1s steps(2,end) infinite',
             }} />
             녹음 중
+          </div>
+        )}
+        {sttDebug && (
+          <div style={{
+            display: 'inline-block', background: 'rgba(194,60,40,0.85)', borderRadius: '20px', padding: '4px 12px',
+            fontSize: '11px', fontWeight: 700, color: '#fff',
+          }}>
+            STT: {sttDebug}
           </div>
         )}
       </div>
