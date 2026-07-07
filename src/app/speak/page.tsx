@@ -241,7 +241,7 @@ function SpeakPageInner() {
     }
 
     recognition.onend = () => {
-      setSttDebug((prev) => prev === 'ok:result' ? prev : 'ended')
+      setSttDebug((prev) => (prev === 'ok:result' || prev?.startsWith('error:')) ? prev : 'ended')
       setTimeout(() => { if (shouldListenRef.current) startSTT() }, 100)
     }
 
