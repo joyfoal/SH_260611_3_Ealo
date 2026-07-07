@@ -67,6 +67,7 @@ function SpeakPageInner() {
   const [isRecording, setIsRecording] = useState(false)
   const [showCameraNotice, setShowCameraNotice] = useState(false)
   const cameraNoticeCheckedRef = useRef(false)
+  const [mediaDebug, setMediaDebug] = useState<string | null>(null)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const recognitionRef = useRef<{ stop: () => void } | null>(null)
@@ -132,9 +133,13 @@ function SpeakPageInner() {
 
   // 오디오 스트림 사전 확보 — 화면 전환 전에 미리 권한 획득
   useEffect(() => {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices) {
+      setMediaDebug((prev) => `${prev ? prev + ' | ' : ''}prewarm:no-mediaDevices(secure-context?)`)
+      return
+    }
     navigator.mediaDevices.getUserMedia({ audio: true })
-      .then((stream) => { prewarmStreamRef.current = stream })
-      .catch(() => {})
+      .then((stream) => { prewarmStreamRef.current = stream; setMediaDebug((prev) => `${prev ? prev + ' | ' : ''}prewarm:ok`) })
+      .catch((e) => setMediaDebug((prev) => `${prev ? prev + ' | ' : ''}prewarm:${e instanceof Error ? `${e.name}:${e.message}` : 'unknown'}`))
     return () => {
       prewarmStreamRef.current?.getTracks().forEach((t) => t.stop())
       prewarmStreamRef.current = null
@@ -155,7 +160,9 @@ function SpeakPageInner() {
         videoRef.current.srcObject = videoStream
         videoRef.current.play().catch(() => {})
       }
-    } catch { /* 카메라 권한 없음 */ }
+    } catch (e) {
+      setMediaDebug((prev) => `${prev ? prev + ' | ' : ''}camera:${e instanceof Error ? `${e.name}:${e.message}` : 'unknown'}`)
+    }
 
     if (!hasExistingRecordingRef.current) {
       try {
@@ -168,6 +175,9 @@ function SpeakPageInner() {
         audioChunksRef.current = []
         recorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data) }
         recorder.onstart = () => setIsRecording(true)
+        recorder.onerror = (e) => {
+          setMediaDebug((prev) => `${prev ? prev + ' | ' : ''}recorder-error:${JSON.stringify((e as unknown as { error?: unknown }).error) || 'unknown'}`)
+        }
         recorder.onstop = async () => {
           setIsRecording(false)
           audioStreamRef.current?.getTracks().forEach((t) => t.stop())
@@ -184,12 +194,22 @@ function SpeakPageInner() {
                 createdAt: Date.now(),
                 keepForever: true,
               })
-            } catch { /* ignore */ }
+              setMediaDebug((prev) => `${prev ? prev + ' | ' : ''}saved:ok(${blob.size}b)`)
+            } catch (e) {
+              setMediaDebug((prev) => `${prev ? prev + ' | ' : ''}save-throw:${e instanceof Error ? e.message : 'unknown'}`)
+            }
+          } else {
+            setMediaDebug((prev) => `${prev ? prev + ' | ' : ''}stop:no-save(blob=${blob.size}b,aff=${!!aff})`)
           }
         }
         recorder.start(500)
         mediaRecorderRef.current = recorder
-      } catch { /* 마이크 권한 없음 */ }
+        setMediaDebug((prev) => `${prev ? prev + ' | ' : ''}mic:ok(mime=${mimeType || 'default'})`)
+      } catch (e) {
+        setMediaDebug((prev) => `${prev ? prev + ' | ' : ''}mic:${e instanceof Error ? `${e.name}:${e.message}` : 'unknown'}`)
+      }
+    } else {
+      setMediaDebug((prev) => `${prev ? prev + ' | ' : ''}skip:hasExistingRecording`)
     }
   }, [])
 
@@ -657,6 +677,16 @@ function SpeakPageInner() {
           </div>
         )}
       </div>
+      {mediaDebug && (
+        <div style={{ position: 'relative', zIndex: 10, padding: '6px 16px 0', display: 'flex', justifyContent: 'center' }}>
+          <div style={{
+            display: 'inline-block', maxWidth: '100%', background: 'rgba(194,60,40,0.85)', borderRadius: '12px', padding: '6px 12px',
+            fontSize: '10.5px', fontWeight: 600, color: '#fff', wordBreak: 'break-all', textAlign: 'center',
+          }}>
+            MEDIA: {mediaDebug}
+          </div>
+        </div>
+      )}
 
       {/* 카메라 안내 배너 */}
       {showCameraNotice && (
