@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: '이뤄',
   description: '말하면, 이루어진다.',
   manifest: '/manifest.json',
-  appleWebApp: { capable: true, statusBarStyle: 'black-translucent' },
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: '이뤄' },
 }
 
 export const viewport: Viewport = {
@@ -16,6 +16,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
+  themeColor: '#BA7517',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
