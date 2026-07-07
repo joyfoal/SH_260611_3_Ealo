@@ -665,7 +665,7 @@ function SpeakPageInner() {
             background: 'rgba(0,0,0,0.55)', borderRadius: '14px', padding: '10px 14px',
             fontSize: '12.5px', color: 'var(--color-text-onDark)', lineHeight: 1.5, textAlign: 'center', maxWidth: '320px',
           }}>
-            카메라와 마이크를 설정하면 내 얼굴을 보면서 목소리로 성공의 말을 할 수 있어요.<br />화면에 얼굴이 보여도 촬영·녹화되지 않고, 녹음 파일은 내 기기에만 저장돼요.
+            카메라와 마이크 기능을 사용하면 내 얼굴을 보면서 목소리로 성공의 말을 할 수 있어요.<br />화면에 얼굴이 보여도 촬영·녹화되지 않고, 녹음 파일은 내 기기에만 저장돼요.
           </div>
         </div>
       )}
