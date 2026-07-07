@@ -809,6 +809,19 @@ export default function HomePage() {
         {/* Calendar */}
         {displaySettings.showCalendar && <CalendarView />}
 
+        {/* 광고 영역 (추후 애드센스 게재 단위로 교체 예정) */}
+        <div style={{
+          margin: '0 16px 16px',
+          padding: '20px',
+          border: `1.5px dashed ${T.cardBorder}`,
+          borderRadius: '14px',
+          textAlign: 'center',
+          fontSize: '12px',
+          color: 'var(--color-text-muted)',
+        }}>
+          광고 영역
+        </div>
+
         {/* Shortcuts */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', padding: '0 16px 16px' }}>
           <button
