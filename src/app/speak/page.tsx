@@ -252,8 +252,8 @@ function SpeakPageInner() {
   useEffect(() => {
     if (screen === 'speak') {
       shouldListenRef.current = true
-      startCamera()
       startSTT()
+      startCamera()
 
       if (!cameraNoticeCheckedRef.current) {
         cameraNoticeCheckedRef.current = true

@@ -308,6 +308,9 @@ export default function OnboardingPage() {
     onbVoiceIdRef.current = voiceId
     onbAudioRecordIdRef.current = audioRecordId
 
+    onbShouldListenRef.current = true
+    startOnbSTT()
+
     try {
       const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true })
       onbAudioStreamRef.current = audioStream
@@ -335,9 +338,6 @@ export default function OnboardingPage() {
       recorder.start()
       onbRecorderRef.current = recorder
     } catch { /* mic denied */ }
-
-    onbShouldListenRef.current = true
-    startOnbSTT()
   }, [startOnbSTT])
 
   // 화면 2 진입: 카메라(비디오 전용)만 시작. 녹음은 마이크 버튼 탭 시 시작
