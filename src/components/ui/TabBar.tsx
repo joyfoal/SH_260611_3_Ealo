@@ -88,8 +88,9 @@ export function TabBar({ activeTab }: TabBarProps) {
       style={{
         background: 'var(--color-bg-primary)',
         borderTop: '1px solid var(--color-border)',
+        paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
       }}
-      className="flex items-center justify-around py-2 pb-safe"
+      className="flex items-center justify-around py-2"
     >
       {LEFT_TABS.map(({ label, href, icon }) => (
         <TabLink key={label} label={label} href={href} icon={icon} isActive={activeTab === label} />
