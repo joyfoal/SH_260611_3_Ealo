@@ -900,6 +900,19 @@ export default function HomePage() {
 
         {/* 저장된 성공 이미지 */}
         {displaySettings.showSuccessImg && <SavedSuccessImage onTap={() => router.push('/home/success-image')} />}
+
+        {/* 광고 영역 (추후 애드센스 게재 단위로 교체 예정) */}
+        <div style={{
+          margin: '0 16px 16px',
+          padding: '20px',
+          border: `1.5px dashed ${T.cardBorder}`,
+          borderRadius: '14px',
+          textAlign: 'center',
+          fontSize: '12px',
+          color: 'var(--color-text-muted)',
+        }}>
+          광고 영역
+        </div>
       </div>
 
       {showWeeklyReport && <WeeklyReportModal onClose={handleCloseWeeklyReport} />}
