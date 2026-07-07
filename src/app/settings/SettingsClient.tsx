@@ -1,0 +1,1865 @@
+'use client'
+
+import { useState, useEffect, useRef, type ReactNode } from 'react'
+import { AppLayout } from '@/components/ui/AppLayout'
+import { useTheme } from '@/lib/themeContext'
+import { themes } from '@/lib/theme'
+import { getCategoryColor } from '@/lib/categories'
+import {
+  isTomorrowEnabled, setTomorrowEnabled,
+  getAffirmations, updateAffirmation, clearAllData,
+  getCategories, saveCategories,
+  getAlarmSettings, saveAlarmSettings, clearAlarmSettings,
+  getAlarmList, saveAlarmList, deleteAlarmById,
+  getTrash, restoreFromTrash, emptyTrash,
+  getCalendar, getStreakData, saveStreakData,
+  getHomeDisplaySettings, setHomeDisplaySetting, deleteDayRecord,
+  todayStr,
+  type AlarmSettings, type AlarmEntry, type Affirmation,
+} from '@/lib/storage'
+import {
+  getAudioRecords, setAudioKeepForever, clearAllAudioRecords,
+  getTrashAudioRecords, restoreAudioFromTrash, emptyAudioTrash,
+  deleteAudioRecordsByAffirmationId, type AudioRecord,
+} from '@/lib/audioStorage'
+import { clearFaceStorage, getFaceProfileFromTrash, restoreFaceProfileFromTrash, type FaceProfile } from '@/lib/faceStorage'
+import { clearSuccessImages, getSuccessImageFromTrash, restoreSuccessImageFromTrash, type SuccessImageRecord } from '@/lib/successImageStorage'
+import { isDevModeEnabled, disableDevMode } from '@/lib/devMode'
+import { Pencil, Trash2, Check, X, Plus, Bell, Download, GripVertical, Palette, Power, BarChart3, Search, UploadCloud, RotateCcw, Folder, BookOpen, ChevronDown, Ban, Mic, User, ImageIcon, Star, AlertTriangle, ExternalLink, Wrench } from 'lucide-react'
+import { WeeklyReportModal } from '@/components/ui/WeeklyReportModal'
+
+// ─── helpers ──────────────────────────────────────────────────────────────────
+function downloadText(content: string, filename: string) {
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function downloadJSON(obj: unknown, filename: string) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+const DAY_KO = ['일', '월', '화', '수', '목', '금', '토']
+
+const MOTTOS = [
+  '말하면 이루어진다.',
+  '반드시 성공한다.',
+  '꿈은 현실이 된다.',
+  '성공은 시작되었다.',
+  '성공에 가까워지고 있다.',
+  '말이 나의 현실을 만든다.',
+  '성공은 나를 향해 오고 있다.',
+  '잘 사는 사람이 된다.',
+  '나의 시간은 성공으로 향하고 있다.',
+  '오늘도 성공에 가까워진다.',
+  '성공은 나의 것이다.',
+  '날마다 더 나아지고 있다.',
+]
+
+// ─── Category Delete Modal ─────────────────────────────────────────────────
+function CategoryDeleteModal({
+  category,
+  affirmationCount,
+  otherCategories,
+  onMove,
+  onCancel,
+}: {
+  category: string
+  affirmationCount: number
+  otherCategories: string[]
+  onMove: (target: string | null) => void
+  onCancel: () => void
+}) {
+  const [selected, setSelected] = useState<string>(otherCategories[0] ?? '')
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'flex-end', background: 'rgba(0,0,0,0.4)' }}
+      onClick={onCancel}
+    >
+      <div
+        style={{ width: '100%', maxWidth: '430px', margin: '0 auto', background: 'var(--color-bg-card)', borderRadius: '20px 20px 0 0', padding: '24px 20px 32px', maxHeight: '80vh', overflowY: 'auto' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p style={{ fontSize: '17px', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '8px' }}>
+          "{category}" 삭제
+        </p>
+        {affirmationCount > 0 ? (
+          <>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+              이 카테고리에 성공의 말이 {affirmationCount}개 있어요. 어떻게 할까요?
+            </p>
+            {otherCategories.length > 0 && (
+              <div style={{ marginBottom: '16px' }}>
+                <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '8px' }}>이동할 카테고리 선택</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {otherCategories.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setSelected(c)}
+                      style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '13px', border: selected === c ? '2px solid var(--color-accent-primary)' : '1px solid var(--color-border)', background: selected === c ? 'var(--color-accent-light)' : 'transparent', color: selected === c ? 'var(--color-accent-primary)' : 'var(--color-text-muted)', cursor: 'pointer', fontWeight: selected === c ? 600 : 400 }}
+                    >{c}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {otherCategories.length > 0 && (
+                <button onClick={() => onMove(selected)} style={{ padding: '14px', background: 'var(--color-accent-primary)', color: 'white', border: 'none', borderRadius: '14px', fontSize: '15px', fontWeight: 600, cursor: 'pointer' }}>
+                  "{selected}"로 이동 후 삭제
+                </button>
+              )}
+              <button onClick={() => onMove(null)} style={{ padding: '14px', background: 'transparent', color: 'var(--color-danger)', border: '1px solid #E53935', borderRadius: '14px', fontSize: '14px', cursor: 'pointer' }}>
+                성공의 말도 함께 삭제
+              </button>
+              <button onClick={onCancel} style={{ padding: '12px', background: 'transparent', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)', borderRadius: '14px', fontSize: '14px', cursor: 'pointer' }}>
+                취소
+              </button>
+            </div>
+          </>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '8px' }}>카테고리를 삭제할까요?</p>
+            <button onClick={() => onMove(null)} style={{ padding: '14px', background: 'var(--color-danger)', color: 'white', border: 'none', borderRadius: '14px', fontSize: '15px', fontWeight: 600, cursor: 'pointer' }}>삭제</button>
+            <button onClick={onCancel} style={{ padding: '12px', background: 'transparent', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)', borderRadius: '14px', fontSize: '14px', cursor: 'pointer' }}>취소</button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Panel wrapper ─────────────────────────────────────────────────────────────
+const T = {
+  cardBorder: 'var(--color-border)',
+  divider: 'var(--color-border)',
+  goldGrad: 'linear-gradient(135deg, var(--color-accent-primary), var(--color-accent-secondary))',
+}
+
+function Panel({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ background: 'var(--color-bg-card)', borderRadius: '20px', padding: '20px', marginBottom: '16px', border: `1px solid ${T.cardBorder}`, boxShadow: '0 4px 16px color-mix(in srgb, var(--color-text-primary) 5%, transparent)' }}>
+      {children}
+    </div>
+  )
+}
+
+// ─── 테마 패널 ──────────────────────────────────────────────────────────────────
+function ThemePanel() {
+  const { themeName, setTheme } = useTheme()
+  const THEMES = [
+    { name: 'warm' as const, label: '행운의 황금', color: themes.warm.accent.primary, colorSecondary: themes.warm.accent.secondary, bg: themes.warm.bg.primary },
+    { name: 'dark' as const, label: '고귀한 보라', color: themes.dark.accent.primary, colorSecondary: themes.dark.accent.secondary, bg: themes.dark.bg.primary },
+    { name: 'green' as const, label: '풍요의 초록', color: themes.green.accent.primary, colorSecondary: themes.green.accent.secondary, bg: themes.green.bg.primary },
+    { name: 'blue' as const, label: '번영의 파랑', color: themes.blue.accent.primary, colorSecondary: themes.blue.accent.secondary, bg: themes.blue.bg.primary },
+  ]
+  return (
+    <Panel>
+      <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '16px' }}>테마 선택</p>
+      <div className="flex gap-3">
+        {THEMES.map((t) => {
+          const selected = themeName === t.name
+          return (
+            <button
+              key={t.name}
+              onClick={() => setTheme(t.name)}
+              style={{ position: 'relative', flex: 1, padding: '14px 8px', borderRadius: '14px', border: selected ? `2px solid ${t.color}` : '2px solid transparent', background: t.bg, cursor: 'pointer', textAlign: 'center' }}
+            >
+              {selected && (
+                <div style={{
+                  position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%',
+                  background: T.goldGrad, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 2px 6px color-mix(in srgb, var(--color-accent-primary) 28%, transparent)',
+                }}>
+                  <Check size={11} color="#fff" strokeWidth={3} />
+                </div>
+              )}
+              <div style={{ width: '28px', height: '28px', borderRadius: '9px', background: `linear-gradient(135deg, ${t.color}, ${t.colorSecondary})`, margin: '0 auto 8px' }} />
+              <p style={{ fontSize: '11px', color: t.color, fontWeight: 600 }}>{t.label}</p>
+            </button>
+          )
+        })}
+      </div>
+    </Panel>
+  )
+}
+
+// ─── On/Off 패널 ──────────────────────────────────────────────────────────────
+function TogglePanel() {
+  const [settings, setSettings] = useState({ showRecentRec: true, showSuccessImg: true, showCalendar: true })
+  const [naege, setNaege] = useState(true)
+
+  useEffect(() => {
+    setSettings(getHomeDisplaySettings())
+    setNaege(isTomorrowEnabled())
+  }, [])
+
+  const toggle = (key: 'showRecentRec' | 'showSuccessImg' | 'showCalendar') => {
+    const val = !settings[key]
+    setHomeDisplaySetting(key, val)
+    setSettings((p) => ({ ...p, [key]: val }))
+  }
+
+  const toggleNaege = () => {
+    const val = !naege
+    setTomorrowEnabled(val)
+    setNaege(val)
+  }
+
+  const items = [
+    { key: 'showRecentRec' as const, label: '최근 녹음 표시', desc: '홈 화면에 최근 녹음 플레이어 표시' },
+    { key: 'showSuccessImg' as const, label: '성공 이미지 표시', desc: '홈 화면에 성공 이미지 표시' },
+    { key: 'showCalendar' as const, label: '달력 표시', desc: '홈 화면에 달력 표시' },
+  ]
+
+  return (
+    <Panel>
+      <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '16px' }}>홈 화면 표시 설정</p>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {items.map(({ key, label, desc }) => (
+          <div
+            key={key}
+            className="flex items-center justify-between"
+            style={{ padding: '12px 0', borderBottom: `1px solid ${T.divider}` }}
+          >
+            <div>
+              <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-text-primary)' }}>{label}</p>
+              <p style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{desc}</p>
+            </div>
+            <button
+              onClick={() => toggle(key)}
+              style={{ width: '46px', height: '27px', borderRadius: '14px', background: settings[key] ? T.goldGrad : 'var(--color-border)', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}
+            >
+              <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'white', position: 'absolute', top: '2.5px', left: settings[key] ? '21px' : '3px', transition: 'left 0.2s' }} />
+            </button>
+          </div>
+        ))}
+        <div className="flex items-center justify-between" style={{ padding: '12px 0' }}>
+          <div>
+            <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-text-primary)' }}>성공의 말 후 나에게 표시</p>
+            <p style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>완료 후 나에게 메시지 남기기</p>
+          </div>
+          <button
+            onClick={toggleNaege}
+            style={{ width: '46px', height: '27px', borderRadius: '14px', background: naege ? T.goldGrad : 'var(--color-border)', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}
+          >
+            <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'white', position: 'absolute', top: '2.5px', left: naege ? '21px' : '3px', transition: 'left 0.2s' }} />
+          </button>
+        </div>
+      </div>
+    </Panel>
+  )
+}
+
+// ─── 알림 패널 ────────────────────────────────────────────────────────────────
+const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
+
+function CustomSelect({ value, onChange, options, width }: {
+  value: number
+  onChange: (v: number) => void
+  options: { value: number; label: string }[]
+  width?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const label = options.find((o) => o.value === value)?.label ?? ''
+  return (
+    <div style={{ position: 'relative', width: width ?? '100%' }}>
+      {open && <div style={{ position: 'fixed', inset: 0, zIndex: 49 }} onClick={() => setOpen(false)} />}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        style={{ width: '100%', padding: '11px 14px', border: '1px solid var(--color-border)', borderRadius: '12px', fontSize: '14px', background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}
+      >
+        <span style={{ fontWeight: 500 }}>{label}</span>
+        <ChevronDown size={16} color="var(--color-text-muted)" style={{ transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none', flexShrink: 0 }} />
+      </button>
+      {open && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 50, background: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '12px', maxHeight: '200px', overflowY: 'auto', boxShadow: '0 8px 24px color-mix(in srgb, var(--color-text-primary) 10%, transparent)' }}>
+          {options.map((opt) => (
+            <div
+              key={opt.value}
+              onClick={() => { onChange(opt.value); setOpen(false) }}
+              style={{ padding: '11px 14px', fontSize: '14px', color: opt.value === value ? 'var(--color-accent-primary)' : 'var(--color-text-primary)', background: opt.value === value ? 'var(--color-accent-light)' : 'transparent', cursor: 'pointer', fontWeight: opt.value === value ? 600 : 400 }}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function AlarmPanel() {
+  const [alarmList, setAlarmList] = useState<AlarmEntry[]>([])
+  const [editingId, setEditingId] = useState<string | null>(null) // null=닫힘, 'new'=새 알림, id=편집
+  const [affirmations, setAffirmations] = useState<Affirmation[]>([])
+  const [categories, setCategories] = useState<string[]>([])
+  const [audioMap, setAudioMap] = useState<Record<string, AudioRecord>>({})
+  const [selectedAffId, setSelectedAffId] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [hour, setHour] = useState(7)
+  const [minute, setMinute] = useState(0)
+  const [repeatDays, setRepeatDays] = useState<number[]>([])
+  const [endType, setEndType] = useState<'none' | 'date' | 'count'>('none')
+  const [endDate, setEndDate] = useState('')
+  const [endCount, setEndCount] = useState(30)
+  const [saving, setSaving] = useState(false)
+  const [notifPerm, setNotifPerm] = useState<NotificationPermission>('default')
+  const [notifSupported, setNotifSupported] = useState(true)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    setAlarmList(getAlarmList())
+    setAffirmations(getAffirmations())
+    setCategories(getCategories())
+    getAudioRecords().then((recs) => {
+      const map: Record<string, AudioRecord> = {}
+      for (const r of recs) {
+        if (!map[r.affirmationId] || r.createdAt > map[r.affirmationId].createdAt) map[r.affirmationId] = r
+      }
+      setAudioMap(map)
+    }).catch(() => {})
+    if (typeof window !== 'undefined') {
+      if ('Notification' in window) {
+        setNotifPerm(Notification.permission)
+      } else {
+        setNotifSupported(false)
+      }
+    }
+  }, [])
+
+  const requestPermission = async () => {
+    if (!('Notification' in window)) return
+    setNotifPerm(await Notification.requestPermission())
+  }
+
+  const toggleDay = (day: number) =>
+    setRepeatDays((prev) => prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day])
+
+  const playPreview = (affId: string) => {
+    const rec = audioMap[affId]
+    if (!rec) return
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
+    const url = URL.createObjectURL(rec.blob)
+    const audio = new Audio(url)
+    audioRef.current = audio
+    audio.onended = () => { URL.revokeObjectURL(url); audioRef.current = null }
+    audio.play().catch(() => URL.revokeObjectURL(url))
+  }
+
+  const openNew = () => {
+    setEditingId('new')
+    setSelectedAffId(''); setSelectedCategory(null)
+    setHour(7); setMinute(0); setRepeatDays([])
+    setEndType('none'); setEndDate(''); setEndCount(30)
+  }
+
+  const openEdit = (entry: AlarmEntry) => {
+    setEditingId(entry.id)
+    setSelectedAffId(entry.affirmationId ?? '')
+    setHour(entry.hour); setMinute(entry.minute)
+    setRepeatDays(entry.repeatDays ?? [])
+    setEndType(entry.endType ?? 'none')
+    setEndDate(entry.endDate ?? ''); setEndCount(entry.endCount ?? 30)
+    const aff = affirmations.find((a) => a.id === entry.affirmationId)
+    if (aff) setSelectedCategory(aff.category)
+  }
+
+  const handleSave = async () => {
+    if (!selectedAffId) return
+    setSaving(true)
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      setNotifPerm(await Notification.requestPermission())
+    }
+    const id = editingId === 'new' ? `alarm-${Date.now()}` : editingId!
+    const entry: AlarmEntry = {
+      id, affirmationId: selectedAffId, hour, minute, repeatDays, endType,
+      endDate: endType === 'date' ? endDate : '',
+      endCount: endType === 'count' ? endCount : 0,
+      firedCount: alarmList.find((a) => a.id === id)?.firedCount ?? 0,
+    }
+    const updated = editingId === 'new'
+      ? [...alarmList, entry]
+      : alarmList.map((a) => a.id === id ? entry : a)
+    saveAlarmList(updated)
+    setAlarmList(updated)
+    setEditingId(null)
+    import('@/lib/alarmScheduler').then(({ scheduleAlarm }) => scheduleAlarm())
+    setSaving(false)
+  }
+
+  const handleDelete = (id: string) => {
+    deleteAlarmById(id)
+    setAlarmList((prev) => prev.filter((a) => a.id !== id))
+    if (editingId === id) setEditingId(null)
+    import('@/lib/alarmScheduler').then(({ cancelAlarmById }) => cancelAlarmById(id))
+  }
+
+  const fmtHour = (h: number) => `${h < 12 ? '오전' : '오후'} ${((h + 11) % 12) + 1}시`
+  const fmtTime = (entry: AlarmEntry) => `${fmtHour(entry.hour)} ${String(entry.minute).padStart(2, '0')}분`
+  const fmtDays = (days: number[]) => {
+    if (!days || days.length === 0) return '매일'
+    const sorted = [...days].sort()
+    return sorted.map((d) => DAY_LABELS[d]).join('')
+  }
+  const catAffs = selectedCategory ? affirmations.filter((a) => a.category === selectedCategory) : []
+  const selectedAff = affirmations.find((a) => a.id === selectedAffId)
+  const chipBg = 'color-mix(in srgb, var(--color-accent-light) 28%, var(--color-bg-card))'
+
+  return (
+    <Panel>
+      <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '16px' }}>알림 설정</p>
+
+      {/* 알림 권한 */}
+      {notifPerm !== 'granted' && (
+        !notifSupported ? (
+          <div style={{ padding: '12px 14px', background: 'color-mix(in srgb, var(--color-accent-light) 20%, var(--color-bg-primary))', borderRadius: '12px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: chipBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Bell size={16} color="var(--color-accent-primary)" />
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', lineHeight: 1.4 }}>이 브라우저는 알림을 지원하지 않아요.<br />홈 화면에 추가 후 사용해보세요.</p>
+          </div>
+        ) : (
+          <div style={{ padding: '12px 14px', background: notifPerm === 'denied' ? 'var(--color-danger-bg-light)' : 'color-mix(in srgb, var(--color-accent-light) 35%, var(--color-bg-primary))', borderRadius: '12px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: notifPerm === 'denied' ? 'var(--color-danger-border)' : chipBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              {notifPerm === 'denied' ? <Ban size={16} color="var(--color-danger)" /> : <Bell size={16} color="var(--color-accent-primary)" />}
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: '13px', fontWeight: 600, color: notifPerm === 'denied' ? 'var(--color-danger)' : 'var(--color-accent-primary)' }}>
+                {notifPerm === 'denied' ? '알림 차단됨' : '알림 권한 필요'}
+              </p>
+              <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '1px' }}>
+                {notifPerm === 'denied' ? '기기 설정 → 브라우저 → 알림에서 허용해주세요' : '알림을 받으려면 권한을 허용해주세요'}
+              </p>
+            </div>
+            {notifPerm === 'default' && (
+              <button onClick={requestPermission} style={{ padding: '7px 14px', background: 'var(--color-accent-primary)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
+                허용
+              </button>
+            )}
+            {notifPerm === 'denied' && (
+              <button onClick={() => { if ('Notification' in window) setNotifPerm(Notification.permission) }} style={{ padding: '7px 12px', background: 'transparent', border: '1px solid #E53935', borderRadius: '10px', fontSize: '11px', fontWeight: 600, color: 'var(--color-danger)', cursor: 'pointer', flexShrink: 0 }}>
+                다시 확인
+              </button>
+            )}
+          </div>
+        )
+      )}
+
+      {/* 설정된 알림 카드 목록 */}
+      {alarmList.length === 0 && editingId === null && (
+        <div style={{ padding: '20px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '13px', background: 'var(--color-bg-primary)', borderRadius: '14px', marginBottom: '12px' }}>
+          설정된 알림이 없어요
+        </div>
+      )}
+      {alarmList.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
+          {alarmList.map((entry) => {
+            const aff = affirmations.find((a) => a.id === entry.affirmationId)
+            const isEditing = editingId === entry.id
+            return (
+              <div key={entry.id} style={{ background: isEditing ? 'color-mix(in srgb, var(--color-accent-light) 18%, var(--color-bg-card))' : 'var(--color-bg-card)', border: isEditing ? '1.5px solid var(--color-accent-primary)' : '1.5px solid transparent', borderRadius: '16px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', transition: 'all 0.15s' }}>
+                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: chipBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Bell size={19} strokeWidth={1.8} color="var(--color-accent-primary)" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: '19px', fontWeight: 800, color: 'var(--color-text-primary)', lineHeight: 1.2 }}>{fmtTime(entry)}</p>
+                  <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {fmtDays(entry.repeatDays)}{aff ? ` · ${aff.category}` : ''}
+                  </p>
+                </div>
+                <button onClick={() => openEdit(entry)} style={{ width: '32px', height: '32px', borderRadius: '8px', background: chipBg, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Pencil size={14} color="var(--color-accent-primary)" />
+                </button>
+                <button onClick={() => handleDelete(entry.id)} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--color-danger-bg-light)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Trash2 size={14} color="var(--color-danger)" />
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* 알림 추가 버튼 */}
+      {editingId === null && (
+        <button onClick={openNew} style={{ width: '100%', padding: '13px', border: '1.5px dashed var(--color-border)', borderRadius: '14px', background: 'transparent', color: 'var(--color-text-muted)', fontSize: '14px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '4px' }}>
+          <Plus size={16} /> 알림 추가
+        </button>
+      )}
+
+      {/* 알림 설정 폼 */}
+      {editingId !== null && (
+        <div style={{ background: 'var(--color-bg-primary)', borderRadius: '16px', padding: '16px', border: '1px solid var(--color-border)', marginTop: '4px' }}>
+          <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-accent-primary)', marginBottom: '16px' }}>
+            {editingId === 'new' ? '새 알림 추가' : '알림 편집'}
+          </p>
+
+          {/* 알림 시간 */}
+          <p style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-muted)', marginBottom: '7px' }}>알림 시간</p>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '18px' }}>
+            <div style={{ flex: '0 0 52%' }}>
+              <CustomSelect value={hour} onChange={setHour} options={Array.from({ length: 24 }, (_, i) => ({ value: i, label: fmtHour(i) }))} width="100%" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <CustomSelect value={minute} onChange={setMinute} options={[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m) => ({ value: m, label: `${String(m).padStart(2, '0')}분` }))} width="100%" />
+            </div>
+          </div>
+
+          {/* 성공의 말 선택 */}
+          <p style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-muted)', marginBottom: '7px' }}>성공의 말 선택</p>
+          {/* 카테고리 가로 스크롤 */}
+          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', marginBottom: '10px', scrollbarWidth: 'none' }}>
+            {categories.map((cat) => {
+              const on = selectedCategory === cat
+              return (
+                <button key={cat} onClick={() => setSelectedCategory(on ? null : cat)}
+                  style={{ padding: '6px 13px', borderRadius: '20px', fontSize: '12px', fontWeight: on ? 700 : 400, cursor: 'pointer', border: on ? '1.5px solid var(--color-accent-primary)' : '1px solid var(--color-border)', background: on ? 'var(--color-accent-primary)' : 'var(--color-bg-card)', color: on ? '#fff' : 'var(--color-text-secondary)', transition: 'all 0.15s', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  {cat}
+                </button>
+              )
+            })}
+          </div>
+          {/* 성공의 말 가로 스크롤 카드 */}
+          {selectedCategory && catAffs.length > 0 && (
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '6px', marginBottom: '10px', scrollbarWidth: 'none' }}>
+              {catAffs.map((aff) => {
+                const hasRec = !!audioMap[aff.id]
+                const isSel = selectedAffId === aff.id
+                return (
+                  <div key={aff.id} onClick={() => setSelectedAffId(aff.id)}
+                    style={{ minWidth: '180px', maxWidth: '200px', padding: '12px 13px', background: isSel ? chipBg : 'var(--color-bg-card)', border: isSel ? '1.5px solid var(--color-accent-primary)' : '1px solid var(--color-border)', borderRadius: '12px', cursor: 'pointer', flexShrink: 0, position: 'relative' }}>
+                    <p style={{ fontSize: '12px', color: 'var(--color-text-primary)', lineHeight: 1.5, marginBottom: hasRec ? '28px' : '0' }}>{aff.text}</p>
+                    {hasRec && (
+                      <button onClick={(e) => { e.stopPropagation(); playPreview(aff.id) }}
+                        style={{ position: 'absolute', bottom: '10px', right: '10px', width: '24px', height: '24px', borderRadius: '50%', background: 'var(--color-accent-primary)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ color: 'white', fontSize: '8px' }}>▶</span>
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          {selectedAff && (
+            <div style={{ padding: '9px 12px', background: chipBg, borderRadius: '10px', border: '1px solid var(--color-accent-primary)', marginBottom: '18px' }}>
+              <p style={{ fontSize: '11px', color: 'var(--color-accent-primary)', marginBottom: '3px', fontWeight: 600 }}>선택된 성공의 말</p>
+              <p style={{ fontSize: '12px', color: 'var(--color-text-primary)', lineHeight: 1.4 }}>{selectedAff.text}</p>
+            </div>
+          )}
+
+          {/* 반복 요일 */}
+          <p style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-muted)', marginBottom: '7px' }}>반복 요일 <span style={{ fontSize: '11px' }}>(선택 없음 = 매일)</span></p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '5px', marginBottom: '16px' }}>
+            {DAY_LABELS.map((label, day) => {
+              const on = repeatDays.includes(day)
+              return (
+                <button key={day} onClick={() => toggleDay(day)}
+                  style={{ aspectRatio: '1', borderRadius: '10px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', border: on ? 'none' : '1px solid var(--color-border)', background: on ? 'var(--color-accent-primary)' : 'var(--color-bg-card)', color: on ? '#fff' : 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}>
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* 종료 설정 */}
+          <p style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-text-muted)', marginBottom: '7px' }}>종료 설정</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '18px' }}>
+            {(['none', 'date', 'count'] as const).map((type) => {
+              const on = endType === type
+              return (
+                <div key={type} onClick={() => setEndType(type)} style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: `2px solid ${on ? 'var(--color-accent-primary)' : 'var(--color-border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'border-color 0.15s' }}>
+                    {on && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--color-accent-primary)' }} />}
+                  </div>
+                  {type === 'none' && <span style={{ fontSize: '13px', color: on ? 'var(--color-accent-primary)' : 'var(--color-text-primary)', fontWeight: on ? 600 : 400 }}>무제한 반복</span>}
+                  {type === 'date' && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                      <span style={{ fontSize: '13px', color: on ? 'var(--color-accent-primary)' : 'var(--color-text-primary)', fontWeight: on ? 600 : 400, flexShrink: 0 }}>종료 날짜</span>
+                      <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} onClick={() => setEndType('date')}
+                        style={{ flex: 1, padding: '7px 11px', border: '1px solid var(--color-border)', borderRadius: '10px', fontSize: '12px', background: 'var(--color-bg-card)', color: 'var(--color-text-primary)', outline: 'none' }} />
+                    </div>
+                  )}
+                  {type === 'count' && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input type="number" min={1} value={endCount} onChange={(e) => setEndCount(Number(e.target.value))} onClick={() => setEndType('count')}
+                        style={{ width: '60px', padding: '7px 8px', border: '1px solid var(--color-border)', borderRadius: '10px', fontSize: '12px', background: 'var(--color-bg-card)', color: 'var(--color-text-primary)', outline: 'none', textAlign: 'center' }} />
+                      <span style={{ fontSize: '13px', color: on ? 'var(--color-accent-primary)' : 'var(--color-text-primary)', fontWeight: on ? 600 : 400 }}>회 반복 후 종료</span>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={handleSave} disabled={!selectedAffId || saving}
+              style={{ flex: 1, padding: '13px', background: selectedAffId ? 'var(--color-accent-primary)' : 'var(--color-border)', color: 'white', border: 'none', borderRadius: '12px', fontSize: '14px', fontWeight: 700, cursor: selectedAffId ? 'pointer' : 'not-allowed', transition: 'background 0.15s' }}>
+              {saving ? '저장 중...' : '저장'}
+            </button>
+            <button onClick={() => setEditingId(null)}
+              style={{ padding: '13px 18px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: '12px', color: 'var(--color-text-muted)', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+              취소
+            </button>
+          </div>
+        </div>
+      )}
+    </Panel>
+  )
+}
+
+// ─── 통계 패널 ────────────────────────────────────────────────────────────────
+function StatsPanel() {
+  const [showReport, setShowReport] = useState(false)
+
+  const affirmations = getAffirmations()
+  const calendar = getCalendar()
+  const streak = getStreakData()
+  const categories = getCategories()
+
+  const totalCompletions = affirmations.reduce((s, a) => s + a.completedDates.length, 0)
+  const daysWithCompletions = calendar.filter((d) => d.completedCount > 0).length
+
+  const topAffirmations = [...affirmations]
+    .sort((a, b) => b.completedDates.length - a.completedDates.length)
+    .slice(0, 10)
+
+  const byCategory = categories.map((cat) => ({
+    cat,
+    count: affirmations.filter((a) => a.category === cat).reduce((s, a) => s + a.completedDates.length, 0),
+  })).sort((a, b) => b.count - a.count)
+
+  // Last 14 days
+  const last14 = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date()
+    d.setDate(d.getDate() - (13 - i))
+    const key = d.toISOString().split('T')[0]
+    const rec = calendar.find((c) => c.date === key)
+    return { date: key, count: rec?.completedCount ?? 0, dayKo: DAY_KO[d.getDay()] }
+  })
+
+  const maxCount = Math.max(...last14.map((d) => d.count), 1)
+
+  const handleExport = () => {
+    const lines: string[] = [
+      '=== 이뤄 통계 리포트 ===',
+      `생성: ${new Date().toLocaleString('ko-KR')}`,
+      '',
+      '▸ 전체 요약',
+      `등록된 성공의 말: ${affirmations.length}개`,
+      `전체 완료 횟수: ${totalCompletions}회`,
+      `완료한 날: ${daysWithCompletions}일`,
+      `현재 연속: ${streak.currentStreak}일`,
+      '',
+      '▸ 최근 14일',
+      ...last14.map((d) => `${d.date} (${d.dayKo}): ${d.count}회`),
+      '',
+      '▸ 많이 한 성공의 말 TOP 10',
+      ...topAffirmations.map((a, i) => `${i + 1}. "${a.text}" — ${a.completedDates.length}회`),
+      '',
+      '▸ 카테고리별 완료',
+      ...byCategory.map((c) => `${c.cat}: ${c.count}회`),
+    ]
+    downloadText(lines.join('\n'), `ealo-통계-${todayStr()}.txt`)
+  }
+
+  const statBox = (label: string, value: string) => (
+    <div style={{ flex: 1, background: 'var(--color-bg-primary)', borderRadius: '12px', padding: '14px 10px', textAlign: 'center' }}>
+      <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-accent-primary)' }}>{value}</div>
+      <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>{label}</div>
+    </div>
+  )
+
+  return (
+    <Panel>
+      <div className="flex items-center justify-between" style={{ marginBottom: '16px' }}>
+        <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)' }}>통계</p>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={() => setShowReport(true)} style={{ padding: '6px 12px', background: 'var(--color-accent-light)', border: 'none', borderRadius: '8px', fontSize: '12px', color: 'var(--color-accent-primary)', fontWeight: 600, cursor: 'pointer' }}>
+            주간 리포트
+          </button>
+          <button onClick={handleExport} style={{ padding: '6px 12px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '12px', color: 'var(--color-text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Download size={14} />텍스트
+          </button>
+        </div>
+      </div>
+
+      {/* Summary boxes */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+        {statBox('성공의 말', `${affirmations.length}개`)}
+        {statBox('전체 완료', `${totalCompletions}회`)}
+        {statBox('완료 일수', `${daysWithCompletions}일`)}
+        {statBox('연속 기록', `${streak.currentStreak}일`)}
+      </div>
+
+      {/* 14-day bar chart */}
+      <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '10px' }}>최근 14일</p>
+      <div style={{ display: 'flex', gap: '3px', alignItems: 'flex-end', height: '60px', marginBottom: '4px' }}>
+        {last14.map((d, i) => (
+          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', height: '100%', justifyContent: 'flex-end' }}>
+            <div
+              style={{ width: '100%', background: d.count > 0 ? 'var(--color-accent-primary)' : 'var(--color-border)', borderRadius: '3px 3px 0 0', height: `${d.count === 0 ? 4 : Math.max(8, (d.count / maxCount) * 52)}px`, transition: 'height 0.3s' }}
+            />
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: '3px' }}>
+        {last14.map((d, i) => (
+          <div key={i} style={{ flex: 1, textAlign: 'center', fontSize: '8px', color: 'var(--color-text-muted)' }}>{d.dayKo}</div>
+        ))}
+      </div>
+
+      {/* Top affirmations */}
+      {topAffirmations.length > 0 && (
+        <div style={{ marginTop: '20px' }}>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '10px' }}>많이 한 성공의 말 TOP 10</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {topAffirmations.map((a, i) => (
+              <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', background: 'var(--color-bg-primary)', borderRadius: '10px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: i < 3 ? 'var(--color-accent-primary)' : 'var(--color-text-muted)', minWidth: '20px' }}>{i + 1}</span>
+                <span style={{ flex: 1, fontSize: '12px', color: 'var(--color-text-primary)', lineHeight: 1.4 }}>{a.text}</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-accent-primary)', flexShrink: 0 }}>{a.completedDates.length}회</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* By category */}
+      {byCategory.length > 0 && (
+        <div style={{ marginTop: '20px' }}>
+          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '10px' }}>카테고리별 완료</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {byCategory.map(({ cat, count }) => {
+              const colors = getCategoryColor(cat, categories)
+              return (
+                <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 500, color: colors.dark, background: colors.light, padding: '2px 10px', borderRadius: '12px', minWidth: '80px' }}>{cat}</span>
+                  <div style={{ flex: 1, height: '6px', background: 'var(--color-border)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', background: colors.dark, borderRadius: '3px', width: `${byCategory[0].count > 0 ? (count / byCategory[0].count) * 100 : 0}%` }} />
+                  </div>
+                  <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', minWidth: '30px', textAlign: 'right' }}>{count}회</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {showReport && <WeeklyReportModal onClose={() => setShowReport(false)} />}
+    </Panel>
+  )
+}
+
+// ─── 찾기 패널 ────────────────────────────────────────────────────────────────
+function SearchPanel() {
+  const [query, setQuery] = useState('')
+  const [dateQuery, setDateQuery] = useState('')
+  const [dateQueryEnd, setDateQueryEnd] = useState('')
+
+  const affirmations = getAffirmations()
+
+  const textResults = query.trim()
+    ? affirmations.filter((a) => a.text.includes(query.trim()))
+    : []
+
+  const handleExportText = () => {
+    if (textResults.length === 0) return
+    const lines = [
+      `=== 찾기 결과: "${query}" ===`,
+      `생성: ${new Date().toLocaleString('ko-KR')}`,
+      `결과: ${textResults.length}개`,
+      '',
+      ...textResults.map((a, i) => [
+        `${i + 1}. "${a.text}"`,
+        `   카테고리: ${a.category}`,
+        `   총 완료: ${a.completedDates.length}회`,
+        `   마지막 완료: ${a.completedDates.length > 0 ? a.completedDates[a.completedDates.length - 1] : '없음'}`,
+        `   완료 날짜: ${a.completedDates.join(', ') || '없음'}`,
+      ].join('\n')),
+    ]
+    downloadText(lines.join('\n'), `ealo-검색-${todayStr()}.txt`)
+  }
+
+
+  return (
+    <Panel>
+      <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '16px' }}>찾기</p>
+
+      {/* Text search */}
+      <div style={{ marginBottom: '20px' }}>
+        <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '8px' }}>성공의 말 검색</p>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="검색어를 입력하세요"
+            style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: '10px', fontSize: '13px', background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', outline: 'none' }}
+          />
+          {textResults.length > 0 && (
+            <button onClick={handleExportText} style={{ padding: '10px 12px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: '10px', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+              <Download size={14} />텍스트
+            </button>
+          )}
+        </div>
+        {query.trim() && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {textResults.length === 0 ? (
+              <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>검색 결과가 없어요</p>
+            ) : textResults.map((a) => (
+              <div key={a.id} style={{ padding: '12px', background: 'var(--color-bg-primary)', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
+                <p style={{ fontSize: '13px', color: 'var(--color-text-primary)', marginBottom: '6px', lineHeight: 1.4 }}>{a.text}</p>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--color-accent-primary)' }}>✓ {a.completedDates.length}회 완료</span>
+                  <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{a.category}</span>
+                  {a.completedDates.length > 0 && (
+                    <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>마지막: {a.completedDates[a.completedDates.length - 1]}</span>
+                  )}
+                </div>
+                {a.completedDates.length > 0 && (
+                  <details style={{ marginTop: '6px' }}>
+                    <summary style={{ fontSize: '11px', color: 'var(--color-text-muted)', cursor: 'pointer' }}>완료 날짜 보기 ({a.completedDates.length}일)</summary>
+                    <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px', lineHeight: 1.8 }}>
+                      {a.completedDates.join(' · ')}
+                    </p>
+                  </details>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Date range search */}
+      <div>
+        <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '8px' }}>날짜 범위 검색</p>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap' }}>
+          <input type="date" value={dateQuery} onChange={(e) => setDateQuery(e.target.value)}
+            style={{ flex: 1, minWidth: '120px', padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: '10px', fontSize: '13px', background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', outline: 'none' }} />
+          <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>~</span>
+          <input type="date" value={dateQueryEnd} onChange={(e) => setDateQueryEnd(e.target.value)}
+            style={{ flex: 1, minWidth: '120px', padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: '10px', fontSize: '13px', background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', outline: 'none' }} />
+        </div>
+        {dateQuery && (
+          <>
+            {(() => {
+              const endStr = dateQueryEnd || dateQuery
+              const dateRangeResults = affirmations.filter((a) =>
+                a.completedDates.some((d) => d >= dateQuery && d <= endStr)
+              )
+              const totalInRange = dateRangeResults.reduce((sum, a) => sum + a.completedDates.filter((d) => d >= dateQuery && d <= endStr).length, 0)
+
+              const handleExportRange = () => {
+                if (dateRangeResults.length === 0) return
+                const lines = [
+                  `=== ${dateQuery} ~ ${endStr} 기록 ===`,
+                  `생성: ${new Date().toLocaleString('ko-KR')}`,
+                  `기간 내 완료 횟수: ${totalInRange}회`,
+                  '',
+                  ...dateRangeResults.map((a) => {
+                    const datesInRange = a.completedDates.filter((d) => d >= dateQuery && d <= endStr)
+                    return `"${a.text}" (${a.category}) — ${datesInRange.length}회\n  ${datesInRange.join(', ')}`
+                  }),
+                ]
+                downloadText(lines.join('\n'), `ealo-검색-${dateQuery}-${endStr}.txt`)
+              }
+
+              return (
+                <>
+                  <div className="flex items-center justify-between" style={{ marginBottom: '8px' }}>
+                    <p style={{ fontSize: '12px', color: 'var(--color-accent-primary)', fontWeight: 600 }}>
+                      {dateRangeResults.length}개 · 총 {totalInRange}회 완료
+                    </p>
+                    {dateRangeResults.length > 0 && (
+                      <button onClick={handleExportRange} style={{ padding: '5px 10px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: '8px', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}>
+                        <Download size={14} />텍스트
+                      </button>
+                    )}
+                  </div>
+                  {dateRangeResults.length === 0 ? (
+                    <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>해당 기간에 완료한 성공의 말이 없어요</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {dateRangeResults.map((a) => {
+                        const cnt = a.completedDates.filter((d) => d >= dateQuery && d <= endStr).length
+                        return (
+                          <div key={a.id} style={{ padding: '10px 12px', background: 'var(--color-bg-primary)', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
+                            <p style={{ fontSize: '13px', color: 'var(--color-text-primary)', lineHeight: 1.4 }}>{a.text}</p>
+                            <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>{a.category} · 기간 내 {cnt}회 완료</p>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </>
+              )
+            })()}
+          </>
+        )}
+      </div>
+    </Panel>
+  )
+}
+
+// ─── 백업 패널 ────────────────────────────────────────────────────────────────
+function BackupPanel() {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleBackup = () => {
+    downloadJSON({
+      version: '1.0',
+      app: '이뤄',
+      exportedAt: new Date().toISOString(),
+      affirmations: getAffirmations(),
+      categories: getCategories(),
+      calendar: getCalendar(),
+      streak: getStreakData(),
+    }, `ealo-백업-${todayStr()}.json`)
+  }
+
+  const handleRestoreFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string)
+        if (!data.affirmations) { alert('올바른 백업 파일이 아니에요.'); return }
+        const dateStr = data.exportedAt ? new Date(data.exportedAt).toLocaleString('ko-KR') : '알 수 없음'
+        if (!confirm(`${dateStr} 백업을 복구할까요?\n현재 데이터가 덮어씌워집니다.`)) return
+        if (typeof window === 'undefined') return
+        localStorage.setItem('ealo-affirmations', JSON.stringify(data.affirmations ?? []))
+        localStorage.setItem('ealo-categories', JSON.stringify(data.categories ?? []))
+        localStorage.setItem('ealo-calendar', JSON.stringify(data.calendar ?? []))
+        localStorage.setItem('ealo-streak', JSON.stringify(data.streak ?? { currentStreak: 0, lastCompletedDate: null, shields: 0 }))
+        alert('복구 완료! 앱을 다시 시작해요.')
+        window.location.reload()
+      } catch { alert('파일을 읽을 수 없어요.') }
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }
+
+  return (
+    <Panel>
+      <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '8px' }}>백업</p>
+      <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '2px' }}>
+        성공의 말, 카테고리, 달력 기록을 JSON 파일로 저장하고 복구해요
+      </p>
+      <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
+        녹음 파일은 백업·복구할 수 없어요
+      </p>
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button onClick={handleBackup}
+          style={{ flex: 1, padding: '14px', background: 'var(--color-accent-primary)', color: 'white', border: 'none', borderRadius: '14px', fontSize: '15px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          <Download size={16} />백업
+        </button>
+        <button onClick={() => fileInputRef.current?.click()}
+          style={{ flex: 1, padding: '14px', background: 'transparent', border: '1.5px solid var(--color-accent-primary)', borderRadius: '14px', fontSize: '15px', fontWeight: 600, color: 'var(--color-accent-primary)', cursor: 'pointer' }}>
+          복구
+        </button>
+        <input ref={fileInputRef} type="file" accept=".json" onChange={handleRestoreFile} style={{ display: 'none' }} />
+      </div>
+    </Panel>
+  )
+}
+
+// ─── 지우기 패널 ──────────────────────────────────────────────────────────────
+function DeletePanel() {
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [msg, setMsg] = useState('')
+
+  const showMsg = (text: string) => { setMsg(text); setTimeout(() => setMsg(''), 3000) }
+
+  const handleDeleteAll = async () => {
+    if (!confirm('모든 성공의 말과 녹음을 삭제할까요?')) return
+    for (const a of getAffirmations()) {
+      try { await deleteAudioRecordsByAffirmationId(a.id) } catch { /* ignore */ }
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('ealo-affirmations')
+      localStorage.removeItem('ealo-today-affirmations')
+    }
+    showMsg('성공의 말과 녹음이 삭제됐어요.')
+  }
+
+  const handleDeleteAudio = async () => {
+    if (!confirm('저장된 모든 녹음 파일을 삭제할까요?')) return
+    await clearAllAudioRecords()
+    showMsg('모든 녹음이 삭제됐어요.')
+  }
+
+  const handleDeleteDateRange = () => {
+    if (!dateFrom) return
+    const endStr = dateTo || dateFrom
+    const affs = getAffirmations()
+    const dates: string[] = []
+    const d = new Date(dateFrom)
+    const end = new Date(endStr)
+    while (d <= end) {
+      dates.push(d.toISOString().split('T')[0])
+      d.setDate(d.getDate() + 1)
+    }
+    const totalRecords = affs.reduce((sum, a) => sum + a.completedDates.filter((c) => dates.includes(c)).length, 0)
+    if (totalRecords === 0) { showMsg('해당 기간에 기록이 없어요.'); return }
+    const label = dateFrom === endStr ? dateFrom : `${dateFrom} ~ ${endStr}`
+    if (!confirm(`${label} 기간의 기록 ${totalRecords}개를 삭제할까요?`)) return
+    dates.forEach((date) => deleteDayRecord(date))
+    setDateFrom(''); setDateTo('')
+    showMsg(`${label} 기록이 삭제됐어요.`)
+  }
+
+  const handleReset = async () => {
+    if (!confirm('모든 데이터를 초기화할까요?\n이 작업은 되돌릴 수 없습니다.')) return
+    clearAllData()
+    await Promise.all([
+      clearAllAudioRecords().catch(() => {}),
+      clearFaceStorage().catch(() => {}),
+      clearSuccessImages().catch(() => {}),
+    ])
+    window.location.href = '/'
+  }
+
+  const btnStyle = (color: string, bg: string, border?: string): React.CSSProperties => ({
+    width: '100%', padding: '14px', background: bg, color, border: border ?? 'none',
+    borderRadius: '12px', fontSize: '14px', fontWeight: 500, cursor: 'pointer', textAlign: 'left',
+  })
+
+  return (
+    <Panel>
+      <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '16px' }}>지우기</p>
+
+      {msg && (
+        <div style={{ padding: '10px 14px', background: 'var(--color-success-bg)', borderRadius: '10px', marginBottom: '14px', fontSize: '13px', color: 'var(--color-success)' }}>
+          {msg}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {/* 날짜 범위 지우기 */}
+        <div style={{ padding: '14px', background: 'var(--color-bg-primary)', borderRadius: '12px', border: '1px solid var(--color-border)' }}>
+          <p style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: '10px' }}>날짜 선택 지우기</p>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
+            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
+              style={{ flex: 1, minWidth: '110px', padding: '8px 10px', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '13px', background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', outline: 'none' }} />
+            <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>~</span>
+            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
+              style={{ flex: 1, minWidth: '110px', padding: '8px 10px', border: '1px solid var(--color-border)', borderRadius: '8px', fontSize: '13px', background: 'var(--color-bg-primary)', color: 'var(--color-text-primary)', outline: 'none' }} />
+          </div>
+          <button onClick={handleDeleteDateRange} disabled={!dateFrom}
+            style={{ width: '100%', padding: '9px', background: dateFrom ? 'var(--color-danger-orange)' : 'var(--color-border)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', cursor: dateFrom ? 'pointer' : 'not-allowed', fontWeight: 500 }}>
+            삭제
+          </button>
+        </div>
+
+        <button onClick={handleDeleteAudio} style={{ ...btnStyle('var(--color-text-primary)', 'var(--color-bg-primary)', '1px solid var(--color-border)'), display: 'flex', alignItems: 'center', gap: '7px', justifyContent: 'center' }}>
+          <Mic size={15} /> 모든 녹음 파일 삭제
+        </button>
+
+        <button onClick={handleDeleteAll} style={{ ...btnStyle('var(--color-danger-orange-dark)', 'var(--color-danger-orange-bg)', '1px solid #FFCCBC'), display: 'flex', alignItems: 'center', gap: '7px', justifyContent: 'center' }}>
+          <Star size={15} /> 성공의 말 전체 지우기
+        </button>
+
+        <button onClick={handleReset} style={{ ...btnStyle('var(--color-danger-dark)', 'transparent', '1px solid #E53935'), display: 'flex', alignItems: 'center', gap: '7px', justifyContent: 'center' }}>
+          <AlertTriangle size={15} /><span style={{ fontWeight: 600 }}>전체 초기화</span>
+        </button>
+      </div>
+    </Panel>
+  )
+}
+
+// ─── 휴지통 패널 ──────────────────────────────────────────────────────────────
+function TrashPanel() {
+  const [affirmations, setAffirmations] = useState<ReturnType<typeof getTrash>>([])
+  const [audios, setAudios] = useState<AudioRecord[]>([])
+  const [faceProfile, setFaceProfile] = useState<FaceProfile | null>(null)
+  const [successImage, setSuccessImage] = useState<SuccessImageRecord | null>(null)
+
+  const totalCount = affirmations.length + audios.length + (faceProfile ? 1 : 0) + (successImage ? 1 : 0)
+
+  const reload = async () => {
+    setAffirmations(getTrash())
+    try { setAudios(await getTrashAudioRecords()) } catch { setAudios([]) }
+    try { setFaceProfile(await getFaceProfileFromTrash()) } catch { setFaceProfile(null) }
+    try { setSuccessImage(await getSuccessImageFromTrash()) } catch { setSuccessImage(null) }
+  }
+
+  useEffect(() => { reload() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleRestoreAffirmation = (id: string) => { restoreFromTrash(id); reload() }
+  const handleRestoreAudio = async (id: string) => { await restoreAudioFromTrash(id); reload() }
+  const handleRestoreFace = async () => { await restoreFaceProfileFromTrash(); reload() }
+  const handleRestoreSuccess = async () => { await restoreSuccessImageFromTrash(); reload() }
+  const handleEmpty = async () => {
+    if (!confirm('휴지통을 비울까요? 모든 항목이 영구 삭제됩니다.')) return
+    emptyTrash()
+    await Promise.all([emptyAudioTrash(), faceProfile ? clearFaceStorage() : Promise.resolve(), successImage ? clearSuccessImages() : Promise.resolve()])
+    reload()
+  }
+
+  const itemStyle: React.CSSProperties = { padding: '10px 12px', background: 'var(--color-bg-surface)', border: '1px solid var(--color-border)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px' }
+  const restoreBtn: React.CSSProperties = { padding: '5px 10px', border: '1px solid var(--color-accent-primary)', borderRadius: '8px', background: 'transparent', cursor: 'pointer', fontSize: '12px', color: 'var(--color-accent-primary)', flexShrink: 0 }
+  const label = (icon: ReactNode, text: string) => (
+    <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', background: 'var(--color-bg-primary)', borderRadius: '6px', padding: '2px 6px', marginBottom: '2px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>{icon}{text}</span>
+  )
+
+  return (
+    <Panel>
+      <div className="flex items-center justify-between" style={{ marginBottom: '16px' }}>
+        <div>
+          <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '2px' }}>휴지통</p>
+          <p style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>성공의 말 · 녹음 · 이미지 · {totalCount}개</p>
+        </div>
+        {totalCount > 0 && (
+          <button onClick={handleEmpty} style={{ padding: '7px 14px', background: 'transparent', border: '1px solid #E53935', borderRadius: '10px', color: 'var(--color-danger)', fontSize: '12px', cursor: 'pointer' }}>
+            비우기
+          </button>
+        )}
+      </div>
+
+      {totalCount === 0 ? (
+        <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', fontStyle: 'italic', textAlign: 'center', padding: '20px 0' }}>
+          휴지통이 비어있어요
+        </p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {affirmations.map((item) => (
+            <div key={item.id} style={itemStyle}>
+              <div style={{ flex: 1 }}>
+                {label(<Star size={12} color="var(--color-accent-primary)" />, '성공의 말')}
+                <p style={{ fontSize: '13px', color: 'var(--color-text-onDark)', lineHeight: 1.4, marginBottom: '2px' }}>{item.text}</p>
+                <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{item.category}</span>
+              </div>
+              <button onClick={() => handleRestoreAffirmation(item.id)} style={restoreBtn}>복원</button>
+            </div>
+          ))}
+          {audios.map((rec) => (
+            <div key={rec.id} style={itemStyle}>
+              <div style={{ flex: 1 }}>
+                {label(<Mic size={12} color="#1E88E5" />, '녹음 파일')}
+                <p style={{ fontSize: '13px', color: 'var(--color-text-onDark)', lineHeight: 1.4, marginBottom: '2px' }}>{rec.affirmationText}</p>
+                <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{new Date(rec.createdAt).toLocaleDateString('ko-KR')}</span>
+              </div>
+              <button onClick={() => handleRestoreAudio(rec.id)} style={restoreBtn}>복원</button>
+            </div>
+          ))}
+          {faceProfile && (
+            <div style={itemStyle}>
+              <div style={{ flex: 1 }}>
+                {label(<User size={12} color="#7B6F5E" />, '프로필 이미지')}
+                <p style={{ fontSize: '13px', color: 'var(--color-text-onDark)', lineHeight: 1.4 }}>{new Date(faceProfile.createdAt).toLocaleDateString('ko-KR')} 생성</p>
+              </div>
+              <button onClick={handleRestoreFace} style={restoreBtn}>복원</button>
+            </div>
+          )}
+          {successImage && (
+            <div style={itemStyle}>
+              <div style={{ flex: 1 }}>
+                {label(<ImageIcon size={12} color="#7B1FA2" />, '성공 이미지')}
+                <p style={{ fontSize: '13px', color: 'var(--color-text-onDark)', lineHeight: 1.4 }}>{new Date(successImage.createdAt).toLocaleDateString('ko-KR')} 생성</p>
+              </div>
+              <button onClick={handleRestoreSuccess} style={restoreBtn}>복원</button>
+            </div>
+          )}
+        </div>
+      )}
+    </Panel>
+  )
+}
+
+// ─── 카테고리 패널 ────────────────────────────────────────────────────────────
+function CategoryPanel() {
+  const [categories, setCategories] = useState<string[]>([])
+  const [editingIdx, setEditingIdx] = useState<number | null>(null)
+  const [editValue, setEditValue] = useState('')
+  const [addMode, setAddMode] = useState(false)
+  const [newCatName, setNewCatName] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<{ name: string; idx: number } | null>(null)
+  const [dragIdx, setDragIdx] = useState<number | null>(null)
+  const [overIdx, setOverIdx] = useState<number | null>(null)
+  const dragStartYRef = useRef(0)
+  const [addingCat, setAddingCat] = useState(false)
+  const [catAlternative, setCatAlternative] = useState<string | null>(null)
+  const [catBlocked, setCatBlocked] = useState(false)
+
+  useEffect(() => { setCategories(getCategories()) }, [])
+  const reload = () => setCategories(getCategories())
+
+  const handleGripDown = (e: React.PointerEvent, idx: number) => {
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    dragStartYRef.current = e.clientY
+    setDragIdx(idx)
+    setOverIdx(idx)
+  }
+  const handleGripMove = (e: React.PointerEvent, idx: number) => {
+    if (dragIdx !== idx) return
+    const delta = Math.round((e.clientY - dragStartYRef.current) / 52)
+    setOverIdx(Math.max(0, Math.min(categories.length - 1, idx + delta)))
+  }
+  const handleGripUp = () => {
+    if (dragIdx !== null && overIdx !== null && dragIdx !== overIdx) {
+      const updated = [...categories]
+      const [removed] = updated.splice(dragIdx, 1)
+      updated.splice(overIdx, 0, removed)
+      saveCategories(updated)
+      setCategories(updated)
+    }
+    setDragIdx(null); setOverIdx(null)
+  }
+
+  const commitEdit = () => {
+    if (editingIdx === null) return
+    const name = editValue.trim()
+    if (!name || name === categories[editingIdx]) { setEditingIdx(null); return }
+    if (categories.includes(name)) { alert('이미 있는 카테고리예요.'); return }
+    const oldName = categories[editingIdx]
+    getAffirmations().forEach((a) => { if (a.category === oldName) updateAffirmation({ ...a, category: name }) })
+    const updated = [...categories]; updated[editingIdx] = name
+    saveCategories(updated); setCategories(updated); setEditingIdx(null)
+  }
+
+  const doAddCategory = (name: string) => {
+    const updated = [...categories, name]
+    saveCategories(updated); setCategories(updated)
+    setNewCatName(''); setCatAlternative(null); setAddMode(false)
+  }
+
+  const handleAdd = async () => {
+    const name = newCatName.trim()
+    if (!name) return
+    if (categories.includes(name)) { alert('이미 있는 카테고리예요.'); return }
+    setAddingCat(true)
+    try {
+      const res = await fetch('/api/detect-negative', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: name }) })
+      const data = await res.json() as { isNegative: boolean; alternative: string | null }
+      if (data.isNegative) {
+        if (data.alternative) { setCatAlternative(data.alternative) } else { setCatBlocked(true) }
+        setAddingCat(false); return
+      }
+    } catch { /* 네트워크 오류 시 통과 */ }
+    setAddingCat(false); doAddCategory(name)
+  }
+
+  const handleDeleteConfirm = (targetCategory: string | null) => {
+    if (!deleteTarget) return
+    const { name } = deleteTarget
+    const remaining = categories.filter((c) => c !== name)
+    const fallback = targetCategory ?? remaining[0] ?? '기타'
+    getAffirmations().forEach((a) => { if (a.category === name) updateAffirmation({ ...a, category: fallback }) })
+    saveCategories(remaining); setCategories(remaining); setDeleteTarget(null); reload()
+  }
+
+  const affCountFor = (cat: string) => getAffirmations().filter((a) => a.category === cat).length
+
+  return (
+    <Panel>
+      <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '16px' }}>카테고리 관리</p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {categories.map((cat, idx) => {
+          const colors = getCategoryColor(cat, categories)
+          const isEditing = editingIdx === idx
+          const isDraggingThis = dragIdx === idx
+          const isOver = overIdx === idx && overIdx !== dragIdx
+          return (
+            <div key={cat} style={{ borderTop: isOver ? '2px solid var(--color-accent-primary)' : '2px solid transparent', transition: 'border-color 0.1s' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', borderRadius: '10px', background: colors.light, opacity: isDraggingThis ? 0.4 : 1, transition: 'opacity 0.15s' }}>
+                {isEditing ? (
+                  <>
+                    <input autoFocus value={editValue} onChange={(e) => setEditValue(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) commitEdit(); if (e.key === 'Escape') setEditingIdx(null) }}
+                      style={{ flex: 1, background: 'var(--color-bg-primary)', border: `1px solid ${colors.dark}`, borderRadius: '6px', padding: '6px 10px', fontSize: '13px', color: colors.dark, outline: 'none' }} />
+                    <button onClick={commitEdit} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.dark, padding: '2px' }}><Check size={16} /></button>
+                    <button onClick={() => setEditingIdx(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '2px' }}><X size={16} /></button>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ flex: 1, fontSize: '13px', fontWeight: 500, color: colors.dark }}>{cat}</span>
+                    <span style={{ fontSize: '11px', color: `${colors.dark}88` }}>{affCountFor(cat)}개</span>
+                    <button onClick={() => { setEditingIdx(idx); setEditValue(categories[idx]) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.dark, padding: '2px' }}><Pencil size={14} /></button>
+                    <button onClick={() => setDeleteTarget({ name: cat, idx })} disabled={categories.length <= 1} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', padding: '2px' }}><Trash2 size={14} /></button>
+                    <button onPointerDown={(e) => handleGripDown(e, idx)} onPointerMove={(e) => handleGripMove(e, idx)} onPointerUp={handleGripUp} onPointerCancel={handleGripUp} style={{ background: 'none', border: 'none', cursor: 'grab', color: `${colors.dark}88`, padding: '2px', touchAction: 'none' }}><GripVertical size={16} /></button>
+                  </>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {addMode ? (
+        <div style={{ marginTop: '10px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input autoFocus value={newCatName} onChange={(e) => { setNewCatName(e.target.value); setCatAlternative(null) }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleAdd(); if (e.key === 'Escape') { setAddMode(false); setNewCatName(''); setCatAlternative(null) } }}
+              placeholder="새 카테고리 이름"
+              style={{ flex: 1, padding: '10px 12px', background: 'var(--color-bg-primary)', border: '1px solid var(--color-border)', borderRadius: '10px', fontSize: '13px', color: 'var(--color-text-primary)', outline: 'none' }} />
+            <button onClick={handleAdd} disabled={addingCat} style={{ padding: '10px 16px', background: 'var(--color-accent-primary)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', opacity: addingCat ? 0.6 : 1 }}>{addingCat ? '확인 중...' : '추가'}</button>
+            <button onClick={() => { setAddMode(false); setNewCatName(''); setCatAlternative(null) }} style={{ padding: '10px', background: 'transparent', border: '1px solid var(--color-border)', borderRadius: '10px', cursor: 'pointer', color: 'var(--color-text-muted)' }}><X size={14} /></button>
+          </div>
+          {catBlocked && (
+            <div style={{ marginTop: '8px', padding: '12px', background: '#FFEBEE', borderRadius: '10px', border: '1px solid #FFCDD2' }}>
+              <p style={{ fontSize: '12px', color: '#B71C1C', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}><Ban size={14} /> 부적절한 표현은 사용할 수 없어요.</p>
+              <button onClick={() => { setNewCatName(''); setCatBlocked(false) }} style={{ width: '100%', padding: '8px', background: 'transparent', color: '#B71C1C', border: '1px solid #FFCDD2', borderRadius: '8px', fontSize: '12px', cursor: 'pointer' }}>다시 쓰기</button>
+            </div>
+          )}
+          {catAlternative && (
+            <div style={{ marginTop: '8px', padding: '12px', background: 'var(--color-warning-bg)', borderRadius: '10px', border: '1px solid #FFE082' }}>
+              <p style={{ fontSize: '12px', color: 'var(--color-warning)', marginBottom: '6px' }}>부정적인 표현이 감지됐어요. 이렇게 바꿔볼까요?</p>
+              <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-warning-dark)', marginBottom: '10px' }}>{catAlternative}</p>
+              <div className="flex gap-2">
+                <button onClick={() => doAddCategory(catAlternative)} style={{ flex: 1, padding: '8px', background: 'var(--color-accent-primary)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>이 이름으로 추가</button>
+                <button onClick={() => { setNewCatName(''); setCatAlternative(null) }} style={{ flex: 1, padding: '8px', background: 'transparent', color: 'var(--color-warning)', border: '1px solid #FFE082', borderRadius: '8px', fontSize: '12px', cursor: 'pointer' }}>다시 쓰기</button>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <button onClick={() => setAddMode(true)} style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 14px', background: 'transparent', border: '1.5px dashed var(--color-border)', borderRadius: '10px', color: 'var(--color-text-muted)', fontSize: '13px', cursor: 'pointer', width: '100%', justifyContent: 'center' }}>
+          <Plus size={14} /> 카테고리 추가
+        </button>
+      )}
+
+      {deleteTarget && (
+        <CategoryDeleteModal
+          category={deleteTarget.name}
+          affirmationCount={affCountFor(deleteTarget.name)}
+          otherCategories={categories.filter((c) => c !== deleteTarget.name)}
+          onMove={handleDeleteConfirm}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
+    </Panel>
+  )
+}
+
+// ─── 사용설명서 패널 ──────────────────────────────────────────────────────────
+function ManualPanel() {
+  const intro = {
+    tagline: '성공의 말 습관 만들기',
+    headline: '흔들리는 시기, 다시 나를 세우는 한 문장',
+    subcopy: 'AI가 모든 것을 바꾸는 시대, 미래가 불안한 요즘. 나를 마주 보고 오늘의 성공의 말을 소리 내어 말해요.',
+    hookTitle: '요즘, 이런 마음이 스치나요?',
+    quotes: [
+      '왜 이렇게 열심히 살았지',
+      '이렇게 해서 얻은 건 뭐지',
+      '내가 추구해 온 것들, 잘 해내고 있나',
+      '앞으로는 어떻게 살아야 하지',
+    ],
+    evidenceTitle: '보고, 말하면, 더 오래 기억됩니다',
+    evidence: [
+      { title: '소리 내어 말하기', desc: '소리 내어 말한 정보는 눈으로만 읽은 정보보다 더 잘 기억되는 경향이 연구로 보고되었습니다.' },
+      { title: '보면서 말하기', desc: '언어와 시각 정보를 함께 사용하면 기억 형성에 도움이 될 수 있다는 인지심리학 이론입니다.' },
+      { title: '나의 가치를 떠올리기', desc: '자신의 가치와 목표를 반복적으로 떠올리는 행동은 행동 변화와 심리적 안정에 도움을 줄 수 있습니다.' },
+      { title: '내 얼굴을 마주하기', desc: '사람은 자신의 얼굴과 관련된 정보를 더 빠르고 강하게 처리하는 경향이 있습니다.' },
+    ],
+    howTitle: '하루 30초면 충분해요',
+    steps: [
+      { num: '01', title: '오늘의 말을 골라요', desc: '카테고리별 확언 중 오늘 마주할 성공의 말을 만나요.' },
+      { num: '02', title: '카메라를 보며 말해요', desc: '소리 내어 말하면 인식된 단어가 하나씩 밝아져요.' },
+      { num: '03', title: '기록으로 이어져요', desc: '완료한 외침이 달력과 연속 기록으로 쌓여요.' },
+    ],
+    featuresTitle: '습관으로 이어지도록',
+    features: [
+      { title: '동적 텍스트 인트로', desc: '확언이 어절 단위로 밝아지며 마음을 준비시켜요.' },
+      { title: '연속 기록 & 달력', desc: '매일의 외침이 기록으로. 보호막으로 지켜요.' },
+      { title: '게임으로 익히기', desc: '벽돌 깨기·단어 정렬로 놀이처럼 익혀요.' },
+      { title: '함께 나누기', desc: '같은 마음의 사람들과 서로를 응원해요.' },
+    ],
+  }
+
+  const sections = [
+    {
+      title: '홈',
+      items: [
+        '오늘의 성공의 말이 카드에 표시돼요. "성공의 말하기" 버튼을 눌러 말하기를 시작해요.',
+        '연속 기록과 오늘 완료한 성공의 말 개수를 확인할 수 있어요.',
+        '보호막 획득 ①: 5일 연속으로 하루 7개 이상 완료하면 보호막 1개가 생겨요.',
+        '보호막 획득 ②: 토요일에 이번 주(일~토) 매일 3개 이상 완료하면 보호막 1개가 생겨요.',
+        '보호막이 있으면 하루 빠져도 연속 기록이 끊기지 않아요.',
+        '달력에서 날짜별 완료 기록을 확인하고 그날 말한 성공의 말을 볼 수 있어요.',
+        '하단 바로가기 버튼: 게임하기 · 성공의 말 만들기(강조) · 성공 이미지 만들기로 바로 이동해요.',
+        '최근 녹음 플레이어로 내 목소리를 바로 들을 수 있어요.',
+        '저장된 성공 이미지가 있으면 홈 하단에 표시돼요. 탭하면 이미지 페이지로 이동해요.',
+      ],
+    },
+    {
+      title: '말하기',
+      items: [
+        '텍스트 화면을 탭하거나 위로 스와이프하면 말하기 화면으로 전환돼요.',
+        '카메라로 나 자신을 보면서 자신감 있게 말해요.',
+        '말한 단어는 실시간으로 인식되어 하이라이트돼요. 모두 완료되면 자동으로 넘어가요.',
+        '녹음이 없을 때 첫 말하기는 자동으로 녹음돼요.',
+        '이미 녹음이 있을 때는 "다시 녹음" 버튼으로 새로 녹음할 수 있어요.',
+        '완료 후 "오늘 더 말하고 싶어요" 또는 "반복하기"로 계속 이어서 말할 수 있어요.',
+        '녹음은 자동 저장되며 게임 성공 시 내 목소리로 재생돼요.',
+      ],
+    },
+    {
+      title: '나의 성공의 말',
+      items: [
+        '저장된 모든 성공의 말을 카테고리별로 볼 수 있어요.',
+        '상단 카테고리 탭을 눌러 원하는 카테고리만 필터링해요.',
+        '재생 버튼으로 녹음을 듣고, 저장 버튼으로 파일을 다운로드해요.',
+        '녹음 삭제 버튼으로 해당 녹음만 휴지통으로 이동해요.',
+        '폴더 버튼으로 다른 카테고리로 이동할 수 있어요.',
+        '성공의 말을 삭제하면 휴지통으로 이동하며 설정에서 복원할 수 있어요.',
+      ],
+    },
+    {
+      title: '성공의 말 만들기',
+      items: [
+        '직접 입력 탭: 원하는 문장을 직접 쓰거나 마이크로 말해서 입력해요.',
+        'AI 추천 탭: 주제나 바라는 점을 입력하면 AI가 긍정적인 성공의 말을 추천해줘요.',
+        '질문 추천 탭: AI와 대화하듯 성공의 말을 함께 만들어가요.',
+        '세 탭 모두 마이크 버튼으로 음성 입력이 가능해요.',
+        '부정적인 표현이 감지되면 긍정적인 대안을 제안해드려요.',
+        '이미 있는 문장은 중복으로 감지되어 안내해요.',
+        '카테고리를 지정해서 성공의 말을 분류해요.',
+      ],
+    },
+    {
+      title: '게임',
+      items: [
+        '벽돌 깨기: 성공의 말 단어들이 벽돌 뒤에 숨어 있어요. 모두 깨면 완성!',
+        '단어 정렬: 뒤섞인 단어를 올바른 순서로 맞춰요.',
+        '게임 성공 시 녹음이 있으면 내 목소리로, 없으면 TTS로 읽어줘요.',
+        '성공 이미지 만들기: AI로 성공한 미래의 내 모습 이미지를 생성해요.',
+      ],
+    },
+    {
+      title: '나에게',
+      items: [
+        '말하기를 완료하면 "나에게" 화면으로 이동해요.',
+        '내일의 나에게 응원 메시지를 남길 수 있어요 (마이크 입력도 가능).',
+        '내일 말할 성공의 말을 최대 7개까지 미리 골라둘 수 있어요.',
+        '저장한 메시지는 오늘 완료 후 홈 카드에 표시돼요.',
+        '설정 On/Off에서 이 기능을 켜고 끌 수 있어요.',
+      ],
+    },
+    {
+      title: '함께',
+      items: [
+        '같은 목표를 가진 사람들과 성공의 말을 나누는 공간이에요.',
+        '내 방: 참여 중인 방 목록이 보여요. 탭하면 방 안으로 이동해요.',
+        '내 방 우측 상단 "+ 방 만들기" 버튼으로 새 방을 만들 수 있어요. 방 이름·소개·태그를 설정해요.',
+        '방 둘러보기: 태그 필터·검색으로 방을 찾아요. 마감된 방도 둘러볼 수 있어요.',
+        '방 둘러보기에서 "둘러보기" 버튼으로 참여 전 방 내부를 먼저 확인할 수 있어요.',
+        '둘러보기 중에는 칭찬 버튼을 누를 수 있지만 성공의 말 공유는 참여 후에만 가능해요.',
+        '"참여하기" 버튼으로 방에 가입하면 내 방 목록에 추가돼요.',
+        '랭킹: 방 랭킹과 성공의 말 랭킹을 전체·연·월·일 기간별로 확인해요.',
+        '우측 상단 프로필 버튼으로 닉네임과 프로필 사진을 설정해요. 닉네임을 설정해야 공유가 활성화돼요.',
+        '방 안 — 성공의 말 나누기: 내 성공의 말을 최대 3개까지 방에 공유해요. 방 재진입 후에도 유지돼요.',
+        '방 안 — 칭찬하기: 12가지 아이콘으로 칭찬해요. 내 공유 항목도 칭찬 가능해요.',
+        '방 안 — 가져오기: 다른 사람의 성공의 말을 내 목록에 추가할 수 있어요.',
+        '방 안 — 함께 도전: 같은 성공의 말에 도전하는 사람들을 확인하고 칭찬해요.',
+        '방 지우기: 방에서 나가면 공유한 성공의 말도 함께 삭제돼요.',
+      ],
+    },
+    {
+      title: '설정',
+      items: [
+        '테마: 행운의 황금 · 고귀한 보라 · 풍요의 초록 · 번영의 파랑 4가지 색상 테마를 선택해요.',
+        'On/Off: 홈 화면의 최근 녹음 · 성공 이미지 · 달력 표시 여부와 "나에게" 기능을 켜고 꺼요.',
+        '알림: 성공의 말을 선택해 매일 정해진 시간에 알림을 받아요. 반복 요일과 종료 조건도 설정 가능해요.',
+        '통계: 완료 횟수, 최근 14일 그래프, 많이 한 성공의 말 TOP 10, 카테고리별 기록을 확인해요.',
+        '찾기: 성공의 말을 텍스트로 검색하거나 날짜 범위로 완료 기록을 조회해요.',
+        '백업: 성공의 말·카테고리·달력·연속 기록을 JSON 파일로 저장하고 복구해요. (녹음 파일 제외)',
+        '카테고리: 카테고리를 추가·수정·삭제하고 드래그로 순서를 변경해요.',
+        '휴지통: 삭제된 성공의 말·녹음·이미지를 복원하거나 영구 삭제해요.',
+        '설명서: 이 화면이에요.',
+        '지우기: 날짜별 기록·녹음·성공의 말을 선택 삭제하거나 앱을 전체 초기화해요.',
+      ],
+    },
+  ]
+
+  return (
+    <Panel>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: '16px' }}>
+        <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)', margin: 0 }}>사용설명서</p>
+        <a
+          href="https://joyfoal.github.io/ealo-landing/mobile.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '4px', flexShrink: 0,
+            padding: '7px 12px', borderRadius: '10px',
+            background: 'var(--color-accent-primary)', color: 'white',
+            fontSize: '12.5px', fontWeight: 600, textDecoration: 'none',
+          }}
+        >
+          <ExternalLink size={13} /> 소개 웹페이지 보기
+        </a>
+      </div>
+
+      {/* 소개 — 랜딩페이지 핵심 메시지 요약 */}
+      <div style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid var(--color-border)' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'var(--color-accent-light)', padding: '4px 10px', borderRadius: '999px', marginBottom: '10px' }}>
+          <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--color-accent-primary)' }} />
+          <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-accent-primary)' }}>{intro.tagline}</span>
+        </div>
+        <p style={{ fontSize: '16px', fontWeight: 800, color: 'var(--color-text-primary)', lineHeight: 1.4, margin: '0 0 8px' }}>{intro.headline}</p>
+        <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.55, margin: '0 0 16px' }}>{intro.subcopy}</p>
+
+        <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-accent-primary)', marginBottom: '8px' }}>{intro.hookTitle}</p>
+        <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '6px', margin: '0 0 16px', padding: 0 }}>
+          {intro.quotes.map((q, i) => (
+            <li key={i} style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.5, paddingLeft: '12px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, color: 'var(--color-accent-primary)' }}>·</span>
+              {q}
+            </li>
+          ))}
+        </ul>
+
+        <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-accent-primary)', marginBottom: '8px' }}>{intro.evidenceTitle}</p>
+        <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '6px', margin: '0 0 16px', padding: 0 }}>
+          {intro.evidence.map((e) => (
+            <li key={e.title} style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.5, paddingLeft: '12px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, color: 'var(--color-accent-primary)' }}>·</span>
+              <strong style={{ color: 'var(--color-text-primary)' }}>{e.title}</strong> — {e.desc}
+            </li>
+          ))}
+        </ul>
+
+        <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-accent-primary)', marginBottom: '8px' }}>{intro.howTitle}</p>
+        <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '6px', margin: '0 0 16px', padding: 0 }}>
+          {intro.steps.map((s) => (
+            <li key={s.num} style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.5, paddingLeft: '12px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, color: 'var(--color-accent-primary)' }}>·</span>
+              <strong style={{ color: 'var(--color-text-primary)' }}>{s.title}</strong> — {s.desc}
+            </li>
+          ))}
+        </ul>
+
+        <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-accent-primary)', marginBottom: '8px' }}>{intro.featuresTitle}</p>
+        <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '6px', margin: 0, padding: 0 }}>
+          {intro.features.map((f) => (
+            <li key={f.title} style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.5, paddingLeft: '12px', position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 0, color: 'var(--color-accent-primary)' }}>·</span>
+              <strong style={{ color: 'var(--color-text-primary)' }}>{f.title}</strong> — {f.desc}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {sections.map((sec) => (
+          <div key={sec.title}>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-accent-primary)', marginBottom: '8px' }}>{sec.title}</p>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {sec.items.map((item, i) => (
+                <li key={i} style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.5, paddingLeft: '12px', position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: 0, color: 'var(--color-accent-primary)' }}>·</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '12px', color: 'var(--color-text-muted)' }}>
+        이뤄 v0.1.0 · 말하면, 이루어진다.
+      </div>
+    </Panel>
+  )
+}
+
+// ─── 개발자 모드 패널 ────────────────────────────────────────────────────────────
+function DevPanel() {
+  const [aiStatus, setAiStatus] = useState<'checking' | 'available' | 'unavailable'>('checking')
+  const [msg, setMsg] = useState('')
+  const [featureFlags, setFeatureFlags] = useState({ showToggleMenu: true, showGame: true, showSuccessImageMaker: true, showRecentRecGlobal: true })
+  const [flagError, setFlagError] = useState('')
+
+  const showMsg = (text: string) => { setMsg(text); setTimeout(() => setMsg(''), 3000) }
+
+  const toggleFeature = async (key: 'showToggleMenu' | 'showGame' | 'showSuccessImageMaker' | 'showRecentRecGlobal') => {
+    const val = !featureFlags[key]
+    setFeatureFlags((p) => ({ ...p, [key]: val }))
+    setFlagError('')
+    try {
+      const res = await fetch('/api/dev/feature-flags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, value: val }),
+      })
+      const data = await res.json() as { ok: boolean; message?: string }
+      if (!data.ok) throw new Error(data.message || '저장 실패')
+      window.dispatchEvent(new Event('ealo-display-settings-changed'))
+    } catch (err) {
+      setFeatureFlags((p) => ({ ...p, [key]: !val }))
+      setFlagError(err instanceof Error ? err.message : '저장 실패')
+    }
+  }
+
+  const featureItems = [
+    { key: 'showToggleMenu' as const, label: '켜기 / 끄기 메뉴 표시' },
+    { key: 'showGame' as const, label: '게임하기 버튼 표시' },
+    { key: 'showSuccessImageMaker' as const, label: '성공 이미지 만들기 버튼 표시' },
+    { key: 'showRecentRecGlobal' as const, label: '최근 녹음 표시 (전역)' },
+  ]
+
+  useEffect(() => {
+    fetch('/api/dev/ai-status')
+      .then((r) => r.json() as Promise<{ available: boolean }>)
+      .then((d) => setAiStatus(d.available ? 'available' : 'unavailable'))
+      .catch(() => setAiStatus('unavailable'))
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/dev/feature-flags')
+      .then((r) => r.json())
+      .then(setFeatureFlags)
+      .catch(() => {})
+  }, [])
+
+  const handleResetOnboarding = () => {
+    if (!confirm('온보딩을 다시 볼까요? (온보딩 완료 기록만 초기화돼요)')) return
+    try { localStorage.removeItem('ealo-onboarded') } catch {}
+    window.location.href = '/'
+  }
+
+  const handleResetCommunityLogin = () => {
+    if (!confirm('함께 로그인 상태를 초기화할까요?')) return
+    try {
+      const saved = localStorage.getItem('ealo-user-profile')
+      if (saved) {
+        const profile = JSON.parse(saved) as Record<string, unknown>
+        delete profile.googleEmail
+        localStorage.setItem('ealo-user-profile', JSON.stringify(profile))
+      }
+    } catch {}
+    showMsg('함께 로그인 상태가 초기화됐어요.')
+  }
+
+  const handleResetEverything = async () => {
+    if (!confirm('앱의 모든 데이터(커뮤니티 포함)를 초기화할까요?\n이 작업은 되돌릴 수 없습니다.')) return
+    clearAllData()
+    try {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith('ealo-room-') || ['ealo-user-profile', 'ealo-my-rooms', 'ealo-custom-rooms'].includes(k))
+        .forEach((k) => localStorage.removeItem(k))
+    } catch {}
+    await Promise.all([
+      clearAllAudioRecords().catch(() => {}),
+      clearFaceStorage().catch(() => {}),
+      clearSuccessImages().catch(() => {}),
+    ])
+    window.location.href = '/'
+  }
+
+  const handleDisableDevMode = () => {
+    disableDevMode()
+    window.dispatchEvent(new Event('ealo-dev-mode-changed'))
+    window.location.reload()
+  }
+
+  const btnStyle = (color: string, bg: string, border?: string): React.CSSProperties => ({
+    width: '100%', padding: '14px', background: bg, color, border: border ?? 'none',
+    borderRadius: '12px', fontSize: '14px', fontWeight: 500, cursor: 'pointer', textAlign: 'left',
+  })
+
+  return (
+    <Panel>
+      <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '16px' }}>개발자 모드</p>
+
+      {msg && (
+        <div style={{ padding: '10px 14px', background: 'var(--color-success-bg)', borderRadius: '10px', marginBottom: '14px', fontSize: '13px', color: 'var(--color-success)' }}>
+          {msg}
+        </div>
+      )}
+
+      <div style={{ padding: '14px', background: 'var(--color-bg-primary)', borderRadius: '12px', border: '1px solid var(--color-border)', marginBottom: '10px', fontSize: '13px', color: 'var(--color-text-secondary)' }}>
+        AI 연동:{' '}
+        {aiStatus === 'checking' ? '확인 중...' : aiStatus === 'available' ? '사용 가능 ✅' : '사용 불가 (API 키 없음) ⚠️'}
+      </div>
+
+      <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-primary)', margin: '18px 0 8px' }}>기능 노출 설정 (일반 모드에만 적용, 모든 기기에 전역 반영)</p>
+      {flagError && (
+        <div style={{ padding: '10px 14px', background: 'var(--color-danger-bg)', borderRadius: '10px', marginBottom: '10px', fontSize: '12px', color: 'var(--color-danger-dark)' }}>
+          {flagError}
+        </div>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '10px' }}>
+        {featureItems.map(({ key, label }) => (
+          <div
+            key={key}
+            className="flex items-center justify-between"
+            style={{ padding: '10px 0', borderBottom: `1px solid ${T.divider}` }}
+          >
+            <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-text-primary)' }}>{label}</p>
+            <button
+              onClick={() => toggleFeature(key)}
+              style={{ width: '46px', height: '27px', borderRadius: '14px', background: featureFlags[key] ? T.goldGrad : 'var(--color-border)', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}
+            >
+              <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'white', position: 'absolute', top: '2.5px', left: featureFlags[key] ? '21px' : '3px', transition: 'left 0.2s' }} />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <button onClick={handleResetOnboarding} style={btnStyle('var(--color-text-primary)', 'var(--color-bg-primary)', '1px solid var(--color-border)')}>
+          온보딩 다시 보기
+        </button>
+        <button onClick={handleResetCommunityLogin} style={btnStyle('var(--color-text-primary)', 'var(--color-bg-primary)', '1px solid var(--color-border)')}>
+          함께 로그인 초기화
+        </button>
+        <button onClick={handleResetEverything} style={btnStyle('var(--color-danger)', 'var(--color-danger-bg)')}>
+          전체 데이터 초기화 (커뮤니티 포함)
+        </button>
+        <button onClick={handleDisableDevMode} style={btnStyle('var(--color-text-muted)', 'var(--color-bg-primary)', '1px solid var(--color-border)')}>
+          개발자 모드 끄기
+        </button>
+      </div>
+    </Panel>
+  )
+}
+
+// ─── Main Settings Page ────────────────────────────────────────────────────────
+type LucideIcon = React.ComponentType<{ size?: number; strokeWidth?: number; color?: string }>
+const BUTTONS: { id: string; icon: LucideIcon; label: string; danger?: boolean }[] = [
+  { id: 'theme',    icon: Palette,    label: '테마' },
+  { id: 'toggle',   icon: Power,      label: '켜기 / 끄기' },
+  { id: 'alarm',    icon: Bell,       label: '알림' },
+  { id: 'stats',    icon: BarChart3,  label: '통계' },
+  { id: 'search',   icon: Search,     label: '찾기' },
+  { id: 'backup',   icon: UploadCloud, label: '백업' },
+  { id: 'category', icon: Folder,     label: '카테고리' },
+  { id: 'trash',    icon: RotateCcw,  label: '휴지통' },
+  { id: 'manual',   icon: BookOpen,   label: '설명서' },
+  { id: 'delete',   icon: Trash2,     label: '지우기', danger: true },
+]
+
+function renderPanel(id: string) {
+  switch (id) {
+    case 'theme':    return <ThemePanel />
+    case 'toggle':   return <TogglePanel />
+    case 'alarm':    return <AlarmPanel />
+    case 'stats':    return <StatsPanel />
+    case 'search':   return <SearchPanel />
+    case 'backup':   return <BackupPanel />
+    case 'delete':   return <DeletePanel />
+    case 'trash':    return <TrashPanel />
+    case 'category': return <CategoryPanel />
+    case 'manual':   return <ManualPanel />
+    case 'dev':      return <DevPanel />
+    default:         return null
+  }
+}
+
+export function SettingsClient({ initialShowToggleMenu }: { initialShowToggleMenu: boolean }) {
+  const [active, setActive] = useState<string | null>(null)
+  const [motto, setMotto] = useState('')
+  const [devModeEnabled, setDevModeEnabled] = useState(() => isDevModeEnabled())
+  const [showToggleMenu, setShowToggleMenu] = useState(initialShowToggleMenu)
+  const fetchShowToggleMenu = () => {
+    fetch('/api/dev/feature-flags')
+      .then((r) => r.json() as Promise<{ showToggleMenu: boolean }>)
+      .then((d) => setShowToggleMenu(d.showToggleMenu))
+      .catch(() => {})
+  }
+  useEffect(() => { setMotto(MOTTOS[Math.floor(Math.random() * MOTTOS.length)]) }, [])
+  useEffect(() => {
+    const onDevModeChange = () => setDevModeEnabled(isDevModeEnabled())
+    window.addEventListener('ealo-dev-mode-changed', onDevModeChange)
+    return () => window.removeEventListener('ealo-dev-mode-changed', onDevModeChange)
+  }, [])
+  useEffect(() => {
+    window.addEventListener('ealo-display-settings-changed', fetchShowToggleMenu)
+    return () => window.removeEventListener('ealo-display-settings-changed', fetchShowToggleMenu)
+  }, [])
+  const toggle = (id: string) => setActive((prev) => prev === id ? null : id)
+
+  const chipBg = 'color-mix(in srgb, var(--color-accent-light) 28%, var(--color-bg-card))'
+  const buttons = devModeEnabled ? [...BUTTONS, { id: 'dev', icon: Wrench, label: '개발자 모드' }] : BUTTONS
+  const rows: typeof BUTTONS[] = []
+  for (let i = 0; i < buttons.length; i += 2) rows.push(buttons.slice(i, i + 2))
+
+  return (
+    <AppLayout
+      activeTab="설정"
+      footerNote={
+        <p style={{ margin: 0, padding: '10px 4px', fontSize: '11px', color: 'var(--color-text-muted)', textAlign: 'center', lineHeight: 1.5, background: 'var(--color-bg-primary)' }}>
+          '이뤄'는 목표 달성을 보장하지 않습니다.
+          <br />
+          목표를 더 자주 인식하고 기억하도록 돕는 습관 형성을 지향합니다.
+        </p>
+      }
+    >
+      <div style={{ padding: '20px 16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '20px' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-text-primary)' }}>설정</h1>
+          <div style={{ fontSize: '13px', color: 'var(--color-accent-primary)', fontWeight: 500 }}>{motto}</div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {rows.flatMap((row, rowIdx) => {
+            const rowActive = row.find((btn) => btn.id === active)
+            const elements = []
+            if (rowIdx > 0) {
+              elements.push(
+                <div key={`divider-${rowIdx}`} style={{ height: '1px', background: T.divider, margin: '0 4px' }} />
+              )
+            }
+            elements.push(
+              <div key={rowIdx}>
+                {/* 버튼 행 */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                  {row.map((btn) => {
+                    const isActive = active === btn.id
+                    const hidden = btn.id === 'toggle' && !showToggleMenu && !devModeEnabled
+                    return (
+                      <button
+                        key={btn.id}
+                        onClick={() => toggle(btn.id)}
+                        style={{
+                          padding: '18px 16px',
+                          background: 'var(--color-bg-card)',
+                          border: isActive ? '1.5px solid var(--color-accent-primary)' : '1.5px solid transparent',
+                          borderRadius: rowActive ? (isActive ? '20px 20px 8px 8px' : '20px') : '20px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '14px',
+                          textAlign: 'left',
+                          transition: 'border-color 0.15s, border-radius 0.15s',
+                          visibility: hidden ? 'hidden' : 'visible',
+                        }}
+                      >
+                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: chipBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <btn.icon size={19} strokeWidth={1.9} color="var(--color-text-secondary)" />
+                        </div>
+                        <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                          {btn.label}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+                {/* 해당 행의 패널 */}
+                {rowActive && (
+                  <div style={{ marginTop: '2px' }}>
+                    {renderPanel(rowActive.id)}
+                  </div>
+                )}
+              </div>
+            )
+            return elements
+          })}
+        </div>
+      </div>
+    </AppLayout>
+  )
+}
