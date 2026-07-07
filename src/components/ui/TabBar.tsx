@@ -88,7 +88,7 @@ export function TabBar({ activeTab }: TabBarProps) {
       style={{
         background: 'var(--color-bg-primary)',
         borderTop: '1px solid var(--color-border)',
-        paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
+        paddingBottom: 'max(8px, var(--safe-bottom))',
       }}
       className="flex items-center justify-around py-2"
     >

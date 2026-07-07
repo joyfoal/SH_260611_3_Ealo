@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
 :root {
+  --safe-top: 0px;
+  --safe-bottom: 0px;
   --color-bg-primary: #FFFAF5;
   --color-bg-card: #FAEEDA;
   --color-bg-dark: #1A0E05;
@@ -67,6 +69,14 @@ body {
   margin: 0 auto;
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
+}
+
+/* 홈 화면에 설치된 PWA(standalone)에서만 세이프 에어리어 여백 적용 */
+@media (display-mode: standalone) {
+  :root {
+    --safe-top: env(safe-area-inset-top);
+    --safe-bottom: env(safe-area-inset-bottom);
+  }
 }
 
 @keyframes slideUp {
