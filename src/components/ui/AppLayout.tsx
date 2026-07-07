@@ -33,7 +33,7 @@ export function AppLayout({ children, activeTab, hideTabBar, decorativeIcons, fo
   return (
     <div
       className="flex flex-col"
-      style={{ height: '100dvh', background: 'var(--color-bg-primary)', position: 'relative' }}
+      style={{ height: '100dvh', background: 'var(--color-bg-primary)', position: 'relative', paddingTop: 'env(safe-area-inset-top)' }}
     >
       <main className="flex-1 min-h-0 overflow-y-auto">{children}</main>
       {footerNote}
